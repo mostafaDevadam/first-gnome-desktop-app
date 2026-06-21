@@ -175,11 +175,12 @@ class MyApp(Adw.Application):
         # view_switcher
         view_switcher = Adw.ViewSwitcher()
         view_switcher.set_stack(view_stack)
-        view_switcher.add_css_class("custom-view-switcher-bg")
-        #view_switcher.set_margin_top(6)
+        
+        view_switcher.set_margin_top(6)
         #view_switcher.set_margin_start(6)
         #view_switcher.set_margin_end(6)
-        view_switcher.set_policy(Adw.ViewSwitcherPolicy.WIDE)
+        #view_switcher.set_policy(Adw.ViewSwitcherPolicy.WIDE)
+        view_switcher.add_css_class("custom-view-switcher-bg")
 
 
         # view_switcher_bar
@@ -207,28 +208,58 @@ class MyApp(Adw.Application):
         self.center_stack.set_vexpand(True)
 
         # View A: welcome_box
+        welcome_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        welcome_box.set_valign(Gtk.Align.CENTER)
+        self.info_label = Gtk.Label(label="Current layout: LTR")
+        welcome_box.append(self.info_label)
+        self.center_stack.add_named(welcome_box, "welcome_view")
 
 
         # View B: loading_box
+        loading_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        loading_box.set_valign(Gtk.Align.CENTER)
+        spinner = Gtk.Spinner()
+        spinner.start()
+        spinner.set_size_request(40, 40)
+        loading_box.append(spinner)
+        loading_label = Gtk.Label(label="Fetching live user cards...")
+        loading_box.append(loading_label)
+        self.center_stack.add_named(loading_box, "loading_view")
 
+
+        # scroll
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
         # View C: users_container
+        self.users_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.users_container.set_margin_top(24)
+        self.users_container.set_margin_bottom(24)
+        self.users_container.set_margin_start(24)
+        self.users_container.set_margin_end(24)
+
+        scroll_win.set_child(self.users_container)
+        self.center_stack.add_named(scroll_win, "users_view")
+
+        # set default view state
+        self.center_stack.set_visible_child_name("welcome_view")
 
 
 
-        self.info_label = Gtk.Label(label="Current Layout: LTR")
-        self.info_label.set_vexpand(True)
+        #self.info_label = Gtk.Label(label="Current Layout: LTR")
+        #self.info_label.set_vexpand(True)
         #center_content.append(self.info_label)
         
          
          
         # right-sidebar 
-        right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        right_sidebar.add_css_class("sidebar-panel")
-        right_sidebar.set_size_request(200, -1)
-        right_label = Gtk.Label(label="Right")
-        right_label.set_margin_top(12)
-        right_sidebar.append(right_label)
+        self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        #self.right_sidebar.add_css_class("sidebar-panel")
+        self.right_sidebar.set_size_request(200, -1)
+        #self.right_label = Gtk.Label(label="Right")
+        #self.right_label.set_margin_top(12)
+        #right_sidebar.append(right_label)
+        #self.right_sidebar.add_css_class("bg-green")
 
 
 
@@ -241,10 +272,12 @@ class MyApp(Adw.Application):
 
         #
         outer_split_view = Adw.OverlaySplitView()
-        outer_split_view.set_sidebar(right_sidebar)
+        outer_split_view.set_sidebar(self.right_sidebar)
         outer_split_view.set_content(inner_split_view)
         outer_split_view.set_sidebar_position(Gtk.PackType.END)
         outer_split_view.set_min_sidebar_width(200)
+
+       
 
 
         #
@@ -276,21 +309,55 @@ class MyApp(Adw.Application):
              padding: 6px;
              border-bottom: 1px solid #b0c4de;
           }
+
+          splitview > box:last-child {
+             background-color: #cfd8dc;
+             border-left: 1px solid #b0bec5;
+          
+          }
+
+          .dim-label {
+             opacity: 0.7;
+          }
+
+          .bg-green {
+            background-color: green;
+          }
+
+          .user-card {
+             background-color: green;
+          }
+
+
         
 
         """
         # create css provider
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(css_data)
+        #css_provider.load_from_data(css_data)
 
-        # attach css provider globally
-        display = Gdk.Display.get_default()
-        if display:
-            Gtk.StyleContext.add_provider_for_display(
-                display,
-                css_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-            )
+        import os
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        css_file_path = os.path.join(current_dir, "style.css")
+
+        try:
+            css_provider.load_from_data(css_file_path)  
+            #
+            # attach css provider globally
+            display = Gdk.Display.get_default()
+            if display:
+                Gtk.StyleContext.add_provider_for_display(
+                    display,
+                    css_provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                )
+            print("css file loaded successfully")
+
+        except Exception as e:
+            print(f"Error loading css file from disk: {e}")
+
+        
 
     
     def on_home_item_clicked(self, row):
@@ -326,9 +393,103 @@ class MyApp(Adw.Application):
             
 
 
-    def update_users_ui(self, user_list):
-        print("fetched users:", user_list)
-        pass
+    def update_users_ui(self, users_list):
+        print("fetched users:", users_list)
+        while child := self.users_container.get_first_child():
+            self.users_container.remove(child)
+        #
+        if not users_list:
+            error_lbl = Gtk.Label(label="Failed to pull profile records.")
+            self.users_container.append(error_lbl)
+            self.center_stack.set_visible_child_name("users_view")
+            return
+        #
+        pref_group = Adw.PreferencesGroup()
+        pref_group.set_title("Registered System Users")
+        pref_group.set_description("Click any user card to view full profile")
+
+        for user in users_list:
+            user_card = Adw.ActionRow()
+            user_card.set_title(user.get("name", "Unknown"))
+            user_card.set_subtitle(user.get("email", "No Email"))
+            user_card.set_margin_bottom(8)
+
+            #
+            user_card.set_activatable(True)
+            #
+            user_card.user_data_payload = user
+
+            #
+            avatar = Gtk.Image.new_from_icon_name("avatar-default-symbolic")
+            user_card.add_prefix(avatar)
+
+            #
+            phone_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            phone_box.set_valign(Gtk.Align.CENTER)
+            #
+            phone_icon = Gtk.Image.new_from_icon_name("")
+            phone_lbl = Gtk.Label(label=user.get("phone", "No Phone"))
+            phone_lbl.add_css_class("dim-label")
+            #
+            phone_box.append(phone_icon)
+            phone_box.append(phone_lbl)
+            #
+            user_card.add_suffix(phone_box)
+            #
+            user_card.connect("activated", self.on_user_card_clicked)
+            #
+            pref_group.add(user_card)
+            #
+            # add to screen layout and hide the loading spinner
+        self.users_container.append(pref_group)
+        self.center_stack.set_visible_child_name("users_view")
+
+
+        
+    def on_user_card_clicked(self, row):
+        user = row.user_data_payload
+        print(f"User card selected: {user.get("name")}")
+
+        #
+        while child := self.right_sidebar.get_first_child():
+            self.right_sidebar.remove(child)
+        #
+        self.right_sidebar.set_margin_top(16)
+        self.right_sidebar.set_margin_start(12)
+        self.right_sidebar.set_margin_end(12)
+        self.right_sidebar.set_margin_bottom(16)
+        #
+        title_label = Gtk.Label(label=user.get("name"))
+        title_label.add_css_class("title-1") # built-in font bold
+        title_label.set_margin_bottom(12)
+        title_label.set_halign(Gtk.Align.START)
+        self.right_sidebar.append(title_label)
+        #
+        sidebar_group = Adw.PreferencesGroup()
+        sidebar_group.set_title("User Information")
+
+        #
+        username_row = Adw.ActionRow(title="Username", subtitle=user.get("username", "N/A"))
+        sidebar_group.add(username_row)
+        #
+        web_row = Adw.ActionRow(title="Website", subtitle=user.get("website", "N/A"))
+        sidebar_group.add(web_row)
+        #
+        company_name = user.get("company", {}).get("name", "N/A")
+        company_row = Adw.ActionRow(title="Company", subtitle=company_name)
+        sidebar_group.add(company_row)
+
+        #
+        city_name = user.get("address", {}).get("city", "N/A")
+        city_row = Adw.ActionRow(title="City", subtitle=city_name)
+        sidebar_group.add(city_row)
+
+        # inject the completed data card into right-sidebar
+        self.right_sidebar.append(sidebar_group)
+        #
+        sidebar_group.set_margin_start(8)
+        sidebar_group.set_margin_end(8)
+
 
 
 
