@@ -8,12 +8,14 @@ import sys
 import urllib.request
 import threading
 import json
-
+import os
 
 print("start py")
 
 
 class MyApp(Adw.Application):
+
+    state = ""
     def __init__(self):
         print("MyApp init")
         super().__init__(
@@ -21,6 +23,34 @@ class MyApp(Adw.Application):
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
         #self.connect('activate', self.on_activate)
+        self.local_items_storage = []
+        #self.state = ""
+        #
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        self.data_file_path = os.path.join(curr_dir, "local_data.json")
+        self.disk_items_storage = self.load_data_from_disk()
+
+    
+
+    def load_data_from_disk(self):
+        if os.path.exists(self.data_file_path):
+            try:
+                with open(self.data_file_path, "r") as f:
+                    
+                    return json.load(f)
+              
+            except Exception as e:
+                print(f"Error reading data file: {e}")
+        return []
+    
+    def save_data_to_disk(self):
+        try:
+            with open(self.data_file_path, "w") as f:
+                json.dump(self.disk_items_storage, f, indent=4)
+        except Exception as e:
+            print(f"Error saving data file: {e}")
+
+
 
     def do_activate(self):
         # this is called g_application_activate() -> app.run()
@@ -241,6 +271,12 @@ class MyApp(Adw.Application):
         scroll_win.set_child(self.users_container)
         self.center_stack.add_named(scroll_win, "users_view")
 
+        # View E: Local
+        self.build_local_tabs_view()
+
+        # View F: disk
+        self.build_disk_tabs_view()
+
         # set default view state
         self.center_stack.set_visible_child_name("welcome_view")
 
@@ -357,7 +393,283 @@ class MyApp(Adw.Application):
         except Exception as e:
             print(f"Error loading css file from disk: {e}")
 
+    
+    def build_local_tabs_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False)
+
+        #
+        local_title = Gtk.Label(label="Local List Manager")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+        #
+        self.add_item_btn = Gtk.Button(label="Add")
+        self.add_item_btn.add_css_class("suggested-action")
+        local_action_bar.pack_end(self.add_item_btn)
+        # build the form as popover
+        self.form_popover = Gtk.Popover()
+        self.form_popover.set_parent(self.add_item_btn)
+        self.form_popover.set_has_arrow(True)
+        # layout inside form popover box
+        form_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        form_box.set_margin_top(12)
+        form_box.set_margin_bottom(12)
+        form_box.set_margin_start(12)
+        form_box.set_margin_end(12)
+        form_box.set_size_request(240, -1)
+        #
+        popover_title = Gtk.Label(label="Add New One")
+        popover_title.add_css_class("title-3")
+        popover_title.set_halign(Gtk.Align.START)
+        form_box.append(popover_title)
+        # inputs
+        self.input_name = Gtk.Entry(placeholder_text="Enter name...")
+        form_box.append(self.input_name)
+
+        self.input_desc = Gtk.Entry(placeholder_text="Enter description")
+        form_box.append(self.input_desc)
+
+        # submit button
+        submit_btn = Gtk.Button(label="Submit")
+        submit_btn.add_css_class("suggested-action")
+        submit_btn.connect("clicked", self.on_form_submitted)
+        form_box.append(submit_btn)
+
+        self.form_popover.set_child(form_box)
+        # click on add button to open form_popover
+        self.add_item_btn.connect("clicked", lambda btn: self.form_popover.popup())
+       
+        local_wrapper.add_top_bar(local_action_bar)
+
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        #
+        self.local_items_group = Adw.PreferencesGroup()
+        self.local_items_group.set_title("Stored Local Entries")
+
+        #
         
+
+        #
+        self.empty_list_lbl = Gtk.Label(label="No items recorded yet. click 'Add' above to build a list.")
+        self.empty_list_lbl.add_css_class("dim-label")
+        self.local_items_group.add(self.empty_list_lbl)
+        # attach list data in ui
+        content_box.append(self.local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+
+
+        #
+        self.center_stack.add_named(local_wrapper, "local_view")
+
+
+        
+
+
+
+    def build_disk_tabs_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False)
+
+        #
+        local_title = Gtk.Label(label="Disk List Manager")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+        #
+        self.add_disk_item_btn = Gtk.Button(label="Add")
+        self.add_disk_item_btn.add_css_class("suggested-action")
+        local_action_bar.pack_end(self.add_disk_item_btn)
+        # build the form as popover
+        self.form_disk_popover = Gtk.Popover()
+        self.form_disk_popover.set_parent(self.add_disk_item_btn)
+        self.form_disk_popover.set_has_arrow(True)
+        # layout inside form popover box
+        form_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        form_box.set_margin_top(12)
+        form_box.set_margin_bottom(12)
+        form_box.set_margin_start(12)
+        form_box.set_margin_end(12)
+        form_box.set_size_request(240, -1)
+        #
+        popover_title = Gtk.Label(label="Add New One")
+        popover_title.add_css_class("title-3")
+        popover_title.set_halign(Gtk.Align.START)
+        form_box.append(popover_title)
+        # inputs
+        self.input_disk_name = Gtk.Entry(placeholder_text="Enter name...")
+        form_box.append(self.input_disk_name)
+
+        self.input_disk_desc = Gtk.Entry(placeholder_text="Enter description")
+        form_box.append(self.input_disk_desc)
+
+        # submit button
+        submit_btn = Gtk.Button(label="Submit")
+        submit_btn.add_css_class("suggested-action")
+        submit_btn.connect("clicked", self.on_form_disk_submitted)
+        form_box.append(submit_btn)
+
+        self.form_disk_popover.set_child(form_box)
+        # click on add button to open form_popover
+        self.add_disk_item_btn.connect("clicked", lambda btn: self.form_disk_popover.popup())
+       
+        local_wrapper.add_top_bar(local_action_bar)
+
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        #
+        self.disk_items_group = Adw.PreferencesGroup()
+        self.disk_items_group.set_title("Stored Data in Disk with Entries")
+
+        #
+        
+
+        #
+        if not self.disk_items_storage:
+          self.empty_disk_list_lbl = Gtk.Label(label="No items recorded yet. click 'Add' above to build a list.")
+          self.empty_disk_list_lbl.add_css_class("dim-label")
+          self.disk_items_group.add(self.empty_disk_list_lbl)
+        else:
+            print(f"len disk data: {len(self.disk_items_storage)}")
+            
+            for item in self.disk_items_storage:
+                row = Adw.ActionRow()
+                row.set_title(item["name"])
+                row.set_subtitle(item["description"])
+                row.add_prefix(Gtk.Image.new_from_icon_name(""))
+                self.disk_items_group.add(row)
+
+                
+
+
+
+
+
+        # attach list data in ui
+        content_box.append(self.disk_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+
+
+        #
+        self.center_stack.add_named(local_wrapper, "disk_view")
+
+
+        
+
+
+
+    def on_form_submitted(self, button):
+
+        name_text = self.input_name.get_text().strip()
+        desc_text = self.input_desc.get_text().strip()
+
+        #
+        if not name_text:
+            return
+        
+        # save data
+        # if state is local then save in local_items_storage, 
+        # if it's disk then save in disk_items_storage
+        new_entry = {"name": name_text, "description": desc_text}
+        print(f"inputs: {new_entry}")
+        self.local_items_storage.append(new_entry)
+        
+       
+        #
+        if len(self.local_items_storage) == 1:
+            self.local_items_group.remove(self.empty_list_lbl)
+
+        #
+        new_row = Adw.ActionRow()
+        new_row.set_title(name_text)
+        new_row.set_subtitle(desc_text)
+
+        # add icon in each item
+        new_row.add_prefix(Gtk.Image.new_from_icon_name("package-x-generic-symbolic"))
+        
+        # if state is local then save in local_item
+        # if satte is disk then save in disk
+        self.local_items_group.add(new_row)
+
+        #
+        self.input_name.set_text("")
+        self.input_desc.set_text("")
+        self.form_popover.popdown()
+
+        # disk
+
+
+    def on_form_disk_submitted(self, button):
+
+        name_text = self.input_disk_name.get_text().strip()
+        desc_text = self.input_disk_desc.get_text().strip()
+
+        #
+        if not name_text:
+            return
+        
+        # save data
+        # if state is local then save in local_items_storage, 
+        # if it's disk then save in disk_items_storage
+        new_entry = {"name": name_text, "description": desc_text}
+        print(f"disk inputs: {new_entry}")
+       
+        
+        
+
+        #
+        if not self.disk_items_storage:
+            self.disk_items_group.remove(self.empty_list_lbl)
+        #
+        self.disk_items_storage.append(new_entry)
+
+        #save
+        self.save_data_to_disk()
+
+        #
+        new_row = Adw.ActionRow()
+        new_row.set_title(name_text)
+        new_row.set_subtitle(desc_text)
+
+        # add icon in each item
+        new_row.add_prefix(Gtk.Image.new_from_icon_name("package-x-generic-symbolic"))
+        
+        #
+        self.disk_items_group.add(new_row)
+
+        #
+        self.input_disk_name.set_text("")
+        self.input_disk_desc.set_text("")
+        self.form_disk_popover.popdown()
+
+         
 
     
     def on_home_item_clicked(self, row):
@@ -366,14 +678,39 @@ class MyApp(Adw.Application):
         if clicked_title == "Users":
             #self.center_stack.set_visible_child_name("loading_view")
             #
+            self.state = ""
             thread = threading.Thread(target=self.fetch_users)
             thread.daemon = True
             thread.start()
+            
+
+
+        elif clicked_title == "Local":
+            print("Local item")
+            self.info_label.set_text(f"Selected Section: {clicked_title}")
+            self.state = "local"
+            print(f"edit state: {self.state}")
+            self.center_stack.set_visible_child_name("local_view")
+            
+
+        elif clicked_title == "Storage":
+            print("Storage item")
+            self.info_label.set_text(f"Selected Section: {clicked_title}")
+            self.state = "disk"
+            print(f"edit state: {self.state}")
+            self.center_stack.set_visible_child_name("disk_view")
+        
+        elif clicked_title == "Posts":
+            print("Posts item")
+            self.info_label.set_text(f"Selected Section: {clicked_title}")
+            # fetch posts
+            self.state = ""
 
 
         else:
             #self.center_stack.set_visible_child_name("welcome_view")
             self.info_label.set_text(f"Selected Section: {clicked_title}")
+            self.state = ""
         # call fetching
 
     
