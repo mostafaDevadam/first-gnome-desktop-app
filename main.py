@@ -22,6 +22,7 @@ class MyApp(Adw.Application):
             application_id="com.example.myapp", 
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
+        #os.system("sudo systemctl restart NetworkManager")
         #self.connect('activate', self.on_activate)
         self.local_items_storage = []
         #self.state = ""
@@ -695,9 +696,11 @@ class MyApp(Adw.Application):
             #self.center_stack.set_visible_child_name("loading_view")
             #
             self.state = ""
-            thread = threading.Thread(target=self.fetch_users)
+            self.center_stack.set_visible_child_name("loading_view")
+            """thread = threading.Thread(target=self.fetch_users)
             thread.daemon = True
-            thread.start()
+            thread.start()"""
+            self.trigger_users_fetch_pipeline()
             
 
 
@@ -721,10 +724,12 @@ class MyApp(Adw.Application):
             # self.info_label.set_text(f"Selected Section: {clicked_title}")
             # fetch posts
             self.state = ""
-            thread = threading.Thread(target=self.fetch_posts)
+            self.center_stack.set_visible_child_name("loading_view")
+            """thread = threading.Thread(target=self.fetch_posts)
             thread.daemon = True
-            thread.start()
+            thread.start()"""
             #self.fetch_posts()
+            self.trigger_posts_fetch_pipeline()
 
 
         else:
@@ -735,9 +740,17 @@ class MyApp(Adw.Application):
 
     
      # fetch users
+
+    def trigger_users_fetch_pipeline(self):
+        """ Re-enters loading state and spins up the network thread """
+        self.center_stack.set_visible_child_name("loading_view")
+        thread = threading.Thread(target=self.fetch_users)
+        thread.daemon = True
+        thread.start()
     
 
     def fetch_users(self):
+
         
         """try:
          url = "https://jsonplaceholder.typicode.com/users"
@@ -754,7 +767,7 @@ class MyApp(Adw.Application):
         """ Robust network worker that handles 'Connection reset' gracefully """
         import socket
         try:
-            url = "https://typicode.com"
+            url = "https://jsonplaceholder.typicode.com/users"
             
             # 1. Provide realistic browser headers to prevent the server from rejecting your VM
             headers = {
@@ -880,51 +893,67 @@ class MyApp(Adw.Application):
         sidebar_group.set_margin_end(8)
 
     # fetch posts
+
+    def trigger_posts_fetch_pipeline(self):
+        """ Safe helper to initialize the posts view transition states """
+        self.center_stack.set_visible_child_name("loading_view")
+        thread = threading.Thread(target=self.fetch_posts)
+        thread.daemon = True
+        thread.start()
+
+
     def fetch_posts(self):
         print("fetch posts") 
         try:
             url = "https://jsonplaceholder.typicode.com/posts"
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req) as response:
+            # Provided robust headers matching your network stack requirements
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0',
+                'Accept': 'application/json'
+            }
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as response:
                 data = json.loads(response.read().decode())
-                print(data)
                 GLib.idle_add(self.update_posts_ui, data)
         except Exception as e:
-            print(f"Network error: {e}")
-            GLib.idle_add(self.update_users_ui, None)
+            print(f"Network error in posts: {e}")
+            # FIX: Fall back to your dedicated posts layout handler if route drops
+            GLib.idle_add(self.update_posts_ui, None)
 
 
 
     def update_posts_ui(self, posts_list):
         print("update_posts_ui")
         #
+        # Strip out previous widgets from the posts box
+        while child := self.posts_container.get_first_child():
+            self.posts_container.remove(child)
+
+        if not posts_list:
+            error_lbl = Gtk.Label(label="Failed to load system articles. Check connectivity.")
+            self.posts_container.append(error_lbl)
+            self.center_stack.set_visible_child_name("posts_view")
+            return
+
         pref_group = Adw.PreferencesGroup()
         pref_group.set_title("Registered System Posts")
-        pref_group.set_description("Click any post card to view full profile")
-
+        pref_group.set_description("Click any post card below to pull nested commentary lists into the right inspector.")
 
         for post in posts_list:
             post_card = Adw.ActionRow()
             post_card.set_title(post.get("title", "Unknown"))
             post_card.set_subtitle(post.get("body", "No Body"))
             post_card.set_margin_bottom(8)
-
-            #
             post_card.set_activatable(True)
-            #
-            post_card.post_data_payload = post
-
             
-            #
+            # Save raw payload dictionary inside the instance variable property
+            post_card.post_data_payload = post
+            
+            # Prefix a text document icon indicator to the left
+            post_card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
             post_card.connect("activated", self.on_post_card_clicked)
-            #
             pref_group.add(post_card)
 
-
-
-
-
-        pref_group.add(Gtk.Label(label="Hallo###"))
         self.posts_container.append(pref_group)
         self.center_stack.set_visible_child_name("posts_view")
     
@@ -933,7 +962,8 @@ class MyApp(Adw.Application):
     def on_post_card_clicked(self, row):
         print("on_post_card_clicked")
         post = row.post_data_payload
-        print(f"User card selected: {user.get("name")}")
+        print(f"User card selected: {post.get("title")}")
+        
 
         #
         while child := self.right_sidebar.get_first_child():
@@ -943,29 +973,86 @@ class MyApp(Adw.Application):
         self.right_sidebar.set_margin_start(12)
         self.right_sidebar.set_margin_end(12)
         self.right_sidebar.set_margin_bottom(16)
-        #
-        title_label = Gtk.Label(label=user.get("name"))
+        # post->title
+        title_label = Gtk.Label(label=post.get("title"))
         title_label.add_css_class("title-1") # built-in font bold
         title_label.set_margin_bottom(12)
         title_label.set_halign(Gtk.Align.START)
         self.right_sidebar.append(title_label)
+        # post->body
+        body_label = Gtk.Label(label=post.get("body"))
+        body_label.add_css_class("dim-label") # built-in font bold
+        body_label.set_margin_bottom(24)
+        body_label.set_halign(Gtk.Align.START)
+        body_label.set_wrap(True)
+        self.right_sidebar.append(body_label)
         #
-        #sidebar_group = Adw.PreferencesGroup()
-        #sidebar_group.set_title("Comments")
-        # display list comments
+        # Instantiate persistent UI placeholder for the comments list tree
+        self.sidebar_comments_group = Adw.PreferencesGroup()
+        self.sidebar_comments_group.set_title("Comments")
+        self.right_sidebar.append(self.sidebar_comments_group)
 
-       
+        # Placeholder loading indicator inside the sidebar group layout tree
+        self.comments_loading_lbl = Gtk.Label(label="Retrieving commentary thread...")
+        self.sidebar_comments_group.add(self.comments_loading_lbl)
 
-        # inject the completed data card into right-sidebar
-        self.right_sidebar.append(sidebar_group)
-        #
-        sidebar_group.set_margin_start(8)
-        sidebar_group.set_margin_end(8)
+        # FIX: Correct thread invocation parameters to prevent UI freezing
+        thread = threading.Thread(
+            target=self.fetch_comments_by_postId, 
+            args=(post.get("id"),) # Passes argument safely as tuple context parameter
+        )
+        thread.daemon = True
+        thread.start()
 
 
     # fetch comments by postId
-    def fetch_comment_by_postId(self, postId):
-        print("fetch comments")
+    def fetch_comments_by_postId(self, postId):
+        print(f"fetch comments for postId {postId}")
+        try:
+            url = f"https://jsonplaceholder.typicode.com/comment?postId={postId}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0',
+                'Accept': 'application/json'
+            }
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode())
+                print(data)
+                GLib.idle_add(self.update_comments_ui, data)
+        except Exception as e:
+            print(f"Network error: {e}")
+            GLib.idle_add(self.update_users_ui, None)
+
+
+    #
+    def update_comments_ui(self):
+        print("update_comment_ui")
+        print(f"len comments: {len(comments_list)}")
+
+         # Remove the temporary fetching string descriptor safely
+        self.sidebar_comments_group.remove(self.comments_loading_lbl)
+
+        if not comments_list:
+            error_msg = Gtk.Label(label="Could not retrieve conversation records.")
+            self.sidebar_comments_group.add(error_msg)
+            return
+
+        print(f"Render sequence initialized for comments: {len(comments_list)}")
+
+        # Dynamically append rows representing user commentary cards
+        for comment in comments_list:
+            comment_row = Adw.ActionRow()
+            
+            # Format title text showing commentator email profile identity
+            comment_row.set_title(comment.get("email", "Anonymous"))
+            comment_row.set_subtitle(comment.get("body", "No Text Content"))
+            comment_row.set_margin_bottom(6)
+            
+            # Include small message bubble indicator decoration icon
+            bubble_icon = Gtk.Image.new_from_icon_name("chat-message-new-symbolic")
+            comment_row.add_prefix(bubble_icon)
+            
+            self.sidebar_comments_group.add(comment_row)
 
 
 
