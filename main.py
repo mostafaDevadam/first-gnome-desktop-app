@@ -274,8 +274,24 @@ class MyApp(Adw.Application):
         # View E: Local
         self.build_local_tabs_view()
 
-        # View F: disk
+        # View F: storage in disk
         self.build_disk_tabs_view()
+
+        # View S: Posts
+        self.posts_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.posts_container.set_margin_top(24)
+        self.posts_container.set_margin_bottom(24)
+        self.posts_container.set_margin_start(24)
+        self.posts_container.set_margin_end(24)
+
+        scroll_win.set_child(self.posts_container)
+        self.center_stack.add_named(scroll_win, "posts_view")
+        #
+
+
+
+
+
 
         # set default view state
         self.center_stack.set_visible_child_name("welcome_view")
@@ -702,9 +718,13 @@ class MyApp(Adw.Application):
         
         elif clicked_title == "Posts":
             print("Posts item")
-            self.info_label.set_text(f"Selected Section: {clicked_title}")
+            # self.info_label.set_text(f"Selected Section: {clicked_title}")
             # fetch posts
             self.state = ""
+            thread = threading.Thread(target=self.fetch_posts)
+            thread.daemon = True
+            thread.start()
+            #self.fetch_posts()
 
 
         else:
@@ -714,10 +734,12 @@ class MyApp(Adw.Application):
         # call fetching
 
     
-     # fetch
+     # fetch users
+    
+
     def fetch_users(self):
         
-        try:
+        """try:
          url = "https://jsonplaceholder.typicode.com/users"
          req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
          with urllib.request.urlopen(req) as response:
@@ -726,7 +748,37 @@ class MyApp(Adw.Application):
             GLib.idle_add(self.update_users_ui, data)
         except Exception as e:
             print(f"Network error: {e}")
+            GLib.idle_add(self.update_users_ui, None)"""
+        #
+        
+        """ Robust network worker that handles 'Connection reset' gracefully """
+        import socket
+        try:
+            url = "https://typicode.com"
+            
+            # 1. Provide realistic browser headers to prevent the server from rejecting your VM
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0',
+                'Accept': 'application/json',
+                'Connection': 'close' # Explicitly tells the server to close neatly after sending data
+            }
+            
+            req = urllib.request.Request(url, headers=headers)
+            
+            # 2. Added a 10-second timeout constraint so the app won't hang indefinitely if the route drops
+            with urllib.request.urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode())
+                
+                # Hand data back to the main UI render loop thread
+                GLib.idle_add(self.update_users_ui, data)
+                
+        except (urllib.error.URLError, socket.error) as network_error:
+            # 3. Intercept connection drops gracefully without disrupting UI elements
+            print(f"Network error managed successfully: {network_error}")
+            
+            # Send 'None' to trigger the visual error label message on screen instead of freezing
             GLib.idle_add(self.update_users_ui, None)
+
             
 
 
@@ -826,6 +878,94 @@ class MyApp(Adw.Application):
         #
         sidebar_group.set_margin_start(8)
         sidebar_group.set_margin_end(8)
+
+    # fetch posts
+    def fetch_posts(self):
+        print("fetch posts") 
+        try:
+            url = "https://jsonplaceholder.typicode.com/posts"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req) as response:
+                data = json.loads(response.read().decode())
+                print(data)
+                GLib.idle_add(self.update_posts_ui, data)
+        except Exception as e:
+            print(f"Network error: {e}")
+            GLib.idle_add(self.update_users_ui, None)
+
+
+
+    def update_posts_ui(self, posts_list):
+        print("update_posts_ui")
+        #
+        pref_group = Adw.PreferencesGroup()
+        pref_group.set_title("Registered System Posts")
+        pref_group.set_description("Click any post card to view full profile")
+
+
+        for post in posts_list:
+            post_card = Adw.ActionRow()
+            post_card.set_title(post.get("title", "Unknown"))
+            post_card.set_subtitle(post.get("body", "No Body"))
+            post_card.set_margin_bottom(8)
+
+            #
+            post_card.set_activatable(True)
+            #
+            post_card.post_data_payload = post
+
+            
+            #
+            post_card.connect("activated", self.on_post_card_clicked)
+            #
+            pref_group.add(post_card)
+
+
+
+
+
+        pref_group.add(Gtk.Label(label="Hallo###"))
+        self.posts_container.append(pref_group)
+        self.center_stack.set_visible_child_name("posts_view")
+    
+
+
+    def on_post_card_clicked(self, row):
+        print("on_post_card_clicked")
+        post = row.post_data_payload
+        print(f"User card selected: {user.get("name")}")
+
+        #
+        while child := self.right_sidebar.get_first_child():
+            self.right_sidebar.remove(child)
+        #
+        self.right_sidebar.set_margin_top(16)
+        self.right_sidebar.set_margin_start(12)
+        self.right_sidebar.set_margin_end(12)
+        self.right_sidebar.set_margin_bottom(16)
+        #
+        title_label = Gtk.Label(label=user.get("name"))
+        title_label.add_css_class("title-1") # built-in font bold
+        title_label.set_margin_bottom(12)
+        title_label.set_halign(Gtk.Align.START)
+        self.right_sidebar.append(title_label)
+        #
+        #sidebar_group = Adw.PreferencesGroup()
+        #sidebar_group.set_title("Comments")
+        # display list comments
+
+       
+
+        # inject the completed data card into right-sidebar
+        self.right_sidebar.append(sidebar_group)
+        #
+        sidebar_group.set_margin_start(8)
+        sidebar_group.set_margin_end(8)
+
+
+    # fetch comments by postId
+    def fetch_comment_by_postId(self, postId):
+        print("fetch comments")
 
 
 
