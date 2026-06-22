@@ -996,20 +996,27 @@ class MyApp(Adw.Application):
         self.comments_loading_lbl = Gtk.Label(label="Retrieving commentary thread...")
         self.sidebar_comments_group.add(self.comments_loading_lbl)
 
+        postId = post.get("id")
+        print(f"postId: {postId}")
+
         # FIX: Correct thread invocation parameters to prevent UI freezing
         thread = threading.Thread(
             target=self.fetch_comments_by_postId, 
-            args=(post.get("id"),) # Passes argument safely as tuple context parameter
+            args=(postId,) # Passes argument safely as tuple context parameter
         )
         thread.daemon = True
         thread.start()
+
+        # Inject the completed data card into right-sidebar
+        self.sidebar_comments_group.set_margin_start(8)
+        self.sidebar_comments_group.set_margin_end(8)
 
 
     # fetch comments by postId
     def fetch_comments_by_postId(self, postId):
         print(f"fetch comments for postId {postId}")
         try:
-            url = f"https://jsonplaceholder.typicode.com/comment?postId={postId}"
+            url = f"https://jsonplaceholder.typicode.com/comments?postId={postId}"
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0',
                 'Accept': 'application/json'
@@ -1017,7 +1024,7 @@ class MyApp(Adw.Application):
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=10) as response:
                 data = json.loads(response.read().decode())
-                print(data)
+                print("comments:", data)
                 GLib.idle_add(self.update_comments_ui, data)
         except Exception as e:
             print(f"Network error: {e}")
@@ -1025,30 +1032,29 @@ class MyApp(Adw.Application):
 
 
     #
-    def update_comments_ui(self):
+    def update_comments_ui(self, comments_list):
         print("update_comment_ui")
         print(f"len comments: {len(comments_list)}")
 
-         # Remove the temporary fetching string descriptor safely
-        self.sidebar_comments_group.remove(self.comments_loading_lbl)
+        # 1. Safely remove the placeholder string "Retrieving commentary thread..."
+        if hasattr(self, 'comments_loading_lbl') and self.comments_loading_lbl.get_parent():
+            self.sidebar_comments_group.remove(self.comments_loading_lbl)
 
+        # 2. Check if the array came back empty or failed
         if not comments_list:
-            error_msg = Gtk.Label(label="Could not retrieve conversation records.")
+            error_msg = Gtk.Label(label="No comments found or connection timeout.")
+            error_msg.add_css_class("dim-label")
             self.sidebar_comments_group.add(error_msg)
             return
 
-        print(f"Render sequence initialized for comments: {len(comments_list)}")
-
-        # Dynamically append rows representing user commentary cards
+        # 3. Populate your rows under the Comments heading block area cleanly
         for comment in comments_list:
             comment_row = Adw.ActionRow()
-            
-            # Format title text showing commentator email profile identity
             comment_row.set_title(comment.get("email", "Anonymous"))
-            comment_row.set_subtitle(comment.get("body", "No Text Content"))
+            comment_row.set_subtitle(comment.get("body", ""))
             comment_row.set_margin_bottom(6)
             
-            # Include small message bubble indicator decoration icon
+            # Add message bubble decorations icon to the left side
             bubble_icon = Gtk.Image.new_from_icon_name("chat-message-new-symbolic")
             comment_row.add_prefix(bubble_icon)
             
