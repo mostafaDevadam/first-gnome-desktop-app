@@ -639,29 +639,14 @@ class MyApp(Adw.Application):
             print(f"local data: {self.local_items_group.get_title()}")
             print(f"local_items_storage: {self.local_items_storage}")
             #self.filter_visible_rows(search_query)
+            self.filter_local_items_storage(search_query)
 
-            if not self.local_items_storage:
-                print("Cannot search because no data!")
-                return
-            filtered_data = []
-            for item in self.local_items_storage:
-                name = item.get("name", "").lower()
-                description = item.get("description", "").lower()
-                #
-                if search_query in name or search_query in description:
-                    filtered_data.append(item)
-
-            
-            if not filtered_data:
-                return False
-            
-            self.display_local_filtered_results(filtered_data)
-            
            
-
-            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
         elif active_view_name == "disk_view":
              print("disk_view")
+             print(f"disk data: {self.disk_items_group.get_title()}")
+             print(f"disk_items_storage: {self.disk_items_storage}")
+             self.filter_disk_items_storage(search_query)
         
 
         elif active_view_name == "local_test_users_view":
@@ -676,7 +661,51 @@ class MyApp(Adw.Application):
 
 
             
-    
+    def filter_local_items_storage(self, query):
+            if not self.local_items_storage:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.local_items_storage:
+                name = item.get("name", "").lower()
+                description = item.get("description", "").lower()
+                #
+                if query in name or query in description:
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_local_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
+        
+    def filter_disk_items_storage(self, query):
+            if not self.disk_items_storage:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.disk_items_storage:
+                name = item.get("name", "").lower()
+                description = item.get("description", "").lower()
+                #
+                if query in name or query in description:
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_disk_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
 
 
     def display_local_filtered_results(self, filtered_data):
@@ -745,6 +774,71 @@ class MyApp(Adw.Application):
 
             GLib.idle_add(force_stack_transition)
       
+    def display_disk_filtered_results(self, filtered_data):
+            """ Force-clears the actual UI widget tree directly to wipe old data completely """
+            print(f"Executing total interface refresh for {len(filtered_data)} matching records...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication is impossible.
+            if hasattr(self, 'disk_items_group') and self.disk_items_group.get_parent():
+                content_box = self.disk_items_group.get_parent()
+                
+                # Gather all children in the parent box (including any hidden/duplicate groups)
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.disk_items_group = Adw.PreferencesGroup()
+                self.disk_items_group.set_title("Stored Disk Entries")
+                content_box.append(self.disk_items_group)
+
+            # -------------------------------------------------------------------------
+            # Case A: Search yielded no matches or storage is empty
+            # -------------------------------------------------------------------------
+            if not filtered_data:
+                # Re-create empty placeholder label text dynamically
+                self.empty_list_lbl = Gtk.Label(label="No recorded items match your search criteria.")
+                self.empty_list_lbl.add_css_class("dim-label")
+                self.disk_items_group.add(self.empty_list_lbl)
+                self.center_stack.set_visible_child_name("disk_view")
+                return
+
+            # -------------------------------------------------------------------------
+            # Case B: Matches found, draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+            for item in filtered_data:
+                row = Adw.ActionRow()
+                row.set_title(item.get("name", "Unknown Entry"))
+                row.set_subtitle(item.get("description", "No Description Available"))
+                row.set_margin_bottom(8)
+                
+                row.user_data_payload = item
+
+                # Include a clean package icon indicator to the left
+                card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
+                row.add_prefix(card_icon)
+                
+                # Append card row item straight to your freshly cleared group field
+                self.disk_items_group.add(row)
+
+            # Force layout refresh and switch focus state
+            self.disk_items_group.set_visible(True)
+            
+            def force_stack_transition():
+                self.center_stack.set_visible_child_name("disk_view")
+                return False
+
+            GLib.idle_add(force_stack_transition)
 
 
 
@@ -1678,7 +1772,7 @@ class MyApp(Adw.Application):
         # submit button
         submit_btn = Gtk.Button(label="Submit")
         submit_btn.add_css_class("suggested-action")
-        submit_btn.connect("clicked", self.on_form_disk_submitted)
+        submit_btn.connect("clicked", self.on_form_disk_submitted2)
         form_box.append(submit_btn)
 
         self.form_disk_popover.set_child(form_box)
@@ -1698,7 +1792,7 @@ class MyApp(Adw.Application):
         content_box.set_margin_end(24)
 
         #
-        self.disk_items_group = Adw.PreferencesGroup()
+        #self.disk_items_group = Adw.PreferencesGroup()
         self.disk_items_group.set_title("Stored Data in Disk with Entries")
 
         #
@@ -1767,6 +1861,40 @@ class MyApp(Adw.Application):
         self.input_name.set_text("")
         self.input_desc.set_text("")
         self.form_popover.popdown()
+
+        return False
+    
+    def on_form_disk_submitted2(self, button):
+        name_text = self.input_disk_name.get_text().strip()
+        desc_text = self.input_disk_desc.get_text().strip()
+
+        # Input Validation Check
+        if not name_text:
+            print("Validation Warning: Name field cannot be empty.")
+            return
+        
+        # Build the structured item object payload
+        new_entry = {"name": name_text, "description": desc_text}
+        print(f"Form submission payload: {new_entry}")
+
+        # Initialize array safely if it hasn't been instantiated yet
+        if not hasattr(self, 'disk_items_storage') or self.disk_items_storage is None:
+            self.disk_items_storage = []
+            
+        # Append the new data row to your single local tracking array
+        self.disk_items_storage.append(new_entry)
+
+        # =========================================================================
+        # REUSE RENDER ENGINE: Let the display helper update rows and clear placeholders
+        # =========================================================================
+        # Passing self.local_items_storage handles clearing out empty state labels,
+        # appends your brand-new row card, and registers it with the search bar query system.
+        self.display_disk_filtered_results(self.disk_items_storage)
+
+        # FORM RESET: Flush the input lines and hide the popup widget cleanly
+        self.input_disk_name.set_text("")
+        self.input_disk_desc.set_text("")
+        self.form_disk_popover.popdown()
 
         return False
 
