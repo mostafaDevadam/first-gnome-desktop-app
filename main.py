@@ -12,6 +12,165 @@ import os
 
 print("start py")
 
+# dark, i18n, search, cache
+# save users, posts, comments in json files in init/background
+# search in: local, storage, users
+
+
+class Jasmin():
+      
+      def __init__(self, name, right_sidebar, center_stack):
+          self.name = name
+          self.right_sidebar = right_sidebar
+          self.center_stack = center_stack
+
+      def get_name(self):
+          return self.name
+      
+      def set_name(self, name):
+          print(f"set_name: {name}")
+          self.name = name
+
+
+      def build_test_view(self):
+            #
+            local_wrapper = Adw.ToolbarView()
+
+            local_action_bar = Gtk.HeaderBar()
+            local_action_bar.set_show_title_buttons(False) 
+            local_title = Gtk.Label(label="test Manager")
+            local_title.add_css_class("heading")
+            local_action_bar.set_title_widget(local_title)
+
+            local_wrapper.add_top_bar(local_action_bar)
+
+
+            scroll_win = Gtk.ScrolledWindow()
+            scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+            content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            content_box.set_margin_top(24)
+            content_box.set_margin_bottom(24)
+            content_box.set_margin_start(24)
+            content_box.set_margin_end(24)
+
+            local_items_group = Adw.PreferencesGroup()
+            local_items_group.set_title("test ui")
+
+
+            # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
+            content_box.append(local_items_group)
+            scroll_win.set_child(content_box)
+            local_wrapper.set_content(scroll_win)
+            
+            # Mount layout to stack structure immediately 
+            self.center_stack.add_named(local_wrapper, "local_test_view")
+
+
+            docs = []   
+
+
+            def test_fetch():
+                print("test_fetch")
+                import time
+                time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+                
+                file_path = os.path.join(GLib.get_current_dir(), "test.json")
+
+                if not os.path.exists(file_path):
+                    print("no json file")
+                    return False
+                
+                print("json file exists!")
+
+                def card_clicked(row):
+                    print(f"card_clicked: {row.payload}")
+
+                    item = row.payload
+
+                    #
+                    while child := self.right_sidebar.get_first_child():
+                        self.right_sidebar.remove(child)
+                    #
+                    self.right_sidebar.set_margin_top(16)
+                    self.right_sidebar.set_margin_start(12)
+                    self.right_sidebar.set_margin_end(12)
+                    self.right_sidebar.set_margin_bottom(16)
+                    #
+                    title_label = Gtk.Label(label=item.get("title"))
+                    title_label.add_css_class("title-1") # built-in font bold
+                    title_label.set_margin_bottom(12)
+                    title_label.set_halign(Gtk.Align.START)
+                    self.right_sidebar.append(title_label)
+                    #
+                    body_label = Gtk.Label(label=item.get("author"))
+                    body_label.add_css_class("dim-label") # built-in font bold
+                    body_label.set_margin_bottom(24)
+                    body_label.set_halign(Gtk.Align.START)
+                    body_label.set_wrap(True)
+                    self.right_sidebar.append(body_label)
+                    #sidebar_group = Adw.PreferencesGroup()
+                    #sidebar_group.set_title("User Information")
+
+                
+                    # inject the completed data card into right-sidebar
+                    #self.right_sidebar.append(sidebar_group)
+                    #
+                    #sidebar_group.set_margin_start(8)
+                    #sidebar_group.set_margin_end(8)
+
+                try:
+                    success, content = GLib.file_get_contents(file_path)
+
+                    if success:
+                        if isinstance(content, bytes):
+                            content = content.decode("utf-8")
+                            
+                        data = json.loads(content)
+                        print(f"data size: {len(data)}")
+                        
+                        for item in data:
+                            print(f"item: {item}")
+                            docs.append(item)
+                            card = Adw.ActionRow()
+                            card.set_title(item.get("title", "test"))
+                            card.set_subtitle(item.get("author", "test"))
+                            card.set_activatable(True)
+                            card.payload = item
+                            card.connect("activated", card_clicked)
+                            card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                            local_items_group.add(card)
+                        
+                        # --- ACTION TAKEN HERE ---
+                        # Now that docs is populated, safely trigger your UI updates or prints:
+                        print(f"len docs inside callback: {len(docs)}")
+
+                        local_items_group.queue_resize()
+                        
+                        
+
+                    else:
+                        print("GLib failed to read file contents successfully.")
+                except Exception as e:
+                    print(f"ERROR: {e}")
+
+                return False # Stop the GLib idle loop from repeating this function
+            
+            # Queue the function to run as soon as the main loop is ready
+            GLib.idle_add(test_fetch)
+
+            
+
+
+            #content_box.append(local_items_group)
+            #scroll_win.set_child(content_box)
+            #local_wrapper.set_content(scroll_win)
+
+
+            #
+            #self.center_stack.add_named(local_wrapper, "local_test_view")
+           
+
 
 class MyApp(Adw.Application):
 
@@ -22,6 +181,10 @@ class MyApp(Adw.Application):
             application_id="com.example.myapp", 
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
+        self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.center_stack = Gtk.Stack()
+        self.jam = Jasmin("jasmin", self.right_sidebar, self.center_stack)
+        
         #os.system("sudo systemctl restart NetworkManager")
         #self.connect('activate', self.on_activate)
         self.local_items_storage = []
@@ -262,15 +425,43 @@ class MyApp(Adw.Application):
         scroll_win = Gtk.ScrolledWindow()
         scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-        # View C: users_container
-        self.users_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        # CRITICAL FIXES: Force the scrollable area to expand to fill the screen space
+        scroll_win.set_vexpand(True)
+        scroll_win.set_hexpand(True)
+
+        self.users_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.users_container.set_margin_top(24)
         self.users_container.set_margin_bottom(24)
         self.users_container.set_margin_start(24)
         self.users_container.set_margin_end(24)
 
+        # CRITICAL FIXES: Force the inner container box to expand inside the scroll view
+        self.users_container.set_vexpand(True)
+        self.users_container.set_hexpand(True)
+
+        # Build the layout tree relationship cleanly
         scroll_win.set_child(self.users_container)
         self.center_stack.add_named(scroll_win, "users_view")
+        #self.center_stack.add_child(self.users_view_scroll)
+
+        #
+
+        """self.test_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.test_container.set_margin_top(24)
+        self.test_container.set_margin_bottom(24)
+        self.test_container.set_margin_start(24)
+        self.test_container.set_margin_end(24)
+
+        scroll_win.set_child(self.test_container)
+        self.center_stack.add_named(scroll_win, "test_view")"""
+        self.build_test_view()
+        self.build_test_users_view()
+        #self.jam.build_test_view()
+
+        # test jasmin
+        j = self.jam.get_name()
+        print(f"jam: {j}")
+
 
         # View E: Local
         self.build_local_tabs_view()
@@ -288,6 +479,8 @@ class MyApp(Adw.Application):
         scroll_win.set_child(self.posts_container)
         self.center_stack.add_named(scroll_win, "posts_view")
         #
+
+        
 
 
 
@@ -409,6 +602,298 @@ class MyApp(Adw.Application):
 
         except Exception as e:
             print(f"Error loading css file from disk: {e}")
+
+
+    def build_test_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False) 
+        local_title = Gtk.Label(label="test Manager")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+
+        local_wrapper.add_top_bar(local_action_bar)
+
+
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("test ui")
+
+
+        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
+        content_box.append(local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+        
+        # Mount layout to stack structure immediately 
+        self.center_stack.add_named(local_wrapper, "local_test_view")
+
+
+        docs = []   
+
+
+        def test_fetch():
+            print("test_fetch")
+            import time
+            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+            
+            file_path = os.path.join(GLib.get_current_dir(), "./data/test.json")
+
+            if not os.path.exists(file_path):
+                print("no json file")
+                return False
+            
+            print("json file exists!")
+
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("author"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.right_sidebar.append(body_label)
+                #sidebar_group = Adw.PreferencesGroup()
+                #sidebar_group.set_title("User Information")
+
+               
+                # inject the completed data card into right-sidebar
+                #self.right_sidebar.append(sidebar_group)
+                #
+                #sidebar_group.set_margin_start(8)
+                #sidebar_group.set_margin_end(8)
+
+            try:
+                success, content = GLib.file_get_contents(file_path)
+
+                if success:
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8")
+                        
+                    data = json.loads(content)
+                    print(f"data size: {len(data)}")
+                    
+                    for item in data:
+                        print(f"item: {item}")
+                        docs.append(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("title", "test"))
+                        card.set_subtitle(item.get("author", "test"))
+                        card.set_activatable(True)
+                        card.payload = item
+                        card.connect("activated", card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        local_items_group.add(card)
+                    
+                    # --- ACTION TAKEN HERE ---
+                    # Now that docs is populated, safely trigger your UI updates or prints:
+                    print(f"len docs inside callback: {len(docs)}")
+
+                    local_items_group.queue_resize()
+                    
+                    
+
+                else:
+                    print("GLib failed to read file contents successfully.")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+            return False # Stop the GLib idle loop from repeating this function
+        
+        # Queue the function to run as soon as the main loop is ready
+        GLib.idle_add(test_fetch)
+
+        
+
+
+        #content_box.append(local_items_group)
+        #scroll_win.set_child(content_box)
+        #local_wrapper.set_content(scroll_win)
+
+
+        #
+        #self.center_stack.add_named(local_wrapper, "local_test_view")
+
+
+
+    def build_test_users_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False) 
+        local_title = Gtk.Label(label="Users Management")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+
+        local_wrapper.add_top_bar(local_action_bar)
+
+
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("Users")
+
+
+        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
+        content_box.append(local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+        
+        # Mount layout to stack structure immediately 
+        self.center_stack.add_named(local_wrapper, "local_test_users_view")
+
+
+        docs = []   
+
+
+        def test_fetch():
+            print("test_fetch")
+            import time
+            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+            
+            file_path = os.path.join(GLib.get_current_dir(), "./data/users.json")
+
+            if not os.path.exists(file_path):
+                print("no json file")
+                return False
+            
+            print("json file exists!")
+
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("name"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("email"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.right_sidebar.append(body_label)
+
+                #
+                sidebar_group = Adw.PreferencesGroup()
+                sidebar_group.set_title("User Information")
+
+                #
+                username_row = Adw.ActionRow(title="Username", subtitle=item.get("username", "N/A"))
+                sidebar_group.add(username_row)
+                #
+                web_row = Adw.ActionRow(title="Website", subtitle=item.get("website", "N/A"))
+                sidebar_group.add(web_row)
+                #
+                company_name = item.get("company", {}).get("name", "N/A")
+                company_row = Adw.ActionRow(title="Company", subtitle=company_name)
+                sidebar_group.add(company_row)
+
+                #
+                city_name = item.get("address", {}).get("city", "N/A")
+                city_row = Adw.ActionRow(title="City", subtitle=city_name)
+                sidebar_group.add(city_row)
+
+                # inject the completed data card into right-sidebar
+                self.right_sidebar.append(sidebar_group)
+                #
+                sidebar_group.set_margin_start(8)
+                sidebar_group.set_margin_end(8)
+
+            try:
+                success, content = GLib.file_get_contents(file_path)
+
+                if success:
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8")
+                        
+                    data = json.loads(content)
+                    print(f"data size: {len(data)}")
+                    
+                    for item in data:
+                        print(f"item: {item}")
+                        docs.append(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("name", "test"))
+                        card.set_subtitle(item.get("email", "test"))
+                        card.set_activatable(True)
+                        card.payload = item
+                        card.connect("activated", card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        local_items_group.add(card)
+                    
+                    # --- ACTION TAKEN HERE ---
+                    # Now that docs is populated, safely trigger your UI updates or prints:
+                    print(f"len docs inside callback: {len(docs)}")
+
+                    local_items_group.queue_resize()
+                    
+                    
+
+                else:
+                    print("GLib failed to read file contents successfully.")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+            return False # Stop the GLib idle loop from repeating this function
+        
+        # Queue the function to run as soon as the main loop is ready
+        GLib.idle_add(test_fetch)
+
+
+
 
     
     def build_local_tabs_view(self):
@@ -694,13 +1179,17 @@ class MyApp(Adw.Application):
 
         if clicked_title == "Users":
             #self.center_stack.set_visible_child_name("loading_view")
-            #
-            self.state = ""
-            self.center_stack.set_visible_child_name("loading_view")
-            """thread = threading.Thread(target=self.fetch_users)
-            thread.daemon = True
-            thread.start()"""
-            self.trigger_users_fetch_pipeline()
+            #self.trigger_users_fetch_pipeline()
+           
+            #thread = threading.Thread(target=self.test_ui)
+            #thread.daemon = True
+            #thread.start()
+            self.jam.set_name("home-jam")
+            print(f"jam-name: {self.jam.get_name()}")
+            #self.center_stack.set_visible_child_name("local_test_view")
+            #self.jam.center_stack.set_visible_child_name("local_test_view")
+            self.center_stack.set_visible_child_name("local_test_users_view")
+            
             
 
 
@@ -743,8 +1232,9 @@ class MyApp(Adw.Application):
 
     def trigger_users_fetch_pipeline(self):
         """ Re-enters loading state and spins up the network thread """
+        print("Starting background file reader thread...")
         self.center_stack.set_visible_child_name("loading_view")
-        thread = threading.Thread(target=self.fetch_users)
+        thread = threading.Thread(target=self.fetch_local_users)
         thread.daemon = True
         thread.start()
     
@@ -792,59 +1282,157 @@ class MyApp(Adw.Application):
             # Send 'None' to trigger the visual error label message on screen instead of freezing
             GLib.idle_add(self.update_users_ui, None)
 
+    def fetch_local_users(self):
+        """ Safe local file reader that unpacks GLib structures correctly """
+        import time
+        print("Initializing local storage file reader pipeline...")
+        
+        # 1. Give the main UI thread 100 milliseconds to smoothly switch to loading_view
+        time.sleep(0.1) 
+        
+        file_path = os.path.join(GLib.get_current_dir(), "users.json")
+
+        if not os.path.exists(file_path):
+            print(f"Local Storage Error: File does not exist at {file_path}")
+            GLib.idle_add(self.update_users_ui, None)
+            return None
+
+        try:
+            success, content = GLib.file_get_contents(file_path)
+
+            if success:
+                if isinstance(content, bytes):
+                    content = content.decode("utf-8")
+                    
+                data = json.loads(content)
+                
+                # Push back to the primary animation thread safely
+                GLib.idle_add(self.update_users_ui, data)
+            else:
+                print("GLib failed to read file contents successfully.")
+                GLib.idle_add(self.update_users_ui, None)
+
+        except GLib.Error as e:
+            print(f"GNOME GLib Error reading file system: {e.message}")
+            GLib.idle_add(self.update_users_ui, None)
             
+        except json.JSONDecodeError as e:
+            print(f"Syntax Error: users.json contains invalid formatting: {e}")
+            GLib.idle_add(self.update_users_ui, None)
+
+        return None
+
+
+
+    def test_ui(self):
+        print("test-ui")    
+        while (child := self.test_container.get_first_child()):
+          self.test_container.remove(child)
+        pref_group = Adw.PreferencesGroup()
+        pref_group.set_title("Registered System Test")
+        pref_group.set_description("Click any test card to view full test")
+        pref_group.set_margin_start(12)
+        pref_group.set_margin_end(12)
+        pref_group.set_margin_top(12)
+
+        lbl = Gtk.Label(label="test")
+
+        # Create a proper row widget instead of a raw Gtk.Label
+        row = Adw.ActionRow()
+        row.set_title("Test Item")
+        row.set_subtitle("Click to run or view details")
+
+        # Add the row to your group
+        pref_group.add(row)
+
+        #pref_group.add(lbl)
+
+
+        self.test_container.set_visible(True)
+        self.test_container.append(pref_group)
+        
+        # 7. Shift view right here directly on the main loop thread 
+        # Do NOT hide this call inside an nested force_stack_transition closure!
+        self.center_stack.set_visible_child_name("test_view")
+        print("Stack successfully shifted target visibility frame layer to 'test_view'")
+
+        return False  # Critical: tells GLib loop window thread to terminate track
+
+     
 
 
     def update_users_ui(self, users_list):
-        print("fetched users:", users_list)
+        """ Updates the main application window with loaded profile cards """
+        print("update_users_ui executing... Data Received:", bool(users_list))
+
+        # 1. Clear out old layout widgets entirely
         while child := self.users_container.get_first_child():
             self.users_container.remove(child)
-        #
+
+        # 2. Safety Check: Handle Empty State
         if not users_list:
             error_lbl = Gtk.Label(label="Failed to pull profile records.")
+            error_lbl.set_margin_top(24)
+            error_lbl.set_halign(Gtk.Align.CENTER)
+            error_lbl.add_css_class("dim-label")
             self.users_container.append(error_lbl)
             self.center_stack.set_visible_child_name("users_view")
-            return
-        #
+            return False
+
+        # 3. Create the Libadwaita preferences layout block
         pref_group = Adw.PreferencesGroup()
         pref_group.set_title("Registered System Users")
         pref_group.set_description("Click any user card to view full profile")
+        pref_group.set_margin_start(12)
+        pref_group.set_margin_end(12)
+        pref_group.set_margin_top(12)
 
+        # 4. Populate rows mapping directly to your provided JSON fields
         for user in users_list:
             user_card = Adw.ActionRow()
-            user_card.set_title(user.get("name", "Unknown"))
+            user_card.set_title(user.get("name", "Unknown User"))
             user_card.set_subtitle(user.get("email", "No Email"))
-            user_card.set_margin_bottom(8)
-
-            #
             user_card.set_activatable(True)
-            #
+            
+            # Safe raw payload fallback hook
             user_card.user_data_payload = user
 
-            #
+            # Decorate with standard person icon indicator
             avatar = Gtk.Image.new_from_icon_name("avatar-default-symbolic")
             user_card.add_prefix(avatar)
 
-            #
+            # Build out right side phone layout elements
             phone_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
             phone_box.set_valign(Gtk.Align.CENTER)
-            #
-            phone_icon = Gtk.Image.new_from_icon_name("")
-            phone_lbl = Gtk.Label(label=user.get("phone", "No Phone"))
+            
+            phone_icon = Gtk.Image.new_from_icon_name("call-start-symbolic") 
+            phone_lbl = Gtk.Label(label=str(user.get("phone", "No Phone")))
             phone_lbl.add_css_class("dim-label")
-            #
+            
             phone_box.append(phone_icon)
             phone_box.append(phone_lbl)
-            #
             user_card.add_suffix(phone_box)
-            #
-            user_card.connect("activated", self.on_user_card_clicked)
-            #
+            
+            # Connect to action click click event if method exists
+            if hasattr(self, 'on_user_card_clicked'):
+                user_card.connect("activated", self.on_user_card_clicked)
+                
             pref_group.add(user_card)
-            #
-            # add to screen layout and hide the loading spinner
+
+        # 5. Append group layout container back into the original connected box
         self.users_container.append(pref_group)
+
+        # 6. FORCE layout visibility states to True across the container line
+        self.users_container.set_visible(True)
+        
+        # 7. Shift view right here directly on the main loop thread 
+        # Do NOT hide this call inside an nested force_stack_transition closure!
         self.center_stack.set_visible_child_name("users_view")
+        print("Stack successfully shifted target visibility frame layer to 'users_view'")
+
+        return False  # Critical: tells GLib loop window thread to terminate track
+
+        
 
 
         
