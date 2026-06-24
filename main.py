@@ -198,6 +198,12 @@ class MyApp(Adw.Application):
         #
         self.test_items_group = Adw.PreferencesGroup()
         self.test_items = []
+        #
+        self.local_users_group = Adw.PreferencesGroup()
+        self.local_users_items = []
+        #
+        self.local_posts_group = Adw.PreferencesGroup()
+        self.local_posts_items = []
 
     
 
@@ -479,7 +485,7 @@ class MyApp(Adw.Application):
         self.build_test_view()
         self.build_test_users_view()
         self.jam.build_test_view()
-        self.build_test_posts_view()
+        self.build_test_posts_view2()
         self.build_test_todos_view()
 
         # test jasmin
@@ -655,9 +661,13 @@ class MyApp(Adw.Application):
 
         elif active_view_name == "local_test_users_view":
             print("local_test_users_view")
+            print(f"local_users_items: {self.local_users_items}")
+            self.filter_users(search_query)
 
         elif active_view_name == "local_test_posts_view":
             print("local_test_posts_view")
+            print(f"local_posts_items: {self.local_posts_items}")
+            self.filter_posts(search_query)
 
         elif active_view_name == "local_test_todos_view":
             print("local_test_todos_view")
@@ -735,6 +745,52 @@ class MyApp(Adw.Application):
                 return False
             
             self.display_test_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
+    def filter_users(self, query):
+            if not self.local_users_items:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.local_users_items:
+                name = item.get("name", "").lower()
+                email = item.get("email", "").lower()
+                #year = str(item.get("year", 0))
+                #
+                if query in name or query in email:
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_users_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
+
+    def filter_posts(self, query):
+            if not self.local_posts_items:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.local_posts_items:
+                title = item.get("title", "").lower()
+                body = item.get("body", "").lower()
+                #
+                if query in title or query in body:
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_posts_filtered_results(filtered_data)
             
            
 
@@ -942,8 +998,425 @@ class MyApp(Adw.Application):
 
             GLib.idle_add(force_stack_transition)
 
+    def display_users_filtered_results(self, filtered_data):
+            """ Force-clears the actual UI widget tree directly to wipe old data completely """
+            print(f"Executing total interface refresh for {len(filtered_data)} matching records...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication is impossible.
+            if hasattr(self, 'local_users_group') and self.local_users_group.get_parent():
+                content_box = self.local_users_group.get_parent()
+                
+                # Gather all children in the parent box (including any hidden/duplicate groups)
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.local_users_group = Adw.PreferencesGroup()
+                self.local_users_group.set_title("Test Entries")
+                content_box.append(self.local_users_group)
+
+            # -------------------------------------------------------------------------
+            # Case A: Search yielded no matches or storage is empty
+            # -------------------------------------------------------------------------
+            if not filtered_data:
+                # Re-create empty placeholder label text dynamically
+                self.empty_list_lbl = Gtk.Label(label="No recorded items match your search criteria.")
+                self.empty_list_lbl.add_css_class("dim-label")
+                self.local_users_group.add(self.empty_list_lbl)
+                self.center_stack.set_visible_child_name("local_test_users_view")
+                return
+
+            # -------------------------------------------------------------------------
+            # Case B: Matches found, draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("name"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("email"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.right_sidebar.append(body_label)
+                #
+                sidebar_group = Adw.PreferencesGroup()
+                sidebar_group.set_title("User Information")
+
+                #
+                username_row = Adw.ActionRow(title="Username", subtitle=item.get("username", "N/A"))
+                sidebar_group.add(username_row)
+                #
+                web_row = Adw.ActionRow(title="Website", subtitle=item.get("website", "N/A"))
+                sidebar_group.add(web_row)
+                #
+                company_name = item.get("company", {}).get("name", "N/A")
+                company_row = Adw.ActionRow(title="Company", subtitle=company_name)
+                sidebar_group.add(company_row)
+
+                #
+                city_name = item.get("address", {}).get("city", "N/A")
+                city_row = Adw.ActionRow(title="City", subtitle=city_name)
+                sidebar_group.add(city_row)
+
+                # inject the completed data card into right-sidebar
+                self.right_sidebar.append(sidebar_group)
+                #
+                sidebar_group.set_margin_start(8)
+                sidebar_group.set_margin_end(8)
 
 
+            for item in filtered_data:
+                row = Adw.ActionRow()
+                row.set_title(item.get("name", "Unknown Name"))
+                row.set_subtitle(item.get("email", "No Author Email"))
+                #row.set_subtitle(str(item.get("year", "0000")))
+                row.set_margin_bottom(8)
+                
+                row.payload = item
+
+                row.set_activatable(True)
+                row.payload = item
+                row.connect("activated", self.user_card_clicked)
+
+
+                
+
+                # Include a clean package icon indicator to the left
+                card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
+                row.add_prefix(card_icon)
+                
+                # Append card row item straight to your freshly cleared group field
+                self.local_users_group.add(row)
+
+            # Force layout refresh and switch focus state
+            self.local_users_group.set_visible(True)
+            
+            def force_stack_transition():
+                self.center_stack.set_visible_child_name("local_test_users_view")
+                return False
+
+            GLib.idle_add(force_stack_transition)
+
+    def display_posts_filtered_results(self, filtered_data):
+            """ Force-clears the actual UI widget tree directly to wipe old data completely """
+            print(f"Executing total interface refresh for {len(filtered_data)} matching records...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication is impossible.
+            if hasattr(self, 'local_posts_group') and self.local_posts_group.get_parent():
+                content_box = self.local_posts_group.get_parent()
+                
+                # Gather all children in the parent box (including any hidden/duplicate groups)
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.local_posts_group = Adw.PreferencesGroup()
+                self.local_posts_group.set_title("Posts Entries")
+                content_box.append(self.local_posts_group)
+
+            # -------------------------------------------------------------------------
+            # Case A: Search yielded no matches or storage is empty
+            # -------------------------------------------------------------------------
+            if not filtered_data:
+                # Re-create empty placeholder label text dynamically
+                self.empty_list_lbl = Gtk.Label(label="No recorded items match your search criteria.")
+                self.empty_list_lbl.add_css_class("dim-label")
+                self.local_posts_group.add(self.empty_list_lbl)
+                self.center_stack.set_visible_child_name("local_test_users_view")
+                return
+
+            # -------------------------------------------------------------------------
+            # Case B: Matches found, draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+
+           # Context-isolated click row callback handler
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+                item = row.payload
+
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                
+                main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+                main_box.set_margin_start(8)
+                main_box.set_margin_end(8)
+                main_box.set_vexpand(True)
+
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") 
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                title_label.set_wrap(True)
+                main_box.append(title_label)
+                
+                body_label = Gtk.Label(label=item.get("body"))
+                body_label.add_css_class("dim-label") 
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                main_box.append(body_label)
+                
+                separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+                separator.set_margin_bottom(12)
+                main_box.append(separator)
+                
+                comments_label = Gtk.Label(label="Comments")
+                comments_label.add_css_class("heading")
+                comments_label.set_halign(Gtk.Align.START)
+                comments_label.set_margin_bottom(8)
+                main_box.append(comments_label)
+
+                self.build_test_comments_by_postId_view(main_box, item.get("id"))
+
+                self.right_sidebar.append(main_box)
+                self.right_sidebar.set_vexpand(True)
+                self.right_sidebar.set_hexpand(False)
+
+            # Thread-safe function to build individual rows onto the UI loop
+            # Thread-safe function to build individual rows onto the UI loop
+            def populate_ui_cards(posts_data):
+                print("Populating UI cards cleanly...")
+
+                # =========================================================================
+                # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+                # =========================================================================
+                # This climbs out of your group to the parent container box, and completely 
+                # flushes every single layout element on screen so duplication or warnings are impossible.
+                if hasattr(self, 'local_posts_group') and self.local_posts_group.get_parent():
+                    content_box = self.local_posts_group.get_parent()
+                    
+                    # Gather all children in the parent box safely
+                    box_children = []
+                    child = content_box.get_first_child()
+                    while child:
+                        box_children.append(child)
+                        child = child.get_next_sibling()
+                        
+                    # Wipe the slate entirely blank
+                    for box_child in box_children:
+                        content_box.remove(box_child)
+                        
+                    # Recreate a fresh, clean preferences group container on the empty box canvas
+                    self.local_posts_group = Adw.PreferencesGroup()
+                    self.local_posts_group.set_title("Posts#")
+                    content_box.append(self.local_posts_group)
+
+                # -------------------------------------------------------------------------
+                # 2. POPULATE CARDS: Draw brand-new ActionRow cards on the clean layout
+                # -------------------------------------------------------------------------
+                for item in posts_data:
+                    self.local_posts_items.append(item)
+                    card = Adw.ActionRow()
+                    card.set_title(item.get("title", "test"))
+                    card.set_subtitle(item.get("body", "test"))
+                    card.set_activatable(True)
+                    
+                    # Bind item payload context directly to row object
+                    card.payload = item
+                    card.connect("activated", card_clicked)
+                    
+                    card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                    self.local_posts_group.add(card)
+                
+                # Force layout refresh and switch focus state
+                self.local_posts_group.set_visible(True)
+                self.local_posts_group.queue_resize()
+                return False
+
+
+
+            populate_ui_cards(filtered_data)
+
+            """for item in filtered_data:
+                row = Adw.ActionRow()
+                row.set_title(item.get("title", "Unknown Title"))
+                row.set_subtitle(item.get("body", "No Author Body"))
+                #row.set_subtitle(str(item.get("year", "0000")))
+                row.set_margin_bottom(8)
+                
+                row.payload = item
+
+                row.set_activatable(True)
+                row.payload = item
+                #row.connect("activated", self.post_card_clicked)
+
+
+                
+
+                # Include a clean package icon indicator to the left
+                card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
+                row.add_prefix(card_icon)
+                
+                # Append card row item straight to your freshly cleared group field
+                self.local_posts_group.add(row)"""
+
+            # Force layout refresh and switch focus state
+            self.local_posts_group.set_visible(True)
+            
+            def force_stack_transition():
+                self.center_stack.set_visible_child_name("local_test_posts_view")
+                return False
+
+            GLib.idle_add(force_stack_transition)
+
+    
+
+    # cards clicked
+
+
+    def user_card_clicked(self, row):
+                print(f"user_card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("name"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("email"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.right_sidebar.append(body_label)
+                #
+                sidebar_group = Adw.PreferencesGroup()
+                sidebar_group.set_title("User Information")
+
+                #
+                username_row = Adw.ActionRow(title="Username", subtitle=item.get("username", "N/A"))
+                sidebar_group.add(username_row)
+                #
+                web_row = Adw.ActionRow(title="Website", subtitle=item.get("website", "N/A"))
+                sidebar_group.add(web_row)
+                #
+                company_name = item.get("company", {}).get("name", "N/A")
+                company_row = Adw.ActionRow(title="Company", subtitle=company_name)
+                sidebar_group.add(company_row)
+
+                #
+                city_name = item.get("address", {}).get("city", "N/A")
+                city_row = Adw.ActionRow(title="City", subtitle=city_name)
+                sidebar_group.add(city_row)
+
+                # inject the completed data card into right-sidebar
+                self.right_sidebar.append(sidebar_group)
+                #
+                sidebar_group.set_margin_start(8)
+                sidebar_group.set_margin_end(8)
+
+    def post_card_clicked(self, row):
+                print(f"post_card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                # Create a container for all content (to maintain proper layout)
+                main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+                main_box.set_margin_start(8)
+                main_box.set_margin_end(8)
+                main_box.set_vexpand(True)  # Allow the main box to expand vertically
+
+                #
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                #self.right_sidebar.append(title_label)
+                main_box.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("body"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                #self.right_sidebar.append(body_label)
+                main_box.append(body_label)
+                # Add a separator
+                separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+                separator.set_margin_bottom(12)
+                main_box.append(separator)
+                # Add comments section with scrolling
+                comments_label = Gtk.Label(label="Comments")
+                comments_label.add_css_class("heading")
+                comments_label.set_halign(Gtk.Align.START)
+                comments_label.set_margin_bottom(8)
+                main_box.append(comments_label)
+
+                # calling fetch comments
+                self.build_test_comments_by_postId_view(main_box, item.get("id"))
+
+                # Add everything to the sidebar
+                self.right_sidebar.append(main_box)
+                self.right_sidebar.set_vexpand(True)
+                self.right_sidebar.set_hexpand(False)  # Keep horizontal expansion off
+
+
+    # builds
 
     def build_test_view(self):
         #
@@ -1119,12 +1592,12 @@ class MyApp(Adw.Application):
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
 
-        local_items_group = Adw.PreferencesGroup()
-        local_items_group.set_title("Users")
+        #self.local_users_group = Adw.PreferencesGroup()
+        self.local_users_group.set_title("Users")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(local_items_group)
+        content_box.append(self.local_users_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
         
@@ -1213,21 +1686,22 @@ class MyApp(Adw.Application):
                     
                     for item in data:
                         print(f"item: {item}")
-                        docs.append(item)
+                        #docs.append(item)
+                        self.local_users_items.append(item)
                         card = Adw.ActionRow()
                         card.set_title(item.get("name", "test"))
                         card.set_subtitle(item.get("email", "test"))
                         card.set_activatable(True)
                         card.payload = item
-                        card.connect("activated", card_clicked)
+                        card.connect("activated", self.user_card_clicked)
                         card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_items_group.add(card)
+                        self.local_users_group.add(card)
                     
                     # --- ACTION TAKEN HERE ---
                     # Now that docs is populated, safely trigger your UI updates or prints:
-                    print(f"len docs inside callback: {len(docs)}")
+                    #print(f"len docs inside callback: {len(docs)}")
 
-                    local_items_group.queue_resize()
+                    self.local_users_group.queue_resize()
                     
                     
 
@@ -1243,11 +1717,13 @@ class MyApp(Adw.Application):
 
     def build_test_posts_view(self):
         #
+        print("build_test_posts_view----------------------------------")
+        #
         local_wrapper = Adw.ToolbarView()
 
         local_action_bar = Gtk.HeaderBar()
         local_action_bar.set_show_title_buttons(False) 
-        local_title = Gtk.Label(label="Users Management")
+        local_title = Gtk.Label(label="Posts Management#")
         local_title.add_css_class("heading")
         local_action_bar.set_title_widget(local_title)
 
@@ -1263,26 +1739,35 @@ class MyApp(Adw.Application):
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
 
-        local_items_group = Adw.PreferencesGroup()
-        local_items_group.set_title("Users")
+        local_posts_group = Adw.PreferencesGroup()
+        local_posts_group.set_title("Posts#")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(local_items_group)
+        content_box.append(local_posts_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
         
         # Mount layout to stack structure immediately 
         self.center_stack.add_named(local_wrapper, "local_test_posts_view")
 
-
-        docs = []   
-
+        card = Adw.ActionRow()
+        card.set_title("test")
+        card.set_subtitle("test")
+        card.set_activatable(True)
+        #card.payload = item
+        #card.connect("activated", card_clicked)
+        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+        local_posts_group.add(card)
+        
 
         def test_fetch():
-            print("test_fetch")
+            print("test_fetch posts#")
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+
+
+           
             
             file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
 
@@ -1290,7 +1775,7 @@ class MyApp(Adw.Application):
                 print("no json file")
                 return False
             
-            print("json file exists!")
+            print("json file exists posts!")
 
             def card_clicked(row):
                 print(f"card_clicked: {row.payload}")
@@ -1356,25 +1841,31 @@ class MyApp(Adw.Application):
                         content = content.decode("utf-8")
                         
                     data = json.loads(content)
-                    print(f"data size: {len(data)}")
+                    print(f"data size posts#: {len(data)}")
+                    print(f"data posts#: {data(0)}")
+
+                    for item in data:
+                        print(f"#item post>>>>>># {item}")
                     
                     for item in data:
-                        print(f"item: {item}")
-                        docs.append(item)
+                        print(f"item post#: {item}")
+                        print("------------------------")
+                        #docs.append(item)
+                        #self.local_posts_items(item)
                         card = Adw.ActionRow()
                         card.set_title(item.get("title", "test"))
                         card.set_subtitle(item.get("body", "test"))
-                        card.set_activatable(True)
-                        card.payload = item
-                        card.connect("activated", card_clicked)
+                        #card.set_activatable(True)
+                        #card.payload = item
+                        #card.connect("activated", card_clicked)
                         card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_items_group.add(card)
+                        local_posts_group.add(card)
                     
                     # --- ACTION TAKEN HERE ---
                     # Now that docs is populated, safely trigger your UI updates or prints:
-                    print(f"len docs inside callback: {len(docs)}")
+                    #print(f"len docs inside callback: {len(docs)}")
 
-                    local_items_group.queue_resize()
+                    local_posts_group.queue_resize()
                     
                     
 
@@ -1387,6 +1878,177 @@ class MyApp(Adw.Application):
         
         # Queue the function to run as soon as the main loop is ready
         GLib.idle_add(test_fetch)
+
+
+    def build_test_posts_view2(self):
+        print("build_test_posts_view2----------------------------------")
+        
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False) 
+        local_title = Gtk.Label(label="Posts Management#")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+
+        local_wrapper.add_top_bar(local_action_bar)
+
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        # Make local_posts_group an instance variable so UI callbacks can access it reliably
+        self.local_posts_group = Adw.PreferencesGroup()
+        self.local_posts_group.set_title("Posts#")
+
+        content_box.append(self.local_posts_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+        
+        self.center_stack.add_named(local_wrapper, "local_test_posts_view")
+
+        # Context-isolated click row callback handler
+        def card_clicked(row):
+            print(f"card_clicked: {row.payload}")
+            item = row.payload
+
+            while child := self.right_sidebar.get_first_child():
+                self.right_sidebar.remove(child)
+            
+            self.right_sidebar.set_margin_top(16)
+            self.right_sidebar.set_margin_start(12)
+            self.right_sidebar.set_margin_end(12)
+            self.right_sidebar.set_margin_bottom(16)
+            
+            main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+            main_box.set_margin_start(8)
+            main_box.set_margin_end(8)
+            main_box.set_vexpand(True)
+
+            title_label = Gtk.Label(label=item.get("title"))
+            title_label.add_css_class("title-1") 
+            title_label.set_margin_bottom(12)
+            title_label.set_halign(Gtk.Align.START)
+            title_label.set_wrap(True)
+            main_box.append(title_label)
+            
+            body_label = Gtk.Label(label=item.get("body"))
+            body_label.add_css_class("dim-label") 
+            body_label.set_margin_bottom(24)
+            body_label.set_halign(Gtk.Align.START)
+            body_label.set_wrap(True)
+            main_box.append(body_label)
+            
+            separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+            separator.set_margin_bottom(12)
+            main_box.append(separator)
+            
+            comments_label = Gtk.Label(label="Comments")
+            comments_label.add_css_class("heading")
+            comments_label.set_halign(Gtk.Align.START)
+            comments_label.set_margin_bottom(8)
+            main_box.append(comments_label)
+
+            self.build_test_comments_by_postId_view(main_box, item.get("id"))
+
+            self.right_sidebar.append(main_box)
+            self.right_sidebar.set_vexpand(True)
+            self.right_sidebar.set_hexpand(False)
+
+        # Thread-safe function to build individual rows onto the UI loop
+        # Thread-safe function to build individual rows onto the UI loop
+        def populate_ui_cards(posts_data):
+            print("Populating UI cards cleanly...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication or warnings are impossible.
+            if hasattr(self, 'local_posts_group') and self.local_posts_group.get_parent():
+                content_box = self.local_posts_group.get_parent()
+                
+                # Gather all children in the parent box safely
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.local_posts_group = Adw.PreferencesGroup()
+                self.local_posts_group.set_title("Posts#")
+                content_box.append(self.local_posts_group)
+
+            # -------------------------------------------------------------------------
+            # 2. POPULATE CARDS: Draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+            for item in posts_data:
+                self.local_posts_items.append(item)
+                card = Adw.ActionRow()
+                card.set_title(item.get("title", "test"))
+                card.set_subtitle(item.get("body", "test"))
+                card.set_activatable(True)
+                
+                # Bind item payload context directly to row object
+                card.payload = item
+                card.connect("activated", card_clicked)
+                
+                card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                self.local_posts_group.add(card)
+            
+            # Force layout refresh and switch focus state
+            self.local_posts_group.set_visible(True)
+            self.local_posts_group.queue_resize()
+            return False
+
+        # Background processing worker thread function
+        def test_fetch_worker():
+            print("test_fetch worker running in thread background...")
+            import threading
+            import time
+            
+            # Safe non-blocking delay inside thread
+            time.sleep(0.1)  
+            
+            file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
+
+            if not os.path.exists(file_path):
+                print("no json file found")
+                return
+
+            try:
+                success, content = GLib.file_get_contents(file_path)
+                if success:
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8")
+                        
+                    data = json.loads(content)
+                    print(f"data size posts#: {len(data)}")
+                    
+                    # FIX: Corrected list index bracket notation syntax [0]
+                    if data:
+                        print(f"data posts[0]#: {data[0]}")
+
+                    # Hand data over to the main graphics thread safely for rendering
+                    GLib.idle_add(populate_ui_cards, data)
+                else:
+                    print("GLib failed to read file contents.")
+            except Exception as e:
+                print(f"THREAD ERROR: {e}")
+
+        # Fire off the data fetch routine inside a detached background worker thread
+        worker_thread = threading.Thread(target=test_fetch_worker, daemon=True)
+        worker_thread.start()
 
 
     def build_test_comments_by_postId_view(self, parent_container, postId):
@@ -2111,8 +2773,8 @@ class MyApp(Adw.Application):
             #thread = threading.Thread(target=self.test_ui)
             #thread.daemon = True
             #thread.start()
-            self.jam.set_name("home-jam")
-            print(f"jam-name: {self.jam.get_name()}")
+            #self.jam.set_name("home-jam")
+            #print(f"jam-name: {self.jam.get_name()}")
             #self.center_stack.set_visible_child_name("local_test_view")
             #self.jam.center_stack.set_visible_child_name("local_test_view")
             self.center_stack.set_visible_child_name("local_test_users_view")
@@ -2137,6 +2799,7 @@ class MyApp(Adw.Application):
         
         elif clicked_title == "Posts":
             print("Posts item")
+            #self.info_label.set_text(f"Selected Section: {clicked_title} #")
             #self.center_stack.set_visible_child_name("loading_view")
             self.center_stack.set_visible_child_name("local_test_posts_view")
 
