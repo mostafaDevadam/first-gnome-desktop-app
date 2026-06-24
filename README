@@ -1,0 +1,10 @@
+
+
+It's simple desktop using gnome under linux ubuntu
+
+
+install packages
+sudo apt gnome-builder 
+or
+flatpak install flathub org.gnome.Builder
+

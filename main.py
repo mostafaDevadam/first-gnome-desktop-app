@@ -457,6 +457,7 @@ class MyApp(Adw.Application):
         self.build_test_view()
         self.build_test_users_view()
         #self.jam.build_test_view()
+        self.build_test_posts_view()
 
         # test jasmin
         j = self.jam.get_name()
@@ -748,8 +749,6 @@ class MyApp(Adw.Application):
 
     def build_test_users_view(self):
         #
-        print(f"state#: {self.state}")
-        #
         local_wrapper = Adw.ToolbarView()
 
         local_action_bar = Gtk.HeaderBar()
@@ -825,7 +824,6 @@ class MyApp(Adw.Application):
                 body_label.set_halign(Gtk.Align.START)
                 body_label.set_wrap(True)
                 self.right_sidebar.append(body_label)
-
                 #
                 sidebar_group = Adw.PreferencesGroup()
                 sidebar_group.set_title("User Information")
@@ -851,6 +849,7 @@ class MyApp(Adw.Application):
                 #
                 sidebar_group.set_margin_start(8)
                 sidebar_group.set_margin_end(8)
+
 
             try:
                 success, content = GLib.file_get_contents(file_path)
@@ -892,7 +891,129 @@ class MyApp(Adw.Application):
         # Queue the function to run as soon as the main loop is ready
         GLib.idle_add(test_fetch)
 
+    def build_test_posts_view(self):
+        #
+        local_wrapper = Adw.ToolbarView()
 
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False) 
+        local_title = Gtk.Label(label="Users Management")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+
+        local_wrapper.add_top_bar(local_action_bar)
+
+
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("Users")
+
+
+        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
+        content_box.append(local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+        
+        # Mount layout to stack structure immediately 
+        self.center_stack.add_named(local_wrapper, "local_test_posts_view")
+
+
+        docs = []   
+
+
+        def test_fetch():
+            print("test_fetch")
+            import time
+            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+            
+            file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
+
+            if not os.path.exists(file_path):
+                print("no json file")
+                return False
+            
+            print("json file exists!")
+
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("body"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.right_sidebar.append(body_label)
+
+                
+
+            try:
+                success, content = GLib.file_get_contents(file_path)
+
+                if success:
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8")
+                        
+                    data = json.loads(content)
+                    print(f"data size: {len(data)}")
+                    
+                    for item in data:
+                        print(f"item: {item}")
+                        docs.append(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("title", "test"))
+                        card.set_subtitle(item.get("body", "test"))
+                        card.set_activatable(True)
+                        card.payload = item
+                        card.connect("activated", card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        local_items_group.add(card)
+                    
+                    # --- ACTION TAKEN HERE ---
+                    # Now that docs is populated, safely trigger your UI updates or prints:
+                    print(f"len docs inside callback: {len(docs)}")
+
+                    local_items_group.queue_resize()
+                    
+                    
+
+                else:
+                    print("GLib failed to read file contents successfully.")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+            return False # Stop the GLib idle loop from repeating this function
+        
+        # Queue the function to run as soon as the main loop is ready
+        GLib.idle_add(test_fetch)
+
+
+    def build_test_comments_by_postId_view(self):
+       print("build_test_comments_by_postId_view")
 
 
     
@@ -1210,15 +1331,10 @@ class MyApp(Adw.Application):
         
         elif clicked_title == "Posts":
             print("Posts item")
-            # self.info_label.set_text(f"Selected Section: {clicked_title}")
-            # fetch posts
-            self.state = ""
-            self.center_stack.set_visible_child_name("loading_view")
-            """thread = threading.Thread(target=self.fetch_posts)
-            thread.daemon = True
-            thread.start()"""
-            #self.fetch_posts()
-            self.trigger_posts_fetch_pipeline()
+            #self.center_stack.set_visible_child_name("loading_view")
+            self.center_stack.set_visible_child_name("local_test_posts_view")
+            
+        
 
 
         else:
