@@ -195,6 +195,9 @@ class MyApp(Adw.Application):
         self.data_file_path = os.path.join(curr_dir, "local_data.json")
         self.disk_items_storage = self.load_data_from_disk()
         self.disk_items_group = Adw.PreferencesGroup()
+        #
+        self.test_items_group = Adw.PreferencesGroup()
+        self.test_items = []
 
     
 
@@ -321,6 +324,7 @@ class MyApp(Adw.Application):
         list_box.add_css_class("boxed-list")
 
         home_items = [
+            ("Test", "folder-download-symbolic"),
             ("Local", "folder-download-symbolic"),
             ("Storage", "drive-harddisk-symbolic"),
             ("Users", "avatar-default-symbolic"),
@@ -474,7 +478,7 @@ class MyApp(Adw.Application):
         self.center_stack.add_named(scroll_win, "test_view")"""
         self.build_test_view()
         self.build_test_users_view()
-        #self.jam.build_test_view()
+        self.jam.build_test_view()
         self.build_test_posts_view()
         self.build_test_todos_view()
 
@@ -658,6 +662,12 @@ class MyApp(Adw.Application):
         elif active_view_name == "local_test_todos_view":
             print("local_test_todos_view")
 
+        elif active_view_name == "local_test_view":
+            print("local_test_view")
+            print(f"test_items: {self.test_items}")
+            self.filter_test_items(search_query)
+
+
 
 
             
@@ -705,6 +715,31 @@ class MyApp(Adw.Application):
            
 
             print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
+
+    def filter_test_items(self, query):
+            if not self.test_items:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.test_items:
+                title = item.get("title", "").lower()
+                author = item.get("author", "").lower()
+                year = str(item.get("year", 0))
+                #
+                if query in title or query in author or query in year:
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_test_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
 
 
 
@@ -840,6 +875,72 @@ class MyApp(Adw.Application):
 
             GLib.idle_add(force_stack_transition)
 
+    def display_test_filtered_results(self, filtered_data):
+            """ Force-clears the actual UI widget tree directly to wipe old data completely """
+            print(f"Executing total interface refresh for {len(filtered_data)} matching records...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication is impossible.
+            if hasattr(self, 'test_items_group') and self.test_items_group.get_parent():
+                content_box = self.test_items_group.get_parent()
+                
+                # Gather all children in the parent box (including any hidden/duplicate groups)
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.test_items_group = Adw.PreferencesGroup()
+                self.test_items_group.set_title("Test Entries")
+                content_box.append(self.test_items_group)
+
+            # -------------------------------------------------------------------------
+            # Case A: Search yielded no matches or storage is empty
+            # -------------------------------------------------------------------------
+            if not filtered_data:
+                # Re-create empty placeholder label text dynamically
+                self.empty_list_lbl = Gtk.Label(label="No recorded items match your search criteria.")
+                self.empty_list_lbl.add_css_class("dim-label")
+                self.test_items_group.add(self.empty_list_lbl)
+                self.center_stack.set_visible_child_name("disk_view")
+                return
+
+            # -------------------------------------------------------------------------
+            # Case B: Matches found, draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+            for item in filtered_data:
+                row = Adw.ActionRow()
+                row.set_title(item.get("title", "Unknown Title"))
+                row.set_subtitle(item.get("author", "No Author Available"))
+                row.set_subtitle(str(item.get("year", "0000")))
+                row.set_margin_bottom(8)
+                
+                row.user_data_payload = item
+
+                # Include a clean package icon indicator to the left
+                card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
+                row.add_prefix(card_icon)
+                
+                # Append card row item straight to your freshly cleared group field
+                self.test_items_group.add(row)
+
+            # Force layout refresh and switch focus state
+            self.test_items_group.set_visible(True)
+            
+            def force_stack_transition():
+                self.center_stack.set_visible_child_name("local_test_view")
+                return False
+
+            GLib.idle_add(force_stack_transition)
 
 
 
@@ -868,12 +969,12 @@ class MyApp(Adw.Application):
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
 
-        local_items_group = Adw.PreferencesGroup()
-        local_items_group.set_title("test ui")
+        #self.test_items_group = Adw.PreferencesGroup()
+        self.test_items_group.set_title("test ui")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(local_items_group)
+        content_box.append(self.test_items_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
         
@@ -881,7 +982,7 @@ class MyApp(Adw.Application):
         self.center_stack.add_named(local_wrapper, "local_test_view")
 
 
-        docs = []   
+        #docs = []   
 
 
         def test_fetch():
@@ -923,6 +1024,14 @@ class MyApp(Adw.Application):
                 body_label.set_halign(Gtk.Align.START)
                 body_label.set_wrap(True)
                 self.right_sidebar.append(body_label)
+                #
+                print(f"item year: {item.get("year")}")
+                year_label = Gtk.Label(label=str(item.get("year", 0)))
+                year_label.add_css_class("dim-label") # built-in font bold
+                year_label.set_margin_bottom(24)
+                year_label.set_halign(Gtk.Align.START)
+                year_label.set_wrap(True)
+                self.right_sidebar.append(year_label)
                 #sidebar_group = Adw.PreferencesGroup()
                 #sidebar_group.set_title("User Information")
 
@@ -945,21 +1054,23 @@ class MyApp(Adw.Application):
                     
                     for item in data:
                         print(f"item: {item}")
-                        docs.append(item)
+                        #docs.append(item)
+                        self.test_items.append(item)
                         card = Adw.ActionRow()
                         card.set_title(item.get("title", "test"))
                         card.set_subtitle(item.get("author", "test"))
+                        card.set_subtitle(str(item.get("year", 0)))
                         card.set_activatable(True)
                         card.payload = item
                         card.connect("activated", card_clicked)
                         card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_items_group.add(card)
+                        self.test_items_group.add(card)
                     
                     # --- ACTION TAKEN HERE ---
                     # Now that docs is populated, safely trigger your UI updates or prints:
-                    print(f"len docs inside callback: {len(docs)}")
+                    #print(f"len docs inside callback: {len(docs)}")
 
-                    local_items_group.queue_resize()
+                    self.test_items_group.queue_resize()
                     
                     
 
@@ -1990,6 +2101,9 @@ class MyApp(Adw.Application):
     def on_home_item_clicked(self, row):
         clicked_title = row.get_title()
 
+
+
+
         if clicked_title == "Users":
             #self.center_stack.set_visible_child_name("loading_view")
             #self.trigger_users_fetch_pipeline()
@@ -2030,6 +2144,10 @@ class MyApp(Adw.Application):
             print("Todos item")
             #self.center_stack.set_visible_child_name("loading_view")
             self.center_stack.set_visible_child_name("local_test_todos_view")
+
+        elif clicked_title == "Test":
+            print("Test item")
+            self.center_stack.set_visible_child_name("local_test_view")
             
         
 
