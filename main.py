@@ -647,7 +647,6 @@ class MyApp(Adw.Application):
             for item in self.local_items_storage:
                 name = item.get("name", "").lower()
                 description = item.get("description", "").lower()
-
                 #
                 if search_query in name or search_query in description:
                     filtered_data.append(item)
@@ -661,6 +660,19 @@ class MyApp(Adw.Application):
            
 
             print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+        elif active_view_name == "disk_view":
+             print("disk_view")
+        
+
+        elif active_view_name == "local_test_users_view":
+            print("local_test_users_view")
+
+        elif active_view_name == "local_test_posts_view":
+            print("local_test_posts_view")
+
+        elif active_view_name == "local_test_todos_view":
+            print("local_test_todos_view")
+
 
 
             
