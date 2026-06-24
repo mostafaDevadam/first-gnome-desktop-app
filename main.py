@@ -204,6 +204,9 @@ class MyApp(Adw.Application):
         #
         self.local_posts_group = Adw.PreferencesGroup()
         self.local_posts_items = []
+        #
+        self.local_todos_group = Adw.PreferencesGroup()
+        self.local_todos_items = []
 
     
 
@@ -671,6 +674,8 @@ class MyApp(Adw.Application):
 
         elif active_view_name == "local_test_todos_view":
             print("local_test_todos_view")
+            print(f"local_todos_items: {self.local_todos_items}")
+            self.filter_todos(search_query)
 
         elif active_view_name == "local_test_view":
             print("local_test_view")
@@ -791,6 +796,28 @@ class MyApp(Adw.Application):
                 return False
             
             self.display_posts_filtered_results(filtered_data)
+            
+           
+
+            print(f"Memory filter match loop complete, Rendering {len(filtered_data)} matches")
+
+    def filter_todos(self, query):
+            if not self.local_todos_items:
+                print("Cannot search because no data!")
+                return
+            filtered_data = []
+            for item in self.local_todos_items:
+                title = item.get("title", "").lower()
+                
+                #
+                if query in title :
+                    filtered_data.append(item)
+
+            
+            if not filtered_data:
+                return False
+            
+            self.display_todos_filtered_results(filtered_data)
             
            
 
@@ -1304,7 +1331,97 @@ class MyApp(Adw.Application):
 
             GLib.idle_add(force_stack_transition)
 
-    
+    def display_todos_filtered_results(self, filtered_data):
+            """ Force-clears the actual UI widget tree directly to wipe old data completely """
+            print(f"Executing total interface refresh for {len(filtered_data)} matching records...")
+
+            # =========================================================================
+            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
+            # =========================================================================
+            # This climbs out of your group to the parent container box, and completely 
+            # flushes every single layout element on screen so duplication is impossible.
+            if hasattr(self, 'local_todos_group') and self.local_todos_group.get_parent():
+                content_box = self.local_todos_group.get_parent()
+                
+                # Gather all children in the parent box (including any hidden/duplicate groups)
+                box_children = []
+                child = content_box.get_first_child()
+                while child:
+                    box_children.append(child)
+                    child = child.get_next_sibling()
+                    
+                # Wipe the slate entirely blank
+                for box_child in box_children:
+                    content_box.remove(box_child)
+                    
+                # Recreate a fresh, clean preferences group container on the empty box canvas
+                self.local_todos_group = Adw.PreferencesGroup()
+                self.local_todos_group.set_title("Todos Entries")
+                content_box.append(self.local_todos_group)
+
+            # -------------------------------------------------------------------------
+            # Case A: Search yielded no matches or storage is empty
+            # -------------------------------------------------------------------------
+            if not filtered_data:
+                # Re-create empty placeholder label text dynamically
+                self.empty_list_lbl = Gtk.Label(label="No recorded items match your search criteria.")
+                self.empty_list_lbl.add_css_class("dim-label")
+                self.local_todos_group.add(self.empty_list_lbl)
+                self.center_stack.set_visible_child_name("local_test_todos_view")
+                return
+
+            # -------------------------------------------------------------------------
+            # Case B: Matches found, draw brand-new ActionRow cards on the clean layout
+            # -------------------------------------------------------------------------
+
+            def card_clicked(row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.right_sidebar.get_first_child():
+                    self.right_sidebar.remove(child)
+                #
+                self.right_sidebar.set_margin_top(16)
+                self.right_sidebar.set_margin_start(12)
+                self.right_sidebar.set_margin_end(12)
+                self.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.right_sidebar.append(title_label)
+                #
+
+
+            for item in filtered_data:
+                row = Adw.ActionRow()
+                row.set_title(item.get("title", "Unknown Title"))
+                #row.set_subtitle(item.get("author", "No Author Available"))
+                #row.set_subtitle(str(item.get("year", "0000")))
+                row.set_margin_bottom(8)
+                
+                row.payload = item
+                row.set_activatable(True)
+                row.connect("activated", card_clicked)
+
+                # Include a clean package icon indicator to the left
+                card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
+                row.add_prefix(card_icon)
+                
+                # Append card row item straight to your freshly cleared group field
+                self.local_todos_group.add(row)
+
+            # Force layout refresh and switch focus state
+            self.local_todos_group.set_visible(True)
+            
+            def force_stack_transition():
+                self.center_stack.set_visible_child_name("local_test_todos_view")
+                return False
+
+            GLib.idle_add(force_stack_transition)
 
     # cards clicked
 
@@ -2319,12 +2436,12 @@ class MyApp(Adw.Application):
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
 
-        local_items_group = Adw.PreferencesGroup()
-        local_items_group.set_title("test ui")
+        self.local_todos_group = Adw.PreferencesGroup()
+        self.local_todos_group .set_title("test ui")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(local_items_group)
+        content_box.append(self.local_todos_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
         
@@ -2332,7 +2449,7 @@ class MyApp(Adw.Application):
         self.center_stack.add_named(local_wrapper, "local_test_todos_view")
 
 
-        docs = []   
+        
 
 
         def test_fetch():
@@ -2370,9 +2487,6 @@ class MyApp(Adw.Application):
                 #
                 
 
-               
-               
-
             try:
                 success, content = GLib.file_get_contents(file_path)
 
@@ -2385,7 +2499,7 @@ class MyApp(Adw.Application):
                     
                     for item in data:
                         print(f"item: {item}")
-                        docs.append(item)
+                        self.local_todos_items.append(item)
                         card = Adw.ActionRow()
                         card.set_title(item.get("title", "test"))
                         #card.set_subtitle(item.get("author", "test"))
@@ -2393,13 +2507,12 @@ class MyApp(Adw.Application):
                         card.payload = item
                         card.connect("activated", card_clicked)
                         card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_items_group.add(card)
+                        self.local_todos_group.add(card)
                     
-                    # --- ACTION TAKEN HERE ---
-                    # Now that docs is populated, safely trigger your UI updates or prints:
-                    print(f"len docs inside callback: {len(docs)}")
+                    
+                    
 
-                    local_items_group.queue_resize()
+                    self.local_todos_group.queue_resize()
                     
                     
 
