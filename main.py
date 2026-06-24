@@ -172,6 +172,99 @@ class Jasmin():
            
 
 
+# i18n
+
+
+class I18n():
+        
+    def __init__(self):
+                # 1. Define your active language track string
+                self.current_lang = "en"  # Switch this to "en", "ar", etc.
+
+                # 2. Build your translation mapping dictionary right inside code memory
+                self.translations = {
+                                "en": {
+                                    "posts": "Posts",
+                                    "posts_mgmt": "Posts Management",
+                                    "add_new": "Add New One",
+                                    "enter_name": "Enter name...",
+                                    "no_items": "No items recorded yet.",
+                                    "tab_home": "Home",
+                                    "tab_settings": "Settings",
+                                    "tab_profile" : "Profile",
+                                    "item_test": "Test",
+                                    "item_local": "Local",
+                                    "item_storage": "Storage",
+                                    "item_users": "Users",
+                                    "item_posts": "Posts",   # Pure English value mapping
+                                    "item_todos": "Todos",
+                                    "gnome_app": "My Gnome App",
+                                    "search_placeholder": "Search records...",
+                                    "local_manager": "Local List Manager",
+                                    "btn_add": "Add",
+                                    "popover_add_title": "Add New One",
+                                    "input_name_ph": "Enter name...",
+                                    "input_desc_ph": "Enter description",
+                                    "btn_submit": "Submit",
+                                    "group_title": "Stored Local Entries",
+                                    "empty_list_text": "No items recorded yet. click 'Add' above to build a list.",
+                                    "group_disk_title": "Stored Data in Disk with Entries",
+                                    "disk_manager": "Disk List Manager"
+                              
+                              
+                              
+                               },
+                                "ar": {  # Matches your custom 'self.current_lang = "ar"' target
+                                    "posts": "المنشورات",
+                                    "posts_mgmt": "إدارة المنشورات",
+                                    "add_new": "إضافة عنصر جديد",
+                                    "enter_name": "أدخل الاسم...",
+                                    "no_items": "لم يتم تسجيل أي عناصر بعد.",
+                                    "tab_home": "الرئيسية",
+                                    "tab_settings": "الاعدادات",
+                                    "tab_profile" : "الملف الشخصي",
+                                    "item_test": "تجربة",
+                                    "item_local": "محلي",
+                                    "item_storage": "التخزين",
+                                    "item_users": "المستخدمين",
+                                    "item_posts": "المنشورات", # Pure Arabic value mapping
+                                    "item_todos": "المهام",
+                                    "gnome_app": "تطبيق جينوم ",
+                                    "search_placeholder": "البحث في السجلات...",  
+                                    "local_manager": "مدير القائمة المحلية",
+                                    "btn_add": "إضافة",
+                                    "popover_add_title": "إضافة عنصر جديد",
+                                    "input_name_ph": "أدخل الاسم...",
+                                    "input_desc_ph": "أدخل الوصف",
+                                    "btn_submit": "إرسال",
+                                    "group_title": "العناصر المحلية المحفوظة",
+                                    "empty_list_text": "لم يتم تسجيل أي عناصر بعد. انقر فوق 'إضافة' أعلاه لإنشاء قائمة.",
+                                    "group_disk_title": "البيانات المحفوظة في القرص مع العناصر",
+                                    "disk_manager": "مدير قائمة القرص"
+
+                               
+                               
+                               
+                               
+                               
+                               
+                                }
+                }
+
+
+
+    def _(self, key):
+        """ Inline key translator lookup utility """
+        # Pull string based on active language, default back to English if missing
+        lang_dict = self.translations.get(self.current_lang, self.translations["en"])
+        
+        # Return the translated text or return the raw key string if not found
+        return lang_dict.get(key, self.translations["en"].get(key, key))
+
+
+
+# app
+
 class MyApp(Adw.Application):
 
     state = ""
@@ -181,6 +274,8 @@ class MyApp(Adw.Application):
             application_id="com.example.myapp", 
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
+        
+
         self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.center_stack = Gtk.Stack()
         self.jam = Jasmin("jasmin", self.right_sidebar, self.center_stack)
@@ -207,6 +302,20 @@ class MyApp(Adw.Application):
         #
         self.local_todos_group = Adw.PreferencesGroup()
         self.local_todos_items = []
+        #
+        Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
+        self.current_lang = "ar"
+        
+        self.i18n = I18n()
+        #
+        
+        #
+        #self.list_box = Gtk.ListBox()
+        #self.tab1_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        #
+        self.nav_rows = {}
+
+        
 
     
 
@@ -228,20 +337,66 @@ class MyApp(Adw.Application):
         except Exception as e:
             print(f"Error saving data file: {e}")
 
+    def sidebar_items(self):
+        return  [
+            ("Test", "folder-download-symbolic"),
+            ("Local", "folder-download-symbolic"),
+            ("Storage", "drive-harddisk-symbolic"),
+            ("Users", "avatar-default-symbolic"),
+            (self.i18n._('posts'), "mail-send-receive-symbolic"),
+            ("Todos", "checkbox-checked-symbolic")
+        ]
+
+    def rebuild_list_box(self):
+        home_items = [
+            ("Test", "folder-download-symbolic"),
+            ("Local", "folder-download-symbolic"),
+            ("Storage", "drive-harddisk-symbolic"),
+            ("Users", "avatar-default-symbolic"),
+            (self.i18n._('posts'), "mail-send-receive-symbolic"),
+            ("Todos", "checkbox-checked-symbolic")
+        ]
+        list_box = Gtk.ListBox()
+
+        for title, icon_name in home_items:
+            row = Adw.ActionRow()
+            row.set_title(title)
+            row.set_activatable(True)
+
+            #row.set_margin_start(8)
+            #row.set_margin_end(8)
+
+            prefix_icon = Gtk.Image.new_from_icon_name(icon_name)
+            row.add_prefix(prefix_icon)
+
+            suffix_arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
+            row.add_suffix(suffix_arrow)
+
+            row.connect("activated", self.on_home_item_clicked)
+
+            list_box.append(row)
+        return list_box
+        #self.tab1_box.append(list_box)
+         
 
 
     def do_activate(self):
         # this is called g_application_activate() -> app.run()
 
         # locale
+        #self.i18n.current_lang = "ar"
         #Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
+        #self.current_lang = "ar"
+        self.init_direction_lang()
+
+        print(f"i18n: {self.i18n._("posts")}")
 
 
 
         # window
         #win = Adw.ApplicationWindow(application=app)
         self.win = Adw.ApplicationWindow(application=self)
-        self.win.set_title("Mein Gnome app")
+        self.win.set_title(f"{self.i18n._('gnome_app')}")
         self.win.set_default_size(600, 400)
 
         #
@@ -323,25 +478,54 @@ class MyApp(Adw.Application):
 
         tab1_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab1_box.set_margin_top(12)
-        tab1_box.append(Gtk.Label(label="Tab1"))
+        #tab1_box.append(Gtk.Label(label="Tab1"))
 
-        page1 = view_stack.add_titled(tab1_box, "home", "Home")
-        page1.set_icon_name("user-home-symbolic") 
+        self.home_page_wrapper = view_stack.add_titled(tab1_box, "home", self.i18n._("tab_home"))
+        self.home_page_wrapper.set_icon_name("user-home-symbolic") 
 
-        # left: items
-        list_box = Gtk.ListBox()
-        list_box.add_css_class("boxed-list")
+        # Left items list box configuration
+        self.list_box = Gtk.ListBox()
+        self.list_box.add_css_class("boxed-list")
 
         home_items = [
-            ("Test", "folder-download-symbolic"),
-            ("Local", "folder-download-symbolic"),
-            ("Storage", "drive-harddisk-symbolic"),
-            ("Users", "avatar-default-symbolic"),
-            ("Posts", "mail-send-receive-symbolic"),
-            ("Todos", "checkbox-checked-symbolic")
+            
+            ("item_test", "folder-download-symbolic"),
+            ("item_local", "folder-download-symbolic"),
+            ("item_storage", "drive-harddisk-symbolic"),
+            ("item_users", "avatar-default-symbolic"),
+            ("item_posts", "mail-send-receive-symbolic"), # FIX: Changed from function call to abstract key string
+            ("item_todos", "checkbox-checked-symbolic")
         ]
 
-        for title, icon_name in home_items:
+        # Tracking dictionary to easily find rows during translation refresh cycles
+        
+
+        for key, icon_name in home_items:
+            row = Adw.ActionRow()
+            
+            # Initial text mapping on initialization canvas
+            row.set_title(self.i18n._(key))
+            row.set_activatable(True)
+
+            # Store the translation key identifier tag property on the row instance
+            row.nav_item_key_id = key
+
+            prefix_icon = Gtk.Image.new_from_icon_name(icon_name)
+            row.add_prefix(prefix_icon)
+
+            suffix_arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
+            row.add_suffix(suffix_arrow)
+
+            row.connect("activated", self.on_home_item_clicked)
+
+            self.list_box.append(row)
+            
+            # Save a link to this row matching its translation tracking key
+            self.nav_rows[key] = row
+
+        
+
+        """for title, icon_name in home_items:
             row = Adw.ActionRow()
             row.set_title(title)
             row.set_activatable(True)
@@ -357,28 +541,32 @@ class MyApp(Adw.Application):
 
             row.connect("activated", self.on_home_item_clicked)
 
-            list_box.append(row)
+            list_box.append(row)"""
 
 
 
-        tab1_box.append(list_box)
-
+        tab1_box.append(self.list_box)
+        
         # tab2
         tab2_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab2_box.set_margin_top(12)
-        tab2_box.append(Gtk.Label(label="tab2"))
+        #tab2_box.append(Gtk.Label(label="tab2"))
 
-        page2 = view_stack.add_titled(tab2_box, "settings", "Settings")
-        page2.set_icon_name("emblem-system-symbolic")
+        #page2 = view_stack.add_titled(tab2_box, "settings", "Settings")
+        #page2.set_icon_name("emblem-system-symbolic")
+        self.page2_wrapper = view_stack.add_titled(tab2_box, "settings", self.i18n._("tab_settings"))
+        self.page2_wrapper.set_icon_name("emblem-system-symbolic") 
 
 
         #tab3
         tab3_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab3_box.set_margin_top(12)
-        tab3_box.append(Gtk.Label(label="tab3"))
+        #tab3_box.append(Gtk.Label(label="tab3"))
 
-        page3 = view_stack.add_titled(tab3_box, "profile", "Profile")
-        page3.set_icon_name("avatar-default-symbolic")
+        #page3 = view_stack.add_titled(tab3_box, "profile", "Profile")
+        #page3.set_icon_name("avatar-default-symbolic")
+        self.page3_wrapper = view_stack.add_titled(tab3_box, "profile", self.i18n._("tab_profile"))
+        self.page3_wrapper.set_icon_name("avatar-default-symbolic") 
 
 
         # view_switcher
@@ -411,7 +599,7 @@ class MyApp(Adw.Application):
 
         self.sidebar_search_entry = Gtk.SearchEntry()
         self.sidebar_search_entry.set_hexpand(True)
-        self.sidebar_search_entry.set_placeholder_text("Search records...")
+        self.sidebar_search_entry.set_placeholder_text(self.i18n._("search_placeholder"))
 
         self.sidebar_search_entry.connect("search-changed", self.on_sidebar_search_changed)
 
@@ -2538,11 +2726,11 @@ class MyApp(Adw.Application):
         local_action_bar.set_show_title_buttons(False)
 
         #
-        local_title = Gtk.Label(label="Local List Manager")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
+        self.local_title = Gtk.Label(label=self.i18n._("local_manager"))
+        self.local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(self.local_title)
         #
-        self.add_item_btn = Gtk.Button(label="Add")
+        self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
         self.add_item_btn.add_css_class("suggested-action")
         local_action_bar.pack_end(self.add_item_btn)
         # build the form as popover
@@ -2557,19 +2745,19 @@ class MyApp(Adw.Application):
         form_box.set_margin_end(12)
         form_box.set_size_request(240, -1)
         #
-        popover_title = Gtk.Label(label="Add New One")
+        popover_title = Gtk.Label(label=self.i18n._("popover_add_title"))
         popover_title.add_css_class("title-3")
         popover_title.set_halign(Gtk.Align.START)
         form_box.append(popover_title)
         # inputs
-        self.input_name = Gtk.Entry(placeholder_text="Enter name...")
+        self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
         form_box.append(self.input_name)
 
-        self.input_desc = Gtk.Entry(placeholder_text="Enter description")
+        self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
         form_box.append(self.input_desc)
 
         # submit button
-        submit_btn = Gtk.Button(label="Submit")
+        submit_btn = Gtk.Button(label=self.i18n._("btn_submit"))
         submit_btn.add_css_class("suggested-action")
         submit_btn.connect("clicked", self.on_form_submitted2)
         form_box.append(submit_btn)
@@ -2592,13 +2780,13 @@ class MyApp(Adw.Application):
 
         #
         #self.local_items_group = Adw.PreferencesGroup()
-        self.local_items_group.set_title("Stored Local Entries")
+        self.local_items_group.set_title(self.i18n._("group_title"))
 
         #
         
 
         #
-        self.empty_list_lbl = Gtk.Label(label="No items recorded yet. click 'Add' above to build a list.")
+        self.empty_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
         self.empty_list_lbl.add_css_class("dim-label")
         self.local_items_group.add(self.empty_list_lbl)
         # attach list data in ui
@@ -2625,11 +2813,11 @@ class MyApp(Adw.Application):
         local_action_bar.set_show_title_buttons(False)
 
         #
-        local_title = Gtk.Label(label="Disk List Manager")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
+        self.local_disk_title = Gtk.Label(label=self.i18n._("disk_manager")) # Disk List Manager
+        self.local_disk_title.add_css_class("heading")
+        local_action_bar.set_title_widget(self.local_disk_title)
         #
-        self.add_disk_item_btn = Gtk.Button(label="Add")
+        self.add_disk_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
         self.add_disk_item_btn.add_css_class("suggested-action")
         local_action_bar.pack_end(self.add_disk_item_btn)
         # build the form as popover
@@ -2644,22 +2832,22 @@ class MyApp(Adw.Application):
         form_box.set_margin_end(12)
         form_box.set_size_request(240, -1)
         #
-        popover_title = Gtk.Label(label="Add New One")
-        popover_title.add_css_class("title-3")
-        popover_title.set_halign(Gtk.Align.START)
-        form_box.append(popover_title)
+        self.popover_disk_title = Gtk.Label(label=self.i18n._("popover_add_title"))
+        self.popover_disk_title.add_css_class("title-3")
+        self.popover_disk_title.set_halign(Gtk.Align.START)
+        form_box.append(self.popover_disk_title)
         # inputs
-        self.input_disk_name = Gtk.Entry(placeholder_text="Enter name...")
+        self.input_disk_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
         form_box.append(self.input_disk_name)
 
-        self.input_disk_desc = Gtk.Entry(placeholder_text="Enter description")
+        self.input_disk_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
         form_box.append(self.input_disk_desc)
 
         # submit button
-        submit_btn = Gtk.Button(label="Submit")
-        submit_btn.add_css_class("suggested-action")
-        submit_btn.connect("clicked", self.on_form_disk_submitted2)
-        form_box.append(submit_btn)
+        self.submit_disk_btn = Gtk.Button(label=self.i18n._("btn_submit"))
+        self.submit_disk_btn.add_css_class("suggested-action")
+        self.submit_disk_btn.connect("clicked", self.on_form_disk_submitted2)
+        form_box.append(self.submit_disk_btn)
 
         self.form_disk_popover.set_child(form_box)
         # click on add button to open form_popover
@@ -2679,14 +2867,14 @@ class MyApp(Adw.Application):
 
         #
         #self.disk_items_group = Adw.PreferencesGroup()
-        self.disk_items_group.set_title("Stored Data in Disk with Entries")
+        self.disk_items_group.set_title(self.i18n._("group_disk_title")) # Stored Data in Disk with Entries
 
         #
         
 
         #
         if not self.disk_items_storage:
-          self.empty_disk_list_lbl = Gtk.Label(label="No items recorded yet. click 'Add' above to build a list.")
+          self.empty_disk_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
           self.empty_disk_list_lbl.add_css_class("dim-label")
           self.disk_items_group.add(self.empty_disk_list_lbl)
         else:
@@ -2698,11 +2886,6 @@ class MyApp(Adw.Application):
                 row.set_subtitle(item["description"])
                 row.add_prefix(Gtk.Image.new_from_icon_name(""))
                 self.disk_items_group.add(row)
-
-                
-
-
-
 
 
         # attach list data in ui
@@ -3366,12 +3549,124 @@ class MyApp(Adw.Application):
             Gtk.Widget.set_default_direction(Gtk.TextDirection.LTR)
             self.win.set_direction(Gtk.TextDirection.LTR)
             self.info_label.set_text("Current Layout: LTR")
+            self.current_lang = "en"
+            self.i18n.current_lang = "en"
+            #
+            # Update all potential pointer targets to ensure english is loaded
+            self.current_lang = "en"
+            if hasattr(self, 'i18n'):
+                self.i18n.current_lang = "en"
+            if hasattr(self, 'lang'):
+                self.lang.current_lang = "en"
+            #
         else:
             Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
             self.win.set_direction(Gtk.TextDirection.RTL)
             self.info_label.set_text("Current Layout: RTL")
+            self.current_lang = "ar"
+            self.i18n.current_lang = "ar"
+            #
+            # Update all potential pointer targets to ensure arabic is loaded
+            self.current_lang = "ar"
+            if hasattr(self, 'i18n'):
+                self.i18n.current_lang = "ar"
+            if hasattr(self, 'lang'):
+                self.lang.current_lang = "ar"
         #
+        #self.init_direction_lang()
         #self.info_label.queue_allocate()
+        if hasattr(self, 'win') and self.win:
+            self.win.set_title(f"{self.i18n._('gnome_app')}")
+            #
+            #self.rebuild_list_box()
+
+        #if hasattr(self, 'tab1_box') and self.tab1_box:
+            #self.tab1_box.append(self.rebuild_list_box)
+        # =========================================================================
+        # REPAINT ACTION 1: Update the master Adw.ViewStack tab page titles
+        # =========================================================================
+        if hasattr(self, 'home_page_wrapper') and self.home_page_wrapper:
+            self.home_page_wrapper.set_title(self.i18n._("tab_home"))
+
+        if hasattr(self, 'nav_rows') and self.nav_rows:
+            print("Refreshing action row navigation titles in UI thread...")
+            for key, row_widget in self.nav_rows.items():
+                # Re-fetch the text value from the freshly updated language index
+                row_widget.set_title(self.i18n._(key))
+        #
+        if hasattr(self, 'page2_wrapper') and self.page2_wrapper:
+            self.page2_wrapper.set_title(self.i18n._("tab_settings"))
+        #
+        if hasattr(self, 'page3_wrapper') and self.page3_wrapper:
+            self.page3_wrapper.set_title(self.i18n._("tab_profile"))
+        # search
+        if hasattr(self, 'sidebar_search_entry') and self.sidebar_search_entry:
+            # Re-fetch the string matching the newly activated language flag
+            self.sidebar_search_entry.set_placeholder_text(self.i18n._("search_placeholder"))
+            print("Sidebar search entry placeholder text refreshed.")
+        # local
+        if hasattr(self, 'local_title') and self.local_title:
+            self.local_title.set_label(self.i18n._("local_manager"))
+
+        if hasattr(self, 'add_item_btn') and self.add_item_btn:
+            self.add_item_btn.set_label(self.i18n._("btn_add"))
+
+        if hasattr(self, 'popover_title') and self.popover_title:
+            self.popover_title.set_label(self.i18n._("popover_add_title"))
+
+        if hasattr(self, 'input_name') and self.input_name:
+            self.input_name.set_placeholder_text(self.i18n._("input_name_ph"))
+
+        if hasattr(self, 'input_desc') and self.input_desc:
+            self.input_desc.set_placeholder_text(self.i18n._("input_desc_ph"))
+
+        if hasattr(self, 'submit_btn') and self.submit_btn:
+            self.submit_btn.set_label(self.i18n._("btn_submit"))
+
+        if hasattr(self, 'local_items_group') and self.local_items_group:
+            self.local_items_group.set_title(self.i18n._("group_title"))
+
+        if hasattr(self, 'empty_list_lbl') and self.empty_list_lbl:
+            self.empty_list_lbl.set_label(self.i18n._("empty_list_text"))
+
+        # disk
+        if hasattr(self, 'local_disk_title') and self.local_disk_title:
+            self.local_disk_title.set_label(self.i18n._("disk_manager"))
+
+        if hasattr(self, 'add_disk_item_btn') and self.add_disk_item_btn:
+            self.add_disk_item_btn.set_label(self.i18n._("btn_add"))
+
+        if hasattr(self, 'popover_disk_title') and self.popover_disk_title:
+            self.popover_disk_title.set_label(self.i18n._("popover_add_title"))
+
+        if hasattr(self, 'input_disk_name') and self.input_disk_name:
+            self.input_disk_name.set_placeholder_text(self.i18n._("input_name_ph"))
+
+        if hasattr(self, 'input_disk_desc') and self.input_disk_desc:
+            self.input_disk_desc.set_placeholder_text(self.i18n._("input_desc_ph"))
+
+        if hasattr(self, 'submit_disk_btn') and self.submit_disk_btn:
+            self.submit_disk_btn.set_label(self.i18n._("btn_submit"))
+
+        if hasattr(self, 'disk_items_group') and self.disk_items_group:
+            self.disk_items_group.set_title(self.i18n._("group_disk_title"))
+
+        if hasattr(self, 'empty_list_lbl') and self.empty_list_lbl:
+            self.empty_list_lbl.set_label(self.i18n._("empty_list_text"))
+        #
+
+
+
+    def init_direction_lang(self):
+         curr_direction = Gtk.Widget.get_default_direction()
+
+         if curr_direction == Gtk.TextDirection.RTL:
+             self.i18n.current_lang = "ar"
+             self.current_lang = "ar"
+         else:
+             self.i18n.current_lang = "en"
+             self.current_lang = "en"
+
 
 
     def setup_actions(self):
