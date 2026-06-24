@@ -956,18 +956,45 @@ class MyApp(Adw.Application):
                 self.right_sidebar.set_margin_end(12)
                 self.right_sidebar.set_margin_bottom(16)
                 #
+                # Create a container for all content (to maintain proper layout)
+                main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+                main_box.set_margin_start(8)
+                main_box.set_margin_end(8)
+                main_box.set_vexpand(True)  # Allow the main box to expand vertically
+
+                #
                 title_label = Gtk.Label(label=item.get("title"))
                 title_label.add_css_class("title-1") # built-in font bold
                 title_label.set_margin_bottom(12)
                 title_label.set_halign(Gtk.Align.START)
-                self.right_sidebar.append(title_label)
+                #self.right_sidebar.append(title_label)
+                main_box.append(title_label)
                 #
                 body_label = Gtk.Label(label=item.get("body"))
                 body_label.add_css_class("dim-label") # built-in font bold
                 body_label.set_margin_bottom(24)
                 body_label.set_halign(Gtk.Align.START)
                 body_label.set_wrap(True)
-                self.right_sidebar.append(body_label)
+                #self.right_sidebar.append(body_label)
+                main_box.append(body_label)
+                # Add a separator
+                separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+                separator.set_margin_bottom(12)
+                main_box.append(separator)
+                # Add comments section with scrolling
+                comments_label = Gtk.Label(label="Comments")
+                comments_label.add_css_class("heading")
+                comments_label.set_halign(Gtk.Align.START)
+                comments_label.set_margin_bottom(8)
+                main_box.append(comments_label)
+
+                # calling fetch comments
+                self.build_test_comments_by_postId_view(main_box, item.get("id"))
+
+                # Add everything to the sidebar
+                self.right_sidebar.append(main_box)
+                self.right_sidebar.set_vexpand(True)
+                self.right_sidebar.set_hexpand(False)  # Keep horizontal expansion off
 
                 
 
@@ -1012,8 +1039,107 @@ class MyApp(Adw.Application):
         GLib.idle_add(test_fetch)
 
 
-    def build_test_comments_by_postId_view(self):
-       print("build_test_comments_by_postId_view")
+    def build_test_comments_by_postId_view(self, parent_container, postId):
+       print(f"build_test_comments_by_postId_view : {postId}")
+       #
+       def test_fetch():
+            print("test_fetch")
+            import time
+
+
+            #for child in self.right_sidebar.observe_children():
+                    #self.right_sidebar.remove(child)
+
+            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+            
+            file_path = os.path.join(GLib.get_current_dir(), "./data/comments.json")
+
+            if not os.path.exists(file_path):
+                print("no json file")
+                return False
+            
+            print("json file exists!")
+
+           
+
+             # Create a preferences group for comments
+            comments_group = Adw.PreferencesGroup()
+            comments_group.set_margin_start(8)
+            comments_group.set_margin_end(8)
+            comments_group.set_margin_bottom(16)
+            
+            # Create scrolled window for comments
+            scroll_win = Gtk.ScrolledWindow()
+            scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+            scroll_win.set_min_content_height(200)  # Give it a minimum height
+            scroll_win.set_vexpand(True)  # Allow it to expand
+            scroll_win.set_child(comments_group)
+            
+            # Add a frame around the comments section (optional)
+            # frame = Adw.PreferencesGroup()
+            # frame.add(scroll_win)
+            
+            # Add the scrolled window to the parent container
+            parent_container.append(scroll_win)
+
+
+            try:
+                success, content = GLib.file_get_contents(file_path)
+
+                if success:
+                    if isinstance(content, bytes):
+                        content = content.decode("utf-8")
+                        
+                    data = json.loads(content)
+                    print(f"data size: {len(data)}")
+
+                    comment_count = 0
+                    
+                    for item in data:
+                        pid = item.get("postId")
+                        #id = item.get("id")
+                        if pid == postId:
+                            print(f"comment item: {item}")
+                            #docs.append(item)
+                            card = Adw.ActionRow()
+                            card.set_title(item.get("name", "test"))
+                            card.set_subtitle(item.get("body", "test"))
+                            card.set_activatable(False)
+                            #card.payload = item
+                            #card.connect("activated", card_clicked)
+                            card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                            card.set_margin_bottom(5)
+                            #local_items_group.add(card)
+                            #sidebar_group.add(card)
+                            comments_group.add(card)
+                            #sidebar_group.add(card)
+                    
+                    # --- ACTION TAKEN HERE ---
+                    # Now that docs is populated, safely trigger your UI updates or prints:
+                    #print(f"len docs inside callback: {len(docs)}")
+
+                    #local_items_group.queue_resize()
+                    #sidebar_group.queue_resize()
+                     # If no comments found, show a message
+                    if comment_count == 0:
+                        empty_label = Gtk.Label(label="No comments for this post")
+                        empty_label.add_css_class("dim-label")
+                        empty_label.set_margin_top(12)
+                        empty_label.set_margin_bottom(12)
+                        comments_group.add(empty_label)
+                    
+                    comments_group.queue_resize()
+                    
+                    
+
+                else:
+                    print("GLib failed to read comments file contents successfully.")
+            except Exception as e:
+                print(f"ERROR: {e}")
+
+            return False # Stop the GLib idle loop from repeating this function
+       
+       test_fetch()
 
 
     
