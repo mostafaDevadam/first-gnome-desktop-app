@@ -248,7 +248,7 @@ class I18n():
                                     "no_items": "لم يتم تسجيل أي عناصر بعد.",
                                     "tab_home": "الرئيسية",
                                     "tab_settings": "الاعدادات",
-                                    "tab_profile" : "الملف الشخصي",
+                                    "tab_profile" : "حسابي", #"الملف الشخصي",
                                     "item_test": "تجربة",
                                     "item_local": "محلي",
                                     "item_storage": "التخزين",
@@ -412,6 +412,10 @@ class MyApp(Adw.Application):
                 self.win.queue_allocate()
             if hasattr(self, 'info_label') and self.info_label:
                 self.info_label.set_text("Current Layout: RTL")
+            #
+            self.view_switcher.set_policy(Adw.ViewSwitcherPolicy.NARROW)
+            self.view_switcher.remove_css_class("view-switcher-ltr")
+            self.view_switcher.add_css_class("view-switcher-rtl")
         else:
              Gtk.Widget.set_default_direction(Gtk.TextDirection.LTR)
              if hasattr(self, 'win') and self.win:
@@ -419,6 +423,10 @@ class MyApp(Adw.Application):
                 self.win.queue_allocate()
              if hasattr(self, 'info_label') and self.info_label:
                 self.info_label.set_text("Current Layout: LTR")
+            #
+             self.view_switcher.set_policy(Adw.ViewSwitcherPolicy.NARROW)
+             self.view_switcher.remove_css_class("view-switcher-rtl")
+             self.view_switcher.add_css_class("view-switcher-ltr")
         
         #
         if hasattr(self, 'win') and self.win:
@@ -819,14 +827,16 @@ class MyApp(Adw.Application):
 
 
         # view_switcher
-        view_switcher = Adw.ViewSwitcher()
-        view_switcher.set_stack(view_stack)
+        self.view_switcher = Adw.ViewSwitcher()
+        self.view_switcher.set_stack(view_stack)
         
-        view_switcher.set_margin_top(6)
+        self.view_switcher.set_margin_top(6)
         #view_switcher.set_margin_start(6)
         #view_switcher.set_margin_end(6)
         #view_switcher.set_policy(Adw.ViewSwitcherPolicy.WIDE)
-        view_switcher.add_css_class("custom-view-switcher-bg")
+        self.view_switcher.add_css_class("custom-view-switcher-bg")
+        self.view_switcher.add_css_class("view-switcher-ltr")
+        self.view_switcher.set_policy(Adw.ViewSwitcherPolicy.NARROW)
 
 
         # view_switcher_bar
@@ -836,7 +846,7 @@ class MyApp(Adw.Application):
         #view_switcher_bar.set_reveal(True)
 
         # add in left_sidebar
-        left_sidebar.append(view_switcher)
+        left_sidebar.append(self.view_switcher)
         left_sidebar.append(view_stack)
         #left_sidebar.append(view_switcher_bar)
         # search-bar
@@ -849,8 +859,8 @@ class MyApp(Adw.Application):
         self.sidebar_search_entry = Gtk.SearchEntry()
         self.sidebar_search_entry.set_hexpand(True)
         self.sidebar_search_entry.set_placeholder_text(self.i18n._("search_placeholder"))
-
         self.sidebar_search_entry.connect("search-changed", self.on_sidebar_search_changed)
+        self.register_widget(self.sidebar_search_entry, 'placeholder', 'search_placeholder')
 
         search_bar_box.append(self.sidebar_search_entry)
 
@@ -998,9 +1008,9 @@ class MyApp(Adw.Application):
         self.outer_split_view.set_content(inner_split_view)
         self.outer_split_view.set_sidebar_position(Gtk.PackType.END)
         #
-        self.outer_split_view.set_min_sidebar_width(280) # 280 or 200 or 320
+        self.outer_split_view.set_min_sidebar_width(340) # 280 or 200 or 320
         # or
-        self.outer_split_view.set_max_sidebar_width(500)
+        self.outer_split_view.set_max_sidebar_width(360)
 
        
 
@@ -1139,8 +1149,26 @@ class MyApp(Adw.Application):
 
             .custom-view-switcher-bg {
                 background-color: #d0e1f9;
-                padding: 6px;
                 border-bottom: 1px solid #b0c4de;
+                transition: all 200ms ease;
+                /*padding: 6px 0px;*/
+                /*border-bottom: 1px solid #b0c4de;*/
+            }
+
+            .view-switcher-rtl {
+               padding: 6px;
+            }
+
+            .view-switcher-rtl label{
+               font-size: 11px;
+               font-weight: bold;
+               wrap: true;
+               text-wrap: wrap;
+               text-align: center;
+            }
+
+            .view-switcher-ltr {
+               padding: 6px 0px;
             }
 
             splitview>box:last-child {
