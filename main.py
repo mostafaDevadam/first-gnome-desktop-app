@@ -215,6 +215,8 @@ class I18n():
                                     "password": "Password",
                                     "enter_email": "Enter Email",
                                     "enter_password": "Enter Password",
+                                    "login_success_msg": "Login successful! Welcome back.",
+                                    "logout_title": "Logout",
 
                               
                               
@@ -252,6 +254,8 @@ class I18n():
                                     "password": "Password",
                                     "enter_email": "Enter Email",
                                     "enter_password": "Enter Password",
+                                    "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
+                                    "logout_title": "خروج",
 
                                
                                
@@ -398,6 +402,8 @@ class MyApp(Adw.Application):
         #self.i18n.current_lang = "ar"
         #Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
         #self.current_lang = "ar"
+        self.apply_custom_styles()
+        #
         self.init_direction_lang()
 
         print(f"i18n: {self.i18n._("posts")}")
@@ -406,10 +412,6 @@ class MyApp(Adw.Application):
         self.style_manager = Adw.StyleManager.get_default()
         self.style_manager.set_color_scheme(Adw.ColorScheme.PREFER_LIGHT)
 
-
-
-
-
         # window
         #win = Adw.ApplicationWindow(application=app)
         self.win = Adw.ApplicationWindow(application=self)
@@ -417,7 +419,7 @@ class MyApp(Adw.Application):
         self.win.set_default_size(600, 400)
 
         #
-        self.apply_custom_styles()
+        
 
         # create toolbar
         toolbar_view = Adw.ToolbarView()
@@ -441,8 +443,9 @@ class MyApp(Adw.Application):
         header_bar.pack_start(self.theme_btn)
 
         # logout-button
-        self.logout_btn = Gtk.Button(label="Logout")
+        self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
         self.logout_btn.connect("clicked", self.on_logout_button_clicked)
+        self.logout_btn.set_visible(False)
         header_bar.pack_start(self.logout_btn)
 
         # menu in header_bar
@@ -786,22 +789,22 @@ class MyApp(Adw.Application):
         login_title.set_margin_bottom(12)
         login_box.append(login_title)
         # login form input email
-        self.input_login_email = Gtk.Entry(placeholder_text="Email address")
+        self.input_login_email = Gtk.Entry(placeholder_text=self.i18n._("enter_email"))
         self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
         login_box.append(self.input_login_email)
 
         # login form input password
-        self.input_login_pass = Gtk.Entry(placeholder_text="Password")
+        self.input_login_pass = Gtk.Entry(placeholder_text=self.i18n._("enter_password"))
         self.input_login_pass.set_visibility(False)
         self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
         login_box.append(self.input_login_pass)
 
         # login button
-        login_btn = Gtk.Button(label="Login")
-        login_btn.add_css_class("suggested-action")
-        login_btn.set_margin_top(8)
-        login_btn.connect("clicked", self.on_login_button_clicked)
-        login_box.append(login_btn)
+        self.login_btn = Gtk.Button(label=self.i18n._("login_title"))
+        self.login_btn.add_css_class("suggested-action")
+        self.login_btn.set_margin_top(8)
+        self.login_btn.connect("clicked", self.on_login_button_clicked)
+        login_box.append(self.login_btn)
 
 
 
@@ -812,13 +815,17 @@ class MyApp(Adw.Application):
         self.root_navigation_stack.add_named(self.outer_split_view, "main_layout")
 
 
-
+        #
+        self.toast_overlay = Adw.ToastOverlay()
+        self.toast_overlay.set_child(self.root_navigation_stack)
+       
         
 
 
 
         #
-        toolbar_view.set_content(self.root_navigation_stack)
+        toolbar_view.set_content(self.toast_overlay)
+        #toolbar_view.set_content(self.root_navigation_stack)
         self.win.set_content(toolbar_view)
         #win.set_content(box)
         self.root_navigation_stack.set_visible_child_name("login_screen_layout")
@@ -831,14 +838,23 @@ class MyApp(Adw.Application):
 
         if not email or not password:
             print("Authentication Failure Email or Password is incorrect")
+            self.isLogin = False
             return
         #
+        self.isLogin = True
+        self.logout_btn.set_visible(True)
         self.root_navigation_stack.set_visible_child_name("main_layout")
 
         self.input_login_email.set_text("")
         self.input_login_pass.set_text("")
         #
         print("Layout interface canvas unlocked.")
+        #
+        success_message = self.i18n._("login_success_msg") if hasattr(self, 'i18n') else "Login successul! Welcome back."
+        toast = Adw.Toast.new(success_message)
+        toast.set_timeout(3)
+        self.toast_overlay.add_toast(toast)
+
             
     def on_logout_button_clicked(self, button):
         if hasattr(self, 'root_navigation_stack'):
@@ -3748,6 +3764,19 @@ class MyApp(Adw.Application):
         if hasattr(self, 'empty_list_lbl') and self.empty_list_lbl:
             self.empty_list_lbl.set_label(self.i18n._("empty_list_text"))
         #
+        if hasattr(self, 'logout_btn') and self.logout_btn:
+            self.logout_btn.set_label(self.i18n._("logout_title"))
+        #
+        if hasattr(self, 'login_btn') and self.login_btn:
+            self.login_btn.set_label(self.i18n._("login_title"))
+        #
+        if hasattr(self, 'input_login_email') and self.input_login_email:
+            self.input_login_email.set_placeholder_text(self.i18n._("enter_email"))
+        #
+        if hasattr(self, 'input_login_pass') and self.input_login_pass:
+            self.input_login_pass.set_placeholder_text(self.i18n._("enter_password"))
+
+
 
     def on_toggle_theme_clicked(self, button):
         print("on_toggle_theme_clicked executing...")

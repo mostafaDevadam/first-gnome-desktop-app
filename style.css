@@ -36,3 +36,8 @@ splitview>box:last-child {
 .user-card {
     background-color: green;
 }
+
+toastoverlay > widget {
+    valign: start;
+    margin-top: 12px;
+}
