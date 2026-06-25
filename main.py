@@ -17,7 +17,9 @@ print("start py")
 
 # dark, i18n, search, cache
 # save users, posts, comments in json files in init/background
-# search in: local, storage, users
+# search in: local, storage, users, posts, todos
+# auth: register,login -> save in json file
+# settings: save in json file
 
 
 class Jasmin():
@@ -317,8 +319,10 @@ class MyApp(Adw.Application):
             application_id="com.example.myapp", 
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
+        #
         
-
+        
+        #
         self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.center_stack = Gtk.Stack()
         self.jam = Jasmin("jasmin", self.right_sidebar, self.center_stack)
@@ -345,12 +349,20 @@ class MyApp(Adw.Application):
         #
         self.local_todos_group = Adw.PreferencesGroup()
         self.local_todos_items = []
-        #
+        # locale
         Gtk.Widget.set_default_direction(Gtk.TextDirection.LTR)
         self.current_lang = "en"
-        
         self.i18n = I18n()
+        self.registered_widgets = []
+        #lang_action = Gio.SimpleAction.new("change-language", GLib.VariantType.new("s"))
+        
+
+        """quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", self.on_quit_clicked)
+        self.add_action(quit_action)"""
+
         #
+
         
         #
         #self.list_box = Gtk.ListBox()
@@ -367,7 +379,78 @@ class MyApp(Adw.Application):
         #
 
         
+    def register_widget(self, widget, prop, key):
+        self.registered_widgets.append((widget, prop, key))
+        self.update_widget_text(widget, prop, key)
 
+    def update_widget_text(self, widget, prop, key):
+        """ Translates ans sets text dynamically"""
+        translated_text = self.i18n._(key)
+        #
+        if prop == "text" and hasattr(widget, "set_text"):
+           widget.set_text(translated_text)
+        elif prop == "label" and hasattr(widget, "set_label"):
+            widget.set_label(translated_text)
+        elif prop == "title" and  hasattr(widget, "set_title"):
+            widget.set_title(translated_text)
+        elif prop == "placeholder" and hasattr(widget, "set_placeholder_text"):
+            widget.set_placeholder_text(translated_text)
+
+    def change_app_language(self, lang_code):
+        self.current_lang = lang_code
+        self.i18n.current_lang = lang_code
+        #
+       
+        # 
+        if lang_code == "ar":
+            Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
+            #self.win.set_direction(Gtk.TextDirection.RTL)
+            if hasattr(self, 'win') and self.win:
+                self.win.set_direction(Gtk.TextDirection.RTL)
+                self.win.queue_allocate()
+            if hasattr(self, 'info_label') and self.info_label:
+                self.info_label.set_text("Current Layout: RTL")
+        else:
+             Gtk.Widget.set_default_direction(Gtk.TextDirection.LTR)
+             if hasattr(self, 'win') and self.win:
+                self.win.set_direction(Gtk.TextDirection.LTR)
+                self.win.queue_allocate()
+             if hasattr(self, 'info_label') and self.info_label:
+                self.info_label.set_text("Current Layout: LTR")
+        
+        #
+        if hasattr(self, 'win') and self.win:
+           self.win.set_title(self.i18n._("gnome_app")) 
+        #
+        for widget, prop, key in self.registered_widgets:
+            self.update_widget_text(widget, prop, key)
+        #
+        self.refresh_row_dictionaries()
+        #
+
+
+    def refresh_row_dictionaries(self):
+        for row_attr in ["nav_rows", "nav_settings_rows"]:
+            if hasattr(self, row_attr):
+                row_dict = getattr(self, row_attr)
+                if row_dict:
+                    for key, row_widget in row_dict.items():
+                        if hasattr(row_widget, "set_title"):
+                            row_widget.set_title(self.i18n._(key))
+    
+    def on_language_action_activated(self, action, parameter):
+        print("on_language_action_activated")
+        #
+        lang_code = parameter.get_string()
+        print(f"lang_code: {lang_code}")
+        action.set_state(GLib.Variant.new_string(lang_code))
+        #action.set_state(parameter)
+        self.change_app_language(lang_code)
+        #
+    
+    def on_toggle_locale_direction_clicked(self, button):
+        new_lang = "ar" if self.i18n.current_lang == "en" else "en"
+        self.change_app_language(new_lang)
     
 
     def load_data_from_disk(self):
@@ -468,12 +551,61 @@ class MyApp(Adw.Application):
         # add header_bar in toolbar
         toolbar_view.add_top_bar(header_bar)
 
-        # toggle button for switch locale
-        toggle_btn = Gtk.Button.new_from_icon_name("object-flip-horizontal-symbolic")
+        # menu: language-switcher 
+        menu_lang = Gio.Menu.new()
+        menu_lang.append("English", "app.lang::en")
+        menu_lang.append("العربية (Arabic)", "app.lang::ar")
+        
+
+
+        """lang_action = Gio.SimpleAction.new_stateful(
+            "lang",
+            GLib.VariantType.new("s"),
+            GLib.Variant.new_string("en")
+        )
+        lang_action.connect("activate", self.on_language_action_activated)
+        self.add_action(lang_action)
+
+        menu_lang.append("lang", "app.lang")
+
+        lang_en_action = Gio.SimpleAction.new("lang", None)
+        lang_en_action.connect("activate", lambda action, param: print("lang_en_action"))
+        self.add_action(lang_en_action)"""
+
+        
+        """quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", self.on_quit_clicked)
+        self.add_action(quit_action)"""
+        # English item
+        """en_item = Gio.MenuItem.new("English", "app.lang::en")
+        en_item.set_attribute_value("icon", GLib.Variant.new_string("en-US"))
+        menu_lang.append_item(en_item)
+        
+        # Arabic item
+        ar_item = Gio.MenuItem.new("العربية (Arabic)", "app.lang::ar")
+        ar_item.set_attribute_value("icon", GLib.Variant.new_string("ar-SA"))
+        menu_lang.append_item(ar_item)"""
+
+        # Create action
+        lang_action = Gio.SimpleAction.new_stateful(
+            "lang",
+            GLib.VariantType.new("s"),
+            GLib.Variant.new_string("en")
+        )
+        lang_action.connect("activate", self.on_language_action_activated)
+        self.add_action(lang_action)
+
+        lang_menu_button = Gtk.MenuButton()
+        lang_menu_button.set_icon_name("preferences-desktop-locale-symbolic")
+        lang_menu_button.set_menu_model(menu_lang)
+        header_bar.pack_end(lang_menu_button)
+
+        # toggle button for switch locale: text-direction
+        """toggle_btn = Gtk.Button.new_from_icon_name("object-flip-horizontal-symbolic")
         toggle_btn.set_tooltip_text("Toggle RTL/LTR")
         toggle_btn.connect("clicked", self.on_toggle_direction_clicked)
         # add toggle_btn in header-bar
-        header_bar.pack_start(toggle_btn)
+        header_bar.pack_start(toggle_btn)"""
 
         # theme-buttton
         self.theme_btn = Gtk.Button()
