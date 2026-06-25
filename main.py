@@ -3032,6 +3032,12 @@ class MyApp(Adw.Application):
         print("CMD > ", cmd_text)
         print(cmd_text)
 
+    def append_text_to_terminal(self, log_stream):
+        pass
+
+    def on_execute_shell_process_worker(self, cmd_text):
+        pass
+
     
     def build_local_tabs_view(self):
         #
