@@ -46,8 +46,13 @@ toastoverlay > widget {
     margin-bottom: 12px;
 }
 
+/* Target the text view widget class and its inner C-level text canvas node natively */
+.monospace textview, 
 .monospace textview text {
-    background-color: #lelele;
-    color: #dfdbd2;
+    /* FIX: Changed letter 'l' to number '1' to create a valid dark charcoal color */
+    background-color: #1e1e1e; 
     
+    /* Clean cream-white typography style for terminal visibility */
+    color: #dfdbd2;
 }
+
