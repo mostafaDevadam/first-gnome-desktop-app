@@ -391,6 +391,12 @@ class MyApp(Adw.Application):
 
         print(f"i18n: {self.i18n._("posts")}")
 
+        # dark-mode
+        self.style_manager = Adw.StyleManager.get_default()
+        self.style_manager.set_color_scheme(Adw.ColorScheme.PREFER_LIGHT)
+
+
+
 
 
         # window
@@ -416,6 +422,12 @@ class MyApp(Adw.Application):
         toggle_btn.connect("clicked", self.on_toggle_direction_clicked)
         # add toggle_btn in header-bar
         header_bar.pack_start(toggle_btn)
+
+        # theme-buttton
+        self.theme_btn = Gtk.Button()
+        self.theme_btn.set_icon_name("weather-clear-symbolic")
+        self.theme_btn.connect("clicked", self.on_toggle_theme_clicked)
+        header_bar.pack_start(self.theme_btn)
 
         # menu in header_bar
         menu = Gio.Menu.new()
@@ -3655,6 +3667,19 @@ class MyApp(Adw.Application):
             self.empty_list_lbl.set_label(self.i18n._("empty_list_text"))
         #
 
+    def on_toggle_theme_clicked(self, button):
+        print("on_toggle_theme_clicked executing...")
+
+        current_scheme = self.style_manager.get_color_scheme()
+
+        if current_scheme == Adw.ColorScheme.PREFER_LIGHT or current_scheme == Adw.ColorScheme.DEFAULT:
+           self.style_manager.set_color_scheme(Adw.ColorScheme.PREFER_DARK)
+           button.set_icon_name("display-brightness-symbolic")
+           print("Theme scheme updated to : FORCE DARK")    
+        else:
+            self.style_manager.set_color_scheme(Adw.ColorScheme.PREFER_LIGHT)
+            button.set_icon_name("weather-clear-symbolic")
+            print("Theme scheme updated to: FORCE LIGHT")
 
 
     def init_direction_lang(self):
