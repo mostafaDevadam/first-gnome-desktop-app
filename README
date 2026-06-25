@@ -10,6 +10,12 @@ Features:
 5. searching
 6. Login/Logout
 
+Development features:
+1. A protected Login portal screen system with top-aligned toast feedback layouts.
+2. Full RTL layout direction toggles linked directly with a dynamic i18n translation engine for instant English/Arabic switches.
+3. Real-time in-memory storage array filtering with immediate interface clearances to prevent duplicate data stacking bugs.
+4. Optimized, thread-safe background processing workers that prevent system stutters.
+
 
 Install packages
 $ sudo apt gnome-builder 

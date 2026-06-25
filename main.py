@@ -1,8 +1,11 @@
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
+gi.require_version('Notify', '0.7')
 
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk, Notify
+
+Notify.init('com.example.myapp')
 
 import sys
 import urllib.request
@@ -882,6 +885,9 @@ class MyApp(Adw.Application):
         #self.menu.append("Logout", "app.logout")
         #self.rebuild_menu()
         GLib.idle_add(self.rebuild_menu)
+        #
+        self.fire_notify("Mein Gnome Login", 
+                         "Login in success for Mein Gnome App!")
 
             
     def on_logout_button_clicked(self, button):
@@ -3946,6 +3952,26 @@ class MyApp(Adw.Application):
         #self.logout_action.set_enabled(False)
         GLib.idle_add(self.rebuild_menu)
         self.logout_btn.set_visible(False)
+        #
+        self.fire_notify("Mein Gnome Notify", "Hallo, Wilkommen!!")
+
+    #
+    def fire_notify(self, title_msg, body_msg):
+        print("fire_notify")
+
+        try:
+            notification = Notify.Notification.new(
+                title_msg,
+                body_msg,
+                "dialog-information-symbolic"
+            )
+
+            notification.set_urgency(Notify.Urgency.NORMAL)
+            notification.show()
+            print("Desktop bubble notification success!")
+
+        except Exception as e:
+            print(f"Error OS notify: {e}")
 
 
     
