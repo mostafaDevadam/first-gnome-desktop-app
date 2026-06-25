@@ -1053,6 +1053,12 @@ class MyApp(Adw.Application):
                 color: #ff5555; /*#dfdbd2;*/
             }
 
+            .prompt {
+              padding: 5px;
+               /*border: 2px solid red;*/
+                border-radius: 15px;
+            }
+
             .login_btn {
                 /*background-color: #fd0000;*/
             }
@@ -3023,6 +3029,7 @@ class MyApp(Adw.Application):
         prompt_lbl = Gtk.Label(label="user@app:~$")
         prompt_lbl.add_css_class("dim-label")
         prompt_lbl.add_css_class("monospace")
+        prompt_lbl.add_css_class("prompt")
         
         #
         #self.shell_entry = Gtk.Entry(placeholder_text=self.i18n._("shell_placeholder"))
