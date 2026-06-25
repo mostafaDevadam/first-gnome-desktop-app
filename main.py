@@ -209,7 +209,13 @@ class I18n():
                                     "group_title": "Stored Local Entries",
                                     "empty_list_text": "No items recorded yet. click 'Add' above to build a list.",
                                     "group_disk_title": "Stored Data in Disk with Entries",
-                                    "disk_manager": "Disk List Manager"
+                                    "disk_manager": "Disk List Manager",
+                                    "login_title": "Login",
+                                    "email": "Email",
+                                    "password": "Password",
+                                    "enter_email": "Enter Email",
+                                    "enter_password": "Enter Password",
+
                               
                               
                               
@@ -240,7 +246,12 @@ class I18n():
                                     "group_title": "العناصر المحلية المحفوظة",
                                     "empty_list_text": "لم يتم تسجيل أي عناصر بعد. انقر فوق 'إضافة' أعلاه لإنشاء قائمة.",
                                     "group_disk_title": "البيانات المحفوظة في القرص مع العناصر",
-                                    "disk_manager": "مدير قائمة القرص"
+                                    "disk_manager": "مدير قائمة القرص",
+                                    "login_title": "Login",
+                                    "email": "Email",
+                                    "password": "Password",
+                                    "enter_email": "Enter Email",
+                                    "enter_password": "Enter Password",
 
                                
                                
@@ -428,6 +439,11 @@ class MyApp(Adw.Application):
         self.theme_btn.set_icon_name("weather-clear-symbolic")
         self.theme_btn.connect("clicked", self.on_toggle_theme_clicked)
         header_bar.pack_start(self.theme_btn)
+
+        # logout-button
+        self.logout_btn = Gtk.Button(label="Logout")
+        self.logout_btn.connect("clicked", self.on_logout_button_clicked)
+        header_bar.pack_start(self.logout_btn)
 
         # menu in header_bar
         menu = Gio.Menu.new()
@@ -750,20 +766,86 @@ class MyApp(Adw.Application):
         inner_split_view.set_min_sidebar_width(200)
 
         #
-        outer_split_view = Adw.OverlaySplitView()
-        outer_split_view.set_sidebar(self.right_sidebar)
-        outer_split_view.set_content(inner_split_view)
-        outer_split_view.set_sidebar_position(Gtk.PackType.END)
-        outer_split_view.set_min_sidebar_width(200)
+        self.outer_split_view = Adw.OverlaySplitView()
+        self.outer_split_view.set_sidebar(self.right_sidebar)
+        self.outer_split_view.set_content(inner_split_view)
+        self.outer_split_view.set_sidebar_position(Gtk.PackType.END)
+        self.outer_split_view.set_min_sidebar_width(200)
 
        
 
 
+        # login
+        login_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        login_box.set_valign(Gtk.Align.CENTER)
+        login_box.set_halign(Gtk.Align.CENTER)
+        login_box.set_size_request(300, -1)
+        # login form layout
+        login_title = Gtk.Label(label=self.i18n._("login_title") if hasattr(self, 'i18n') else "Welcome Back")
+        login_title.add_css_class("title-1")
+        login_title.set_margin_bottom(12)
+        login_box.append(login_title)
+        # login form input email
+        self.input_login_email = Gtk.Entry(placeholder_text="Email address")
+        self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        login_box.append(self.input_login_email)
+
+        # login form input password
+        self.input_login_pass = Gtk.Entry(placeholder_text="Password")
+        self.input_login_pass.set_visibility(False)
+        self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        login_box.append(self.input_login_pass)
+
+        # login button
+        login_btn = Gtk.Button(label="Login")
+        login_btn.add_css_class("suggested-action")
+        login_btn.set_margin_top(8)
+        login_btn.connect("clicked", self.on_login_button_clicked)
+        login_box.append(login_btn)
+
+
+
+        # stack
+        self.root_navigation_stack = Gtk.Stack()
+        self.root_navigation_stack.set_transition_type(Gtk.StackTransitionType.NONE)
+        self.root_navigation_stack.add_named(login_box, "login_screen_layout")
+        self.root_navigation_stack.add_named(self.outer_split_view, "main_layout")
+
+
+
+        
+
+
+
         #
-        toolbar_view.set_content(outer_split_view)
+        toolbar_view.set_content(self.root_navigation_stack)
         self.win.set_content(toolbar_view)
         #win.set_content(box)
+        self.root_navigation_stack.set_visible_child_name("login_screen_layout")
         self.win.present()
+
+
+    def on_login_button_clicked(self, button):
+        email = self.input_login_email.get_text().strip()
+        password = self.input_login_pass.get_text().strip()
+
+        if not email or not password:
+            print("Authentication Failure Email or Password is incorrect")
+            return
+        #
+        self.root_navigation_stack.set_visible_child_name("main_layout")
+
+        self.input_login_email.set_text("")
+        self.input_login_pass.set_text("")
+        #
+        print("Layout interface canvas unlocked.")
+            
+    def on_logout_button_clicked(self, button):
+        if hasattr(self, 'root_navigation_stack'):
+            self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+            print("Session cleared. Interface state locked back to login")
+
+
 
     
     # handle css
