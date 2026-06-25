@@ -1,10 +1,17 @@
 
 
-It's simple desktop using gnome under linux ubuntu
+It's simple desktop app using Gnome(Gtk4) under linux ubuntu
+
+Features:
+1. Dark-Mode
+2. Localization and support English and Arabic
+3. add data
+4. display data
+5. searching
 
 
-install packages
-sudo apt gnome-builder 
+Install packages
+$ sudo apt gnome-builder 
 or
-flatpak install flathub org.gnome.Builder
+$ flatpak install flathub org.gnome.Builder
 
