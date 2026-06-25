@@ -233,6 +233,7 @@ class I18n():
                                     "setting_display_item": "display",
                                     "setting_colors_item": "Colors" ,
                                     "setting_keyboard_item": "Keyboard",
+                                    
 
 
                               
@@ -254,7 +255,8 @@ class I18n():
                                     "item_users": "المستخدمين",
                                     "item_posts": "المنشورات", # Pure Arabic value mapping
                                     "item_todos": "المهام",
-                                    "item_text": "محطة الشل",
+                                    "item_shell": "الشل",
+                                    "item_text" : "محطة الشل",
                                     "shell_manager": "مساحة عمل الشل نظام",
                                     "shell_run_btn": "تنفيذ",
                                     "shell_placeholder": "اكتب أمر الشل هنا...",
@@ -270,7 +272,7 @@ class I18n():
                                     "empty_list_text": "لم يتم تسجيل أي عناصر بعد. انقر فوق 'إضافة' أعلاه لإنشاء قائمة.",
                                     "group_disk_title": "البيانات المحفوظة في القرص مع العناصر",
                                     "disk_manager": "مدير قائمة القرص",
-                                    "login_title": "Login",
+                                    "login_title": "دخول",
                                     "email": "Email",
                                     "password": "Password",
                                     "enter_email": "Enter Email",
@@ -541,6 +543,9 @@ class MyApp(Adw.Application):
         self.apply_custom_styles()
 
         #
+        self.refresh_row_dictionaries()
+        #
+
         
 
         # create toolbar
@@ -555,22 +560,7 @@ class MyApp(Adw.Application):
         menu_lang = Gio.Menu.new()
         menu_lang.append("English", "app.lang::en")
         menu_lang.append("العربية (Arabic)", "app.lang::ar")
-        
-
-
-        """lang_action = Gio.SimpleAction.new_stateful(
-            "lang",
-            GLib.VariantType.new("s"),
-            GLib.Variant.new_string("en")
-        )
-        lang_action.connect("activate", self.on_language_action_activated)
-        self.add_action(lang_action)
-
-        menu_lang.append("lang", "app.lang")
-
-        lang_en_action = Gio.SimpleAction.new("lang", None)
-        lang_en_action.connect("activate", lambda action, param: print("lang_en_action"))
-        self.add_action(lang_en_action)"""
+    
 
         
         """quit_action = Gio.SimpleAction.new("quit", None)
@@ -691,6 +681,7 @@ class MyApp(Adw.Application):
 
         self.home_page_wrapper = view_stack.add_titled(tab1_box, "home", self.i18n._("tab_home"))
         self.home_page_wrapper.set_icon_name("user-home-symbolic") 
+        self.register_widget(self.home_page_wrapper, 'title', 'tab_home')
 
         # Left items list box configuration
         self.list_box = Gtk.ListBox()
@@ -715,6 +706,7 @@ class MyApp(Adw.Application):
             
             # Initial text mapping on initialization canvas
             row.set_title(self.i18n._(key))
+            #row.set_title(key)
             row.set_activatable(True)
 
             # Store the translation key identifier tag property on the row instance
@@ -766,6 +758,7 @@ class MyApp(Adw.Application):
         #page2.set_icon_name("emblem-system-symbolic")
         self.page2_wrapper = view_stack.add_titled(tab2_box, "settings", self.i18n._("tab_settings"))
         self.page2_wrapper.set_icon_name("emblem-system-symbolic") 
+        self.register_widget(self.page2_wrapper, 'title', 'tab_settings')
 
 
         #
@@ -791,6 +784,7 @@ class MyApp(Adw.Application):
             
             # Initial text mapping on initialization canvas
             row.set_title(self.i18n._(key))
+            #row.set_title(key)
             row.set_activatable(True)
 
             # Store the translation key identifier tag property on the row instance
@@ -821,6 +815,7 @@ class MyApp(Adw.Application):
         #page3.set_icon_name("avatar-default-symbolic")
         self.page3_wrapper = view_stack.add_titled(tab3_box, "profile", self.i18n._("tab_profile"))
         self.page3_wrapper.set_icon_name("avatar-default-symbolic") 
+        self.register_widget(self.page3_wrapper, 'title', 'tab_profile')
 
 
         # view_switcher
@@ -980,7 +975,9 @@ class MyApp(Adw.Application):
         # right-sidebar 
         self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         #self.right_sidebar.add_css_class("sidebar-panel")
-        self.right_sidebar.set_size_request(200, -1)
+        #self.right_sidebar.set_size_request(340, -1)
+        self.right_sidebar.set_hexpand(True)
+        self.right_sidebar.set_vexpand(True)
         #self.right_label = Gtk.Label(label="Right")
         #self.right_label.set_margin_top(12)
         #right_sidebar.append(right_label)
@@ -1000,7 +997,10 @@ class MyApp(Adw.Application):
         self.outer_split_view.set_sidebar(self.right_sidebar)
         self.outer_split_view.set_content(inner_split_view)
         self.outer_split_view.set_sidebar_position(Gtk.PackType.END)
-        self.outer_split_view.set_min_sidebar_width(200)
+        #
+        self.outer_split_view.set_min_sidebar_width(280) # 280 or 200 or 320
+        # or
+        self.outer_split_view.set_max_sidebar_width(500)
 
        
 
@@ -1014,10 +1014,12 @@ class MyApp(Adw.Application):
         login_title = Gtk.Label(label=self.i18n._("login_title") if hasattr(self, 'i18n') else "Welcome Back")
         login_title.add_css_class("title-1")
         login_title.set_margin_bottom(12)
+        self.register_widget(login_title, "label", "login_title")
         login_box.append(login_title)
         # login form input email
-        self.input_login_email = Gtk.Entry(placeholder_text=self.i18n._("enter_email"))
+        self.input_login_email = Gtk.Entry() #(placeholder_text=self.i18n._("enter_email"))
         self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        self.register_widget(self.input_login_email, "placeholder", "enter_email")
         login_box.append(self.input_login_email)
 
         # login form input password
@@ -1027,7 +1029,9 @@ class MyApp(Adw.Application):
         login_box.append(self.input_login_pass)
 
         # login button
-        self.login_btn = Gtk.Button(label=self.i18n._("login_title"))
+        #self.login_btn = Gtk.Button(label=self.i18n._("login_title"))
+        self.login_btn = Gtk.Button() #(label="login_title")
+        self.register_widget(self.login_btn, "label", "login_title")
         self.login_btn.add_css_class("suggested-action")
         #self.login_btn.add_css_class("login_btn")
         self.login_btn.set_margin_top(8)
@@ -4107,7 +4111,7 @@ class MyApp(Adw.Application):
             self.sidebar_comments_group.add(comment_row)
 
 
-
+    """
 
     def on_toggle_direction_clicked(self, button):
         print("on_toggle_direction_clicked")
@@ -4242,7 +4246,7 @@ class MyApp(Adw.Application):
         if hasattr(self, 'input_login_pass') and self.input_login_pass:
             self.input_login_pass.set_placeholder_text(self.i18n._("enter_password"))
 
-
+    """
 
     def on_toggle_theme_clicked(self, button):
         print("on_toggle_theme_clicked executing...")
