@@ -201,6 +201,10 @@ class I18n():
                                     "item_users": "Users",
                                     "item_posts": "Posts",   # Pure English value mapping
                                     "item_todos": "Todos",
+                                    "item_shell": "Shell Terminal",
+                                    "shell_manager": "System Shell Workspace",
+                                    "shell_run_btn": "Execute",
+                                    "shell_placeholder": "Type shell command here...",
                                     "gnome_app": "My Gnome App",
                                     "search_placeholder": "Search records...",
                                     "local_manager": "Local List Manager",
@@ -221,6 +225,12 @@ class I18n():
                                     "login_success_msg": "Login successful! Welcome back.",
                                     "logout_title": "Logout",
                                     "login_failure_msg": "Login failed: Email and password fields cannot be empty.",
+                                    "setting_general_item": "General",
+                                    "setting_account_item": "Account",
+                                    "setting_notifications_item": "Notifications",
+                                    "setting_display_item": "display",
+                                    "setting_colors_item": "Colors" ,
+                                    "setting_keyboard_item": "Keyboard",
 
 
                               
@@ -242,6 +252,10 @@ class I18n():
                                     "item_users": "المستخدمين",
                                     "item_posts": "المنشورات", # Pure Arabic value mapping
                                     "item_todos": "المهام",
+                                    "item_text": "محطة الشل",
+                                    "shell_manager": "مساحة عمل الشل نظام",
+                                    "shell_run_btn": "تنفيذ",
+                                    "shell_placeholder": "اكتب أمر الشل هنا...",
                                     "gnome_app": "تطبيق جينوم ",
                                     "search_placeholder": "البحث في السجلات...",  
                                     "local_manager": "مدير القائمة المحلية",
@@ -262,6 +276,13 @@ class I18n():
                                     "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
                                     "logout_title": "خروج",
                                     "login_failure_msg": "فشل تسجيل الدخول: لا يمكن ترك حقول البريد الإلكتروني وكلمة المرور فارغة.",
+                                    "setting_general_item": "عام",
+                                    "setting_account_item": "الحساب",
+                                    "setting_notifications_item": "الإشعارات",
+                                    "setting_display_item": "العرض",
+                                    "setting_colors_item": "الألوان",
+                                    "setting_keyboard_item": "لوحة المفاتيح",
+
 
 
                                
@@ -336,6 +357,7 @@ class MyApp(Adw.Application):
         #self.tab1_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         #
         self.nav_rows = {}
+        self.nav_settings_rows = {}
         #
         self.isLogin = False
         self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
@@ -546,7 +568,8 @@ class MyApp(Adw.Application):
             ("item_storage", "drive-harddisk-symbolic"),
             ("item_users", "avatar-default-symbolic"),
             ("item_posts", "mail-send-receive-symbolic"), # FIX: Changed from function call to abstract key string
-            ("item_todos", "checkbox-checked-symbolic")
+            ("item_todos", "checkbox-checked-symbolic"),
+            ("item_shell", "utilities-terminal-symbolic"),
         ]
 
         # Tracking dictionary to easily find rows during translation refresh cycles
@@ -608,6 +631,50 @@ class MyApp(Adw.Application):
         #page2.set_icon_name("emblem-system-symbolic")
         self.page2_wrapper = view_stack.add_titled(tab2_box, "settings", self.i18n._("tab_settings"))
         self.page2_wrapper.set_icon_name("emblem-system-symbolic") 
+
+
+        #
+        self.list2_box = Gtk.ListBox()
+        self.list2_box.add_css_class("boxed-list")
+
+       
+
+        settings_items = [
+            ("setting_general_item", "preferences-system-symbolic"),       # Clean gear/sliders icon
+            ("setting_account_item", "avatar-default-symbolic"),           # Crisp user profile silhouette
+            ("setting_notifications_item", "preferences-system-notifications-symbolic"), # Bell icon
+            ("setting_display_item", "video-display-symbolic"),            # Monitor/screen icon
+            ("setting_colors_item", "preferences-desktop-wallpaper-symbolic"), # Color palette/dropper icon
+            ("setting_keyboard_item", "input-keyboard-symbolic")
+        ]
+
+        # Tracking dictionary to easily find rows during translation refresh cycles
+        
+
+        for key, icon_name in settings_items:
+            row = Adw.ActionRow()
+            
+            # Initial text mapping on initialization canvas
+            row.set_title(self.i18n._(key))
+            row.set_activatable(True)
+
+            # Store the translation key identifier tag property on the row instance
+            row.nav_item_key_id = key
+
+            prefix_icon = Gtk.Image.new_from_icon_name(icon_name)
+            row.add_prefix(prefix_icon)
+
+            suffix_arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
+            row.add_suffix(suffix_arrow)
+
+            row.connect("activated", self.on_settings_item_clicked)
+
+            self.list2_box.append(row)
+            
+            # Save a link to this row matching its translation tracking key
+            self.nav_settings_rows[key] = row
+
+        tab2_box.append(self.list2_box)
 
 
         #tab3
@@ -741,6 +808,10 @@ class MyApp(Adw.Application):
 
         # View F: storage in disk
         self.build_disk_tabs_view()
+
+        # View : Shell
+        self.build_shell_view()
+
 
         # View S: Posts
         """self.posts_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -899,6 +970,11 @@ class MyApp(Adw.Application):
             print("Session cleared. Interface state locked back to login")
         self.logout_btn.set_visible(False)
         GLib.idle_add(self.rebuild_menu)
+        self.fire_notify("Gnome App","Logout is success!")
+
+
+    
+
 
 
 
@@ -2866,6 +2942,96 @@ class MyApp(Adw.Application):
         GLib.idle_add(test_fetch)
 
 
+    def build_shell_view(self):
+        shell_wrapper = Adw.ToolbarView()
+        #
+        shell_action_bar = Gtk.HeaderBar()
+        shell_action_bar.set_show_title_buttons(False)
+        #
+        self.shell_title = Gtk.Label(label=self.i18n._("shell_manager"))
+        self.shell_title.add_css_class("heading")
+        shell_action_bar.set_title_widget(self.shell_title)
+        shell_wrapper.add_top_bar(shell_action_bar)
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        #
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        content_box.set_margin_top(16)
+        content_box.set_margin_bottom(16)
+        content_box.set_margin_start(16)
+        content_box.set_margin_end(16)
+        #
+        self.terminal_scroller = Gtk.ScrolledWindow()
+        self.terminal_scroller.set_vexpand(True)
+        self.terminal_scroller.set_hexpand(True)
+        self.terminal_scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        
+        self.terminal_view = Gtk.TextView()
+        self.terminal_view.set_editable(False)
+        self.terminal_view.set_cursor_visible(False)
+        self.terminal_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.terminal_view.add_css_class("monospace")
+
+        self.terminal_scroller.set_child(self.terminal_view)
+        content_box.append(self.terminal_scroller)
+
+
+        #
+        input_row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        #
+        prompt_lbl = Gtk.Label(label="user@app:~$")
+        prompt_lbl.add_css_class("dim-label")
+        prompt_lbl.add_css_class("monospace")
+        
+        #
+        #self.shell_entry = Gtk.Entry(placeholder_text=self.i18n._("shell_placeholder"))
+        self.shell_entry = Gtk.Entry()
+        self.shell_entry.set_placeholder_text(self.i18n._("shell_placeholder"))
+        self.shell_entry.set_hexpand(True)
+        self.shell_entry.add_css_class("monospace")
+        self.shell_entry.connect("activate", self.on_execute_shell_command)
+        #
+        self.shell_run_btn = Gtk.Button(label=self.i18n._("shell_run_btn"))
+        self.shell_run_btn.add_css_class("suggested-action")
+        #self.shell_run_btn.connect("clicked", self.on_execute_shell_command)
+        #
+        input_row_box.append(prompt_lbl)
+        input_row_box.append(self.shell_entry)
+        input_row_box.append(self.shell_run_btn)
+        content_box.append(input_row_box)
+        #
+        #pref_group = Adw.PreferencesGroup()
+        #pref_group.set_title("Terminal Logs")
+        #
+        self.shell_log_row = Adw.ActionRow()
+        self.shell_log_row.set_title("Console Output Ready...")
+        self.shell_log_row.set_subtitle("System shell runtime operational pipelines are initialized.")
+        #
+        #pref_group.add(self.shell_log_row)
+        #content_box.append(pref_group)
+        content_box.append(input_row_box)
+        #
+        scroll_win.set_child(content_box)
+        shell_wrapper.set_content(scroll_win)
+        #
+        self.center_stack.add_named(shell_wrapper, "shell_console_view")
+
+
+
+    def on_execute_shell_command(self, button):
+        print("on_execute_shell_command")
+        #
+        cmd = self.shell_entry.get_text()
+        cmd_text = cmd.strip()
+        if not cmd_text:
+            print("Validation Warning!")
+            return
+        #
+        print(f"CMD: '{cmd_text}'")
+        print("CMD > ", cmd_text)
+        print(cmd_text)
+
     
     def build_local_tabs_view(self):
         #
@@ -3258,6 +3424,12 @@ class MyApp(Adw.Application):
         elif clicked_title == "Test":
             print("Test item")
             self.center_stack.set_visible_child_name("local_test_view")
+
+        elif clicked_title == "Shell Terminal":
+            print("Shell item")
+            #self.center_stack.set_visible_child_name("shell_view")
+            #self.info_label.set_text(f"Selected Section: {clicked_title} #")
+            self.center_stack.set_visible_child_name("shell_console_view")
             
         
 
@@ -3270,6 +3442,13 @@ class MyApp(Adw.Application):
 
     
      # fetch users
+
+
+    def on_settings_item_clicked(self, row):
+        clicked_title = row.get_title()
+        self.info_label.set_text(f"Selected Section: {clicked_title}")
+
+
 
     def trigger_users_fetch_pipeline(self):
         """ Re-enters loading state and spins up the network thread """
@@ -3739,11 +3918,19 @@ class MyApp(Adw.Application):
         if hasattr(self, 'home_page_wrapper') and self.home_page_wrapper:
             self.home_page_wrapper.set_title(self.i18n._("tab_home"))
 
+        #
         if hasattr(self, 'nav_rows') and self.nav_rows:
             print("Refreshing action row navigation titles in UI thread...")
             for key, row_widget in self.nav_rows.items():
                 # Re-fetch the text value from the freshly updated language index
                 row_widget.set_title(self.i18n._(key))
+        #
+        if hasattr(self, 'nav_settings_rows') and self.nav_settings_rows:
+            print("Refreshing action row navigation titles in UI thread...")
+            for key, row_widget in self.nav_settings_rows.items():
+                # Re-fetch the text value from the freshly updated language index
+                row_widget.set_title(self.i18n._(key))
+
         #
         if hasattr(self, 'page2_wrapper') and self.page2_wrapper:
             self.page2_wrapper.set_title(self.i18n._("tab_settings"))
@@ -3883,7 +4070,9 @@ class MyApp(Adw.Application):
 
         # restart Action
         restart_action = Gio.SimpleAction.new("restart", None)
-        restart_action.connect("activate", lambda action, param:  print("restart...") )
+        #restart_action.connect("activate", lambda action, param:  print("restart...") )
+        restart_action.connect("activate", lambda action, param:  self.fire_notify("Gnome App","Restart Gnome App") )
+        #restart_action.connect("activate", self.on_restart_clicked)
         self.add_action(restart_action)
         # 2. CRITICAL FIX: Register the logout action here ONCE, completely safe from loops
         if not self.lookup_action("logout"):
@@ -3930,6 +4119,11 @@ class MyApp(Adw.Application):
 
     def on_quit_clicked(self, action, parameter):
         print("on_quit_clicked")
+        self.fire_notify("Gnome App","Quit Gnome App!")
+
+    def on_restart_clicked(self, action, parameter):
+        print("on_restart_clicked")
+        self.fire_notify("Gnome App","Restart Gnome App!")
 
     def on_about_clicked(self, action, parameter):
         print("on_about_clicked")

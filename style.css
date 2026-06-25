@@ -45,3 +45,9 @@ toastoverlay > widget {
 .boxed-list {
     margin-bottom: 12px;
 }
+
+.monospace textview text {
+    background-color: #lelele;
+    color: #dfdbd2;
+    
+}
