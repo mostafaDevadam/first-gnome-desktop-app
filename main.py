@@ -217,6 +217,8 @@ class I18n():
                                     "enter_password": "Enter Password",
                                     "login_success_msg": "Login successful! Welcome back.",
                                     "logout_title": "Logout",
+                                    "login_failure_msg": "Login failed: Email and password fields cannot be empty.",
+
 
                               
                               
@@ -256,6 +258,8 @@ class I18n():
                                     "enter_password": "Enter Password",
                                     "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
                                     "logout_title": "خروج",
+                                    "login_failure_msg": "فشل تسجيل الدخول: لا يمكن ترك حقول البريد الإلكتروني وكلمة المرور فارغة.",
+
 
                                
                                
@@ -318,8 +322,8 @@ class MyApp(Adw.Application):
         self.local_todos_group = Adw.PreferencesGroup()
         self.local_todos_items = []
         #
-        Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
-        self.current_lang = "ar"
+        Gtk.Widget.set_default_direction(Gtk.TextDirection.LTR)
+        self.current_lang = "en"
         
         self.i18n = I18n()
         #
@@ -329,6 +333,13 @@ class MyApp(Adw.Application):
         #self.tab1_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         #
         self.nav_rows = {}
+        #
+        self.isLogin = False
+        self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
+        #self.logout_action = Gio.SimpleAction.new("logout", None)
+        #
+        self.menu = Gio.Menu.new()
+        #
 
         
 
@@ -443,20 +454,27 @@ class MyApp(Adw.Application):
         header_bar.pack_start(self.theme_btn)
 
         # logout-button
-        self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
+        #self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
         self.logout_btn.connect("clicked", self.on_logout_button_clicked)
+        #if self.isLogin:
         self.logout_btn.set_visible(False)
         header_bar.pack_start(self.logout_btn)
 
         # menu in header_bar
-        menu = Gio.Menu.new()
-        menu.append("About", "app.about")
-        menu.append("Quit", "app.quit")
+        """self.menu = Gio.Menu.new()
+        self.menu.append("About", "app.about")
+        self.menu.append("Quit", "app.quit")
+        self.menu.append("Restart", "app.restart")"""
+        #self.menu.append("Logout", "app.logout")
+        #self.logout_action.set_enabled(False)
+
+        GLib.idle_add(self.rebuild_menu)
+        self.setup_actions()
 
 
         # menu button
         menu_button = Gtk.MenuButton()
-        menu_button.set_menu_model(menu)
+        menu_button.set_menu_model(self.menu)
         menu_button.set_icon_name("open-menu-symbolic")
 
         # add in header_bar
@@ -465,7 +483,7 @@ class MyApp(Adw.Application):
 
 
         # actions for menu clicks
-        self.setup_actions()
+        #self.setup_actions()
 
 
         
@@ -839,10 +857,16 @@ class MyApp(Adw.Application):
         if not email or not password:
             print("Authentication Failure Email or Password is incorrect")
             self.isLogin = False
+            self.logout_btn.set_visible(False)
+            failure_msg = self.i18n._("login_failure_msg") if hasattr(self, 'i18n') else "Login failed: Email and password fields cannot be empty."
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.toast_overlay.add_toast(failure_toast)
             return
         #
         self.isLogin = True
         self.logout_btn.set_visible(True)
+        #self.logout_action.set_enabled(True)
         self.root_navigation_stack.set_visible_child_name("main_layout")
 
         self.input_login_email.set_text("")
@@ -854,12 +878,21 @@ class MyApp(Adw.Application):
         toast = Adw.Toast.new(success_message)
         toast.set_timeout(3)
         self.toast_overlay.add_toast(toast)
+        #
+        #self.menu.append("Logout", "app.logout")
+        #self.rebuild_menu()
+        GLib.idle_add(self.rebuild_menu)
 
             
     def on_logout_button_clicked(self, button):
+        self.isLogin = False
+        
+        #
         if hasattr(self, 'root_navigation_stack'):
             self.root_navigation_stack.set_visible_child_name("login_screen_layout")
             print("Session cleared. Interface state locked back to login")
+        self.logout_btn.set_visible(False)
+        GLib.idle_add(self.rebuild_menu)
 
 
 
@@ -910,13 +943,15 @@ class MyApp(Adw.Application):
 
         """
         # create css provider
-        css_provider = Gtk.CssProvider()
+        
         #css_provider.load_from_data(css_data)
 
         import os
 
         current_dir = os.path.dirname(os.path.abspath(__file__))
         css_file_path = os.path.join(current_dir, "style.css")
+
+        css_provider = Gtk.CssProvider()
 
         try:
             css_provider.load_from_data(css_file_path)  
@@ -3805,7 +3840,7 @@ class MyApp(Adw.Application):
 
 
 
-    def setup_actions(self):
+    """def setup_actions(self):
 
         # Quite Action
         quit_action = Gio.SimpleAction.new("quit", None)
@@ -3816,6 +3851,75 @@ class MyApp(Adw.Application):
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self.on_about_clicked)
         self.add_action(about_action)
+
+        # restart Action
+        restart_action = Gio.SimpleAction.new("restart", None)
+        restart_action.connect("activate", lambda action, param:  print("restart...") )
+        self.add_action(restart_action)
+
+        #"""
+
+    def setup_actions(self):
+        """ Registers all application framework GActions EXACTLY ONCE on startup """
+        print("Initializing master GAction registration pipeline...")
+
+        # 1. Register your system default helper actions (About, Quit, Restart)
+        # ... (your existing action setups for about, quit, restart) ...
+        # Quite Action
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", self.on_quit_clicked)
+        self.add_action(quit_action)
+
+        # About Action
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.on_about_clicked)
+        self.add_action(about_action)
+
+        # restart Action
+        restart_action = Gio.SimpleAction.new("restart", None)
+        restart_action.connect("activate", lambda action, param:  print("restart...") )
+        self.add_action(restart_action)
+        # 2. CRITICAL FIX: Register the logout action here ONCE, completely safe from loops
+        if not self.lookup_action("logout"):
+            logout_action = Gio.SimpleAction.new("logout", None)
+            logout_action.connect("activate", self.on_logout_clicked)
+            self.add_action(logout_action)
+            print("System Logout action successfully registered to app scope runtime channels.")
+
+
+    def rebuild_menu(self):
+        """ Safe, optimized layout rebuilder that resets menu items cleanly """
+        print(f"rebuild_menu executing... User Authenticated: {self.isLogin}")
+
+        # =========================================================================
+        # FIX 1: Reuse or instantiate your menu container model shell cleanly
+        # =========================================================================
+        if not hasattr(self, 'menu') or self.menu is None:
+            self.menu = Gio.Menu.new()
+        else:
+            self.menu.remove_all() # Clears out old options to prevent layout accumulation
+
+        # 1. Append global navigation options common to both application states
+        self.menu.append("About", "app.about")
+        self.menu.append("Quit", "app.quit")
+        self.menu.append("Restart", "app.restart")
+
+        # 2. Append conditional menu entries based on active authentication parameters
+        if self.isLogin:
+            self.menu.append("Logout", "app.logout")
+            print("Visual Logout option item appended to menu model tree.")
+        else:
+            print("Visual Logout option item hidden from menu model tree.")
+
+        # =========================================================================
+        # FIX 2: Removed self.add_action() from here to prevent duplicate registration lag
+        # =========================================================================
+        return False
+
+
+
+
+        
 
 
     def on_quit_clicked(self, action, parameter):
@@ -3830,6 +3934,19 @@ class MyApp(Adw.Application):
             transient_for=self.get_active_window()
         )
         about.present()
+
+    def on_logout_clicked(self, action, parameter):
+        print("on_logout_clicked")
+        self.isLogin = False
+        # rebuild menu
+       
+        if hasattr(self, 'root_navigation_stack'):
+            self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+            print("Session cleared. Interface state locked back to login")
+        #self.logout_action.set_enabled(False)
+        GLib.idle_add(self.rebuild_menu)
+        self.logout_btn.set_visible(False)
+
 
     
    

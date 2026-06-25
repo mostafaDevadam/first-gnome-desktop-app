@@ -41,3 +41,7 @@ toastoverlay > widget {
     valign: start;
     margin-top: 12px;
 }
+
+.boxed-list {
+    margin-bottom: 12px;
+}
