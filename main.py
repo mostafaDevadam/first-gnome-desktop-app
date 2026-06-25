@@ -438,7 +438,7 @@ class MyApp(Adw.Application):
         #self.i18n.current_lang = "ar"
         #Gtk.Widget.set_default_direction(Gtk.TextDirection.RTL)
         #self.current_lang = "ar"
-        self.apply_custom_styles()
+        
         #
         self.init_direction_lang()
 
@@ -453,6 +453,9 @@ class MyApp(Adw.Application):
         self.win = Adw.ApplicationWindow(application=self)
         self.win.set_title(f"{self.i18n._('gnome_app')}")
         self.win.set_default_size(600, 400)
+
+        #
+        self.apply_custom_styles()
 
         #
         
@@ -894,6 +897,7 @@ class MyApp(Adw.Application):
         # login button
         self.login_btn = Gtk.Button(label=self.i18n._("login_title"))
         self.login_btn.add_css_class("suggested-action")
+        #self.login_btn.add_css_class("login_btn")
         self.login_btn.set_margin_top(8)
         self.login_btn.connect("clicked", self.on_login_button_clicked)
         login_box.append(self.login_btn)
@@ -982,43 +986,78 @@ class MyApp(Adw.Application):
     # handle css
     def apply_custom_styles(self):
         css_data = b"""
-          .custom-topbar {
-              background-color: #1a3a5f;
-              color: #ffffff;
-          }
-          .custom-topbar windowcontrols button {
-             color: #ffffff;
-          }
+                    .custom-topbar {
+                background-color: #1a3a5f;
+                color: #ffffff;
+            }
 
-          .sidebar-panel {
-             background-color: #e0e0e0;
-             border-left: 1px solid #cccccc;
-             border-right: 1px solid; #cccccc;
-          }
+            .custom-topbar windowcontrols button {
+                color: #ffffff;
+            }
 
-          .custom-view-switcher-bg {
-             background-color: #d0e1f9;
-             padding: 6px;
-             border-bottom: 1px solid #b0c4de;
-          }
+            .sidebar-panel {
+                background-color: #e0e0e0;
+                border-left: 1px solid #cccccc;
+                border-right: 1px solid #cccccc;
+            }
 
-          splitview > box:last-child {
-             background-color: #cfd8dc;
-             border-left: 1px solid #b0bec5;
-          
-          }
+            .custom-view-switcher-bg {
+                background-color: #d0e1f9;
+                padding: 6px;
+                border-bottom: 1px solid #b0c4de;
+            }
 
-          .dim-label {
-             opacity: 0.7;
-          }
+            splitview>box:last-child {
+                background-color: #cfd8dc;
+                border-left: 1px solid #b0bec5;
 
-          .bg-green {
-            background-color: green;
-          }
+            }
 
-          .user-card {
-             background-color: green;
-          }
+            .dim-label {
+                opacity: 0.7;
+            }
+
+            .bg-green {
+                background-color: green;
+            }
+
+            .user-card {
+                background-color: green;
+            }
+
+            toastoverlay > widget {
+                valign: start;
+                margin-top: 12px;
+            }
+
+            .boxed-list {
+                margin-bottom: 12px;
+            }
+
+            /* Target the text view widget class and its inner C-level text canvas node natively */
+            .monospace textview,
+            .monospace textview text {
+                /* FIX: Changed letter 'l' to number '1' to create a valid dark charcoal color */
+                /*background-color: #1e1e1e;*/
+                
+                /* Clean cream-white typography style for terminal visibility */
+               /* color: #dfdbd2;*/
+            }
+
+            .monospace textview text {
+              /* background-color: #1e1e1e;*/
+            }
+
+            .monospace  {
+                background-color: #1e1e1e;
+                color: #ff5555; /*#dfdbd2;*/
+            }
+
+            .login_btn {
+                /*background-color: #fd0000;*/
+            }
+
+
 
 
         
@@ -1036,7 +1075,8 @@ class MyApp(Adw.Application):
         css_provider = Gtk.CssProvider()
 
         try:
-            css_provider.load_from_data(css_file_path)  
+            #css_provider.load_from_data(css_file_path)  
+            css_provider.load_from_data(css_data)
             #
             # attach css provider globally
             display = Gdk.Display.get_default()
@@ -1046,7 +1086,7 @@ class MyApp(Adw.Application):
                     css_provider,
                     Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
                 )
-            print("css file loaded successfully")
+            print(f"css file loaded successfully: {css_file_path} {css_provider}")
 
         except Exception as e:
             print(f"Error loading css file from disk: {e}")
@@ -2565,11 +2605,11 @@ class MyApp(Adw.Application):
                         content = content.decode("utf-8")
                         
                     data = json.loads(content)
-                    print(f"data size posts#: {len(data)}")
+                    #print(f"data size posts#: {len(data)}")
                     
                     # FIX: Corrected list index bracket notation syntax [0]
-                    if data:
-                        print(f"data posts[0]#: {data[0]}")
+                    #if data:
+                        #print(f"data posts[0]#: {data[0]}")
 
                     # Hand data over to the main graphics thread safely for rendering
                     GLib.idle_add(populate_ui_cards, data)
@@ -2635,7 +2675,7 @@ class MyApp(Adw.Application):
                         content = content.decode("utf-8")
                         
                     data = json.loads(content)
-                    print(f"data size: {len(data)}")
+                    #print(f"data size: {len(data)}")
 
                     comment_count = 0
                     
@@ -2643,7 +2683,7 @@ class MyApp(Adw.Application):
                         pid = item.get("postId")
                         #id = item.get("id")
                         if pid == postId:
-                            print(f"comment item: {item}")
+                            #print(f"comment item: {item}")
                             #docs.append(item)
                             card = Adw.ActionRow()
                             card.set_title(item.get("name", "test"))
@@ -2740,7 +2780,7 @@ class MyApp(Adw.Application):
             print("json file exists!")
 
             def card_clicked(row):
-                print(f"card_clicked: {row.payload}")
+                #print(f"card_clicked: {row.payload}")
 
                 item = row.payload
 
@@ -2783,7 +2823,7 @@ class MyApp(Adw.Application):
                         content = content.decode("utf-8")
                         
                     data = json.loads(content)
-                    print(f"data size: {len(data)}")
+                    #print(f"data size: {len(data)}")
                     
                     for item in data:
                         print(f"item: {item}")
@@ -2799,7 +2839,7 @@ class MyApp(Adw.Application):
                     
                     # --- ACTION TAKEN HERE ---
                     # Now that docs is populated, safely trigger your UI updates or prints:
-                    print(f"len docs inside callback: {len(docs)}")
+                    #print(f"len docs inside callback: {len(docs)}")
 
                     local_items_group.queue_resize()
                     
@@ -3031,12 +3071,65 @@ class MyApp(Adw.Application):
         print(f"CMD: '{cmd_text}'")
         print("CMD > ", cmd_text)
         print(cmd_text)
+        buffer = self.terminal_view.get_buffer()
+        end_iter = buffer.get_end_iter()
+        buffer.insert(end_iter, f"user@app:~$ {cmd_text}\n")
+        self.shell_entry.set_text("")
+        self.shell_run_btn.set_sensitive(False)
+        #
+        import threading
+        worker_thread = threading.Thread(
+            target=self.on_execute_shell_process_worker,
+            args=(cmd_text,),
+            daemon=True
+        )
+        worker_thread.start()
 
     def append_text_to_terminal(self, log_stream):
-        pass
+        
+
+        buffer = self.terminal_view.get_buffer()
+        end_iter = buffer.get_end_iter()
+        buffer.insert(end_iter, f"{log_stream}\n")
+        mark = buffer.create_mark(None, buffer.get_end_iter(), False)
+        self.terminal_view.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
+       
+        if hasattr(self, 'shell_run_btn'):
+            self.shell_run_btn.set_sensitive(True)
+
+        return False
+
 
     def on_execute_shell_process_worker(self, cmd_text):
-        pass
+        import subprocess
+
+        if cmd_text.lower() == "clear":
+            GLib.idle.add(lambda: self.terminal_view.get_buffer().set_text(""))
+            GLib.idle_add(lambda: self.shell_run_btn.set_sensitive(True))
+            return
+        try:
+            result = subprocess.run(
+                cmd_text,
+                shell=True,
+                text=True,
+                capture_output=True,
+                timeout=10.0
+            )
+            if result.returncode == 0:
+                output_text = result.stdout
+                if not output_text:
+                    output_text = "[Command executed success with no output]"
+            else:
+                output_text = f"Error (Status {result.returncode}):\n{result.stderr}"
+
+        except subprocess.TimeoutExpired:
+             output_text = "Error: Command exceeded the maximum 10-second"
+
+        except Exception as e:
+               print(f"Failure: {e}")
+        #
+        GLib.idle_add(self.append_text_to_terminal, output_text)
+
 
     
     def build_local_tabs_view(self):
