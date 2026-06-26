@@ -758,25 +758,41 @@ class MenuLanguagesComponent(Gio.Menu):
       def __init__(self, app):
            super().__init__()
            self.app = app
+           #
+           self.build_menu_items()
+           self.register_statful_action()
 
-      def build_menu(self):
+
+      def build_menu_items(self):
           # menu: language-switcher 
-            menu_lang = Gio.Menu.new()
-            menu_lang.append("English", "app.lang::en")
+            #menu_lang = Gio.Menu.new()
+            """menu_lang.append("English", "app.lang::en")
             menu_lang.append("Deutsch (German)", "app.lang::de")
-            menu_lang.append("العربية (Arabic)", "app.lang::ar")
+            menu_lang.append("العربية (Arabic)", "app.lang::ar")"""
         
 
             # English item
-            """en_item = Gio.MenuItem.new("English", "app.lang::en")
-            en_item.set_attribute_value("icon", GLib.Variant.new_string("en-US"))
-            menu_lang.append_item(en_item)
+            en_item = Gio.MenuItem.new("English", "app.lang::en")
+            en_item.set_attribute_value("icon", GLib.Variant.new_string("preferences-desktop-locale-symbolic"))
+            self.append_item(en_item)
+
+            # German Item
+            de_item = Gio.MenuItem.new("Deutsch (German)", "app.lang::de")
+            de_item.set_attribute_value("icon", GLib.Variant.new_string("preferences-desktop-locale-symbolic"))
+            self.append_item(de_item)
+
             
             # Arabic item
             ar_item = Gio.MenuItem.new("العربية (Arabic)", "app.lang::ar")
-            ar_item.set_attribute_value("icon", GLib.Variant.new_string("ar-SA"))
-            menu_lang.append_item(ar_item)"""
+            ar_item.set_attribute_value("icon", GLib.Variant.new_string("preferences-desktop-locale-symbolic"))
+            self.append_item(ar_item)
 
+            
+
+            
+            #header_bar.pack_end(lang_menu_button)
+            #
+      def register_statful_action(self):
             # Create action
             lang_action = Gio.SimpleAction.new_stateful(
                 "lang",
@@ -785,13 +801,14 @@ class MenuLanguagesComponent(Gio.Menu):
             )
             lang_action.connect("activate", self.on_language_action_activated)
             self.app.add_action(lang_action)
+          
 
+      def get_menu_button(self):
             lang_menu_button = Gtk.MenuButton()
             lang_menu_button.set_icon_name("preferences-desktop-locale-symbolic")
-            lang_menu_button.set_menu_model(menu_lang)
+            lang_menu_button.set_menu_model(self)
             return lang_menu_button
-            #header_bar.pack_end(lang_menu_button)
-            #
+            
 
 
       def on_language_action_activated(self, action, parameter):
@@ -1077,41 +1094,9 @@ class MyApp(Adw.Application):
         #toolbar_view.add_top_bar(header_bar)
 
         # menu: language-switcher 
-        menu_lang = Gio.Menu.new()
-        menu_lang.append("English", "app.lang::en")
-        menu_lang.append("Deutsch (German)", "app.lang::de")
-        menu_lang.append("العربية (Arabic)", "app.lang::ar")
-    
-
-        # English item
-        """en_item = Gio.MenuItem.new("English", "app.lang::en")
-        en_item.set_attribute_value("icon", GLib.Variant.new_string("en-US"))
-        menu_lang.append_item(en_item)
-        
-        # Arabic item
-        ar_item = Gio.MenuItem.new("العربية (Arabic)", "app.lang::ar")
-        ar_item.set_attribute_value("icon", GLib.Variant.new_string("ar-SA"))
-        menu_lang.append_item(ar_item)"""
-
-        # Create action
-        lang_action = Gio.SimpleAction.new_stateful(
-            "lang",
-            GLib.VariantType.new("s"),
-            GLib.Variant.new_string("en")
-        )
-        lang_action.connect("activate", self.on_language_action_activated)
-        #self.add_action(lang_action)
-
-        lang_menu_button = Gtk.MenuButton()
-        lang_menu_button.set_icon_name("preferences-desktop-locale-symbolic")
-        lang_menu_button.set_menu_model(menu_lang)
-
-        #header_bar.pack_end(lang_menu_button)
-        lang_menu_inst = MenuLanguagesComponent(app=self)
-
-
-        
-        header_bar.pack_end(lang_menu_inst.build_menu())
+        self.lang_menu_component = MenuLanguagesComponent(app=self)
+        switcher_button = self.lang_menu_component.get_menu_button()
+        header_bar.pack_end(switcher_button)
 
         # toggle button for switch locale: text-direction
         """toggle_btn = Gtk.Button.new_from_icon_name("object-flip-horizontal-symbolic")
