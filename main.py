@@ -1147,6 +1147,49 @@ class TestViewClass():
         # Queue the function to run as soon as the main loop is ready
         GLib.idle_add(test_fetch)
         
+    def card_clicked(self, row):
+                print(f"card_clicked: {row.payload}")
+
+                item = row.payload
+
+                #
+                while child := self.app.right_sidebar.get_first_child():
+                    self.app.right_sidebar.remove(child)
+                #
+                self.app.right_sidebar.set_margin_top(16)
+                self.app.right_sidebar.set_margin_start(12)
+                self.app.right_sidebar.set_margin_end(12)
+                self.app.right_sidebar.set_margin_bottom(16)
+                #
+                title_label = Gtk.Label(label=item.get("title"))
+                title_label.add_css_class("title-1") # built-in font bold
+                title_label.set_margin_bottom(12)
+                title_label.set_halign(Gtk.Align.START)
+                self.app.right_sidebar.append(title_label)
+                #
+                body_label = Gtk.Label(label=item.get("author"))
+                body_label.add_css_class("dim-label") # built-in font bold
+                body_label.set_margin_bottom(24)
+                body_label.set_halign(Gtk.Align.START)
+                body_label.set_wrap(True)
+                self.app.right_sidebar.append(body_label)
+                #
+                print(f"item year: {item.get("year")}")
+                year_label = Gtk.Label(label=str(item.get("year", 0)))
+                year_label.add_css_class("dim-label") # built-in font bold
+                year_label.set_margin_bottom(24)
+                year_label.set_halign(Gtk.Align.START)
+                year_label.set_wrap(True)
+                self.app.right_sidebar.append(year_label)
+                #sidebar_group = Adw.PreferencesGroup()
+                #sidebar_group.set_title("User Information")
+
+               
+                # inject the completed data card into right-sidebar
+                #self.right_sidebar.append(sidebar_group)
+                #
+                #sidebar_group.set_margin_start(8)
+                #sidebar_group.set_margin_end(8)
 
 class UsersViewClass():
 
@@ -1585,10 +1628,6 @@ class PostsViewClass():
         # Fire off the data fetch routine inside a detached background worker thread
         worker_thread = threading.Thread(target=test_fetch_worker, daemon=True)
         worker_thread.start()
-
-
-    
-
 
 
 class CommentsViewClass():
@@ -2221,13 +2260,14 @@ class MyApp(Adw.Application):
         scroll_win.set_child(self.test_container)
         self.center_stack.add_named(scroll_win, "test_view")"""
         #self.build_test_view()
-        TestViewClass(app=self)
+        self.test_view_class = TestViewClass(app=self)
         #
         #self.build_test_users_view()
-        UsersViewClass(app=self)
+        self.users_view_class = UsersViewClass(app=self)
         #
         #self.build_test_posts_view2()
         PostsViewClass(app=self)
+        self.comments_view_class = CommentsViewClass()
         #
         #self.build_test_todos_view()
         TodosViewClass(app=self)
@@ -2851,6 +2891,9 @@ class MyApp(Adw.Application):
                 # Include a clean package icon indicator to the left
                 card_icon = Gtk.Image.new_from_icon_name("package-x-generic-symbolic")
                 row.add_prefix(card_icon)
+                row.set_activatable(True)
+                row.payload = item
+                row.connect("activated", self.test_view_class.card_clicked)
                 
                 # Append card row item straight to your freshly cleared group field
                 self.test_items_group.add(row)
@@ -2971,7 +3014,8 @@ class MyApp(Adw.Application):
 
                 row.set_activatable(True)
                 row.payload = item
-                row.connect("activated", self.user_card_clicked)
+                row.connect("activated", self.users_view_class.user_card_clicked)
+
 
 
                 
@@ -3077,7 +3121,8 @@ class MyApp(Adw.Application):
                 comments_label.set_margin_bottom(8)
                 main_box.append(comments_label)
 
-                self.build_test_comments_by_postId_view(main_box, item.get("id"))
+                #self.build_test_comments_by_postId_view(main_box, item.get("id"))
+                self.comments_view_class.build_by_postId(main_box, item.get("id"))
 
                 self.right_sidebar.append(main_box)
                 self.right_sidebar.set_vexpand(True)
@@ -3264,750 +3309,6 @@ class MyApp(Adw.Application):
 
     # cards clicked
 
-
-    def user_card_clicked(self, row):
-                print(f"user_card_clicked: {row.payload}")
-
-                item = row.payload
-
-                #
-                while child := self.right_sidebar.get_first_child():
-                    self.right_sidebar.remove(child)
-                #
-                self.right_sidebar.set_margin_top(16)
-                self.right_sidebar.set_margin_start(12)
-                self.right_sidebar.set_margin_end(12)
-                self.right_sidebar.set_margin_bottom(16)
-                #
-                title_label = Gtk.Label(label=item.get("name"))
-                title_label.add_css_class("title-1") # built-in font bold
-                title_label.set_margin_bottom(12)
-                title_label.set_halign(Gtk.Align.START)
-                self.right_sidebar.append(title_label)
-                #
-                body_label = Gtk.Label(label=item.get("email"))
-                body_label.add_css_class("dim-label") # built-in font bold
-                body_label.set_margin_bottom(24)
-                body_label.set_halign(Gtk.Align.START)
-                body_label.set_wrap(True)
-                self.right_sidebar.append(body_label)
-                #
-                sidebar_group = Adw.PreferencesGroup()
-                sidebar_group.set_title("User Information")
-
-                #
-                username_row = Adw.ActionRow(title="Username", subtitle=item.get("username", "N/A"))
-                sidebar_group.add(username_row)
-                #
-                web_row = Adw.ActionRow(title="Website", subtitle=item.get("website", "N/A"))
-                sidebar_group.add(web_row)
-                #
-                company_name = item.get("company", {}).get("name", "N/A")
-                company_row = Adw.ActionRow(title="Company", subtitle=company_name)
-                sidebar_group.add(company_row)
-
-                #
-                city_name = item.get("address", {}).get("city", "N/A")
-                city_row = Adw.ActionRow(title="City", subtitle=city_name)
-                sidebar_group.add(city_row)
-
-                # inject the completed data card into right-sidebar
-                self.right_sidebar.append(sidebar_group)
-                #
-                sidebar_group.set_margin_start(8)
-                sidebar_group.set_margin_end(8)
-
-    def post_card_clicked(self, row):
-                print(f"post_card_clicked: {row.payload}")
-
-                item = row.payload
-
-                #
-                while child := self.right_sidebar.get_first_child():
-                    self.right_sidebar.remove(child)
-                #
-                self.right_sidebar.set_margin_top(16)
-                self.right_sidebar.set_margin_start(12)
-                self.right_sidebar.set_margin_end(12)
-                self.right_sidebar.set_margin_bottom(16)
-                #
-                # Create a container for all content (to maintain proper layout)
-                main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-                main_box.set_margin_start(8)
-                main_box.set_margin_end(8)
-                main_box.set_vexpand(True)  # Allow the main box to expand vertically
-
-                #
-                title_label = Gtk.Label(label=item.get("title"))
-                title_label.add_css_class("title-1") # built-in font bold
-                title_label.set_margin_bottom(12)
-                title_label.set_halign(Gtk.Align.START)
-                #self.right_sidebar.append(title_label)
-                main_box.append(title_label)
-                #
-                body_label = Gtk.Label(label=item.get("body"))
-                body_label.add_css_class("dim-label") # built-in font bold
-                body_label.set_margin_bottom(24)
-                body_label.set_halign(Gtk.Align.START)
-                body_label.set_wrap(True)
-                #self.right_sidebar.append(body_label)
-                main_box.append(body_label)
-                # Add a separator
-                separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-                separator.set_margin_bottom(12)
-                main_box.append(separator)
-                # Add comments section with scrolling
-                comments_label = Gtk.Label(label="Comments")
-                comments_label.add_css_class("heading")
-                comments_label.set_halign(Gtk.Align.START)
-                comments_label.set_margin_bottom(8)
-                main_box.append(comments_label)
-
-                # calling fetch comments
-                self.build_test_comments_by_postId_view(main_box, item.get("id"))
-
-                # Add everything to the sidebar
-                self.right_sidebar.append(main_box)
-                self.right_sidebar.set_vexpand(True)
-                self.right_sidebar.set_hexpand(False)  # Keep horizontal expansion off
-
-
-    # builds
-
-    #
-   
-
-
-
-    def build_test_users_view(self):
-        #
-        local_wrapper = Adw.ToolbarView()
-
-        local_action_bar = Gtk.HeaderBar()
-        local_action_bar.set_show_title_buttons(False) 
-        local_title = Gtk.Label(label="Users Management")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
-
-        local_wrapper.add_top_bar(local_action_bar)
-
-
-        scroll_win = Gtk.ScrolledWindow()
-        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-
-        #self.local_users_group = Adw.PreferencesGroup()
-        self.local_users_group.set_title("Users")
-
-
-        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(self.local_users_group)
-        scroll_win.set_child(content_box)
-        local_wrapper.set_content(scroll_win)
-        
-        # Mount layout to stack structure immediately 
-        self.center_stack.add_named(local_wrapper, "local_test_users_view")
-
-
-        docs = []   
-
-
-        def test_fetch():
-            print("test_fetch")
-            import time
-            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
-            
-            """file_path = os.path.join(GLib.get_current_dir(), "./data/users.json")
-
-            if not os.path.exists(file_path):
-                print("no json file")
-                return False
-            
-            print("json file exists!")"""
-
-            def card_clicked(row):
-                #print(f"card_clicked: {row.payload}")
-
-                item = row.payload
-
-                #
-                while child := self.right_sidebar.get_first_child():
-                    self.right_sidebar.remove(child)
-                #
-                self.right_sidebar.set_margin_top(16)
-                self.right_sidebar.set_margin_start(12)
-                self.right_sidebar.set_margin_end(12)
-                self.right_sidebar.set_margin_bottom(16)
-                #
-                title_label = Gtk.Label(label=item.get("name"))
-                title_label.add_css_class("title-1") # built-in font bold
-                title_label.set_margin_bottom(12)
-                title_label.set_halign(Gtk.Align.START)
-                self.right_sidebar.append(title_label)
-                #
-                body_label = Gtk.Label(label=item.get("email"))
-                body_label.add_css_class("dim-label") # built-in font bold
-                body_label.set_margin_bottom(24)
-                body_label.set_halign(Gtk.Align.START)
-                body_label.set_wrap(True)
-                self.right_sidebar.append(body_label)
-                #
-                sidebar_group = Adw.PreferencesGroup()
-                sidebar_group.set_title("User Information")
-
-                #
-                username_row = Adw.ActionRow(title="Username", subtitle=item.get("username", "N/A"))
-                sidebar_group.add(username_row)
-                #
-                web_row = Adw.ActionRow(title="Website", subtitle=item.get("website", "N/A"))
-                sidebar_group.add(web_row)
-                #
-                company_name = item.get("company", {}).get("name", "N/A")
-                company_row = Adw.ActionRow(title="Company", subtitle=company_name)
-                sidebar_group.add(company_row)
-
-                #
-                city_name = item.get("address", {}).get("city", "N/A")
-                city_row = Adw.ActionRow(title="City", subtitle=city_name)
-                sidebar_group.add(city_row)
-
-                # inject the completed data card into right-sidebar
-                self.right_sidebar.append(sidebar_group)
-                #
-                sidebar_group.set_margin_start(8)
-                sidebar_group.set_margin_end(8)
-
-            def populate_ui_cards(data):
-                for item in data:
-                           
-                        self.local_users_items.append(item)
-                        c = CardComponent()
-                        c.build(item, "text-x-generic-symbolic", "users")
-                        c.set_activatable(True)
-                        c.payload = item
-                        c.connect("activated", self.user_card_clicked)
-                        self.local_users_group.add(c)
-                        #
-                    
-                    
-
-                self.local_users_group.queue_resize()
-
-
-            #self.read_json_file(populate_ui_cards, "data", "users")
-            self.handle_json_file.read_json_file(populate_ui_cards, "data", "users")
-
-            """try:
-                success, content = GLib.file_get_contents(file_path)
-
-                if success:
-                    if isinstance(content, bytes):
-                        content = content.decode("utf-8")
-                        
-                    data = json.loads(content)
-                    print(f"data size: {len(data)}")
-                    
-                    for item in data:
-                        print(f"item: {item}")
-                        #docs.append(item)
-                        self.local_users_items.append(item)
-                        card = Adw.ActionRow()
-                        card.set_title(item.get("name", "test"))
-                        card.set_subtitle(item.get("email", "test"))
-                        card.set_activatable(True)
-                        card.payload = item
-                        card.connect("activated", self.user_card_clicked)
-                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        self.local_users_group.add(card)
-                    
-                    # --- ACTION TAKEN HERE ---
-                    # Now that docs is populated, safely trigger your UI updates or prints:
-                    #print(f"len docs inside callback: {len(docs)}")
-
-                    self.local_users_group.queue_resize()
-                    
-                    
-
-                else:
-                    print("GLib failed to read file contents successfully.")
-            except Exception as e:
-                print(f"ERROR: {e}")"""
-
-            return False # Stop the GLib idle loop from repeating this function
-        
-        # Queue the function to run as soon as the main loop is ready
-        GLib.idle_add(test_fetch)
-
-        """
-
-    def build_test_posts_view(self):
-        #
-        print("build_test_posts_view----------------------------------")
-        #
-        local_wrapper = Adw.ToolbarView()
-
-        local_action_bar = Gtk.HeaderBar()
-        local_action_bar.set_show_title_buttons(False) 
-        local_title = Gtk.Label(label="Posts Management#")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
-
-        local_wrapper.add_top_bar(local_action_bar)
-
-
-        scroll_win = Gtk.ScrolledWindow()
-        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-
-        local_posts_group = Adw.PreferencesGroup()
-        local_posts_group.set_title("Posts")
-
-
-        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(local_posts_group)
-        scroll_win.set_child(content_box)
-        local_wrapper.set_content(scroll_win)
-        
-        # Mount layout to stack structure immediately 
-        self.center_stack.add_named(local_wrapper, "local_test_posts_view")
-
-        card = Adw.ActionRow()
-        card.set_title("test")
-        card.set_subtitle("test")
-        card.set_activatable(True)
-        #card.payload = item
-        #card.connect("activated", card_clicked)
-        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-        local_posts_group.add(card)
-        
-
-        def test_fetch():
-            print("test_fetch posts#")
-            import time
-            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
-
-           
-
-            def card_clicked(row):
-                #print(f"card_clicked: {row.payload}")
-
-                item = row.payload
-
-                #
-                while child := self.right_sidebar.get_first_child():
-                    self.right_sidebar.remove(child)
-                #
-                self.right_sidebar.set_margin_top(16)
-                self.right_sidebar.set_margin_start(12)
-                self.right_sidebar.set_margin_end(12)
-                self.right_sidebar.set_margin_bottom(16)
-                #
-                # Create a container for all content (to maintain proper layout)
-                main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-                main_box.set_margin_start(8)
-                main_box.set_margin_end(8)
-                main_box.set_vexpand(True)  # Allow the main box to expand vertically
-
-                #
-                title_label = Gtk.Label(label=item.get("title"))
-                title_label.add_css_class("title-1") # built-in font bold
-                title_label.set_margin_bottom(12)
-                title_label.set_halign(Gtk.Align.START)
-                #self.right_sidebar.append(title_label)
-                main_box.append(title_label)
-                #
-                body_label = Gtk.Label(label=item.get("body"))
-                body_label.add_css_class("dim-label") # built-in font bold
-                body_label.set_margin_bottom(24)
-                body_label.set_halign(Gtk.Align.START)
-                body_label.set_wrap(True)
-                #self.right_sidebar.append(body_label)
-                main_box.append(body_label)
-                # Add a separator
-                separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-                separator.set_margin_bottom(12)
-                main_box.append(separator)
-                # Add comments section with scrolling
-                comments_label = Gtk.Label(label="Comments")
-                comments_label.add_css_class("heading")
-                comments_label.set_halign(Gtk.Align.START)
-                comments_label.set_margin_bottom(8)
-                main_box.append(comments_label)
-
-                # calling fetch comments
-                self.build_test_comments_by_postId_view(main_box, item.get("id"))
-
-                # Add everything to the sidebar
-                self.right_sidebar.append(main_box)
-                self.right_sidebar.set_vexpand(True)
-                self.right_sidebar.set_hexpand(False)  # Keep horizontal expansion off
-
-            def populate_ui_cards(data):
-                for item in data:
-                        #print(f"item post#: {item}")
-                        print("------------------------")
-                        #docs.append(item)
-                        #self.local_posts_items(item)
-                        card = Adw.ActionRow()
-                        card.set_title(item.get("title", "test"))
-                        card.set_subtitle(item.get("body", "test"))
-                        #card.set_activatable(True)
-                        #card.payload = item
-                        #card.connect("activated", card_clicked)
-                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_posts_group.add(card)
-                    
-                   
-                #
-                local_posts_group.queue_resize()
-
-            self.read_json_file(populate_ui_cards, "data", "posts")
-                
-
-            
-
-            return False # Stop the GLib idle loop from repeating this function
-        
-        # Queue the function to run as soon as the main loop is ready
-        GLib.idle_add(test_fetch)
-
-"""
-    
-    
-    
-    
-    
-    def build_test_posts_view2(self):
-        print("build_test_posts_view2----------------------------------")
-        
-        local_wrapper = Adw.ToolbarView()
-
-        local_action_bar = Gtk.HeaderBar()
-        local_action_bar.set_show_title_buttons(False) 
-        local_title = Gtk.Label(label="Posts Management#")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
-
-        local_wrapper.add_top_bar(local_action_bar)
-
-        scroll_win = Gtk.ScrolledWindow()
-        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-
-        # Make local_posts_group an instance variable so UI callbacks can access it reliably
-        self.local_posts_group = Adw.PreferencesGroup()
-        self.local_posts_group.set_title("Posts")
-
-        content_box.append(self.local_posts_group)
-        scroll_win.set_child(content_box)
-        local_wrapper.set_content(scroll_win)
-        
-        self.center_stack.add_named(local_wrapper, "local_test_posts_view")
-
-        # Context-isolated click row callback handler
-        def card_clicked(row):
-            print(f"card_clicked: {row.payload}")
-            item = row.payload
-
-            while child := self.right_sidebar.get_first_child():
-                self.right_sidebar.remove(child)
-            
-            self.right_sidebar.set_margin_top(16)
-            self.right_sidebar.set_margin_start(12)
-            self.right_sidebar.set_margin_end(12)
-            self.right_sidebar.set_margin_bottom(16)
-            
-            main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-            main_box.set_margin_start(8)
-            main_box.set_margin_end(8)
-            main_box.set_vexpand(True)
-
-            title_label = Gtk.Label(label=item.get("title"))
-            title_label.add_css_class("title-1") 
-            title_label.set_margin_bottom(12)
-            title_label.set_halign(Gtk.Align.START)
-            title_label.set_wrap(True)
-            main_box.append(title_label)
-            
-            body_label = Gtk.Label(label=item.get("body"))
-            body_label.add_css_class("dim-label") 
-            body_label.set_margin_bottom(24)
-            body_label.set_halign(Gtk.Align.START)
-            body_label.set_wrap(True)
-            main_box.append(body_label)
-            
-            separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-            separator.set_margin_bottom(12)
-            main_box.append(separator)
-            
-            comments_label = Gtk.Label(label="Comments")
-            comments_label.add_css_class("heading")
-            comments_label.set_halign(Gtk.Align.START)
-            comments_label.set_margin_bottom(8)
-            main_box.append(comments_label)
-
-            self.build_test_comments_by_postId_view(main_box, item.get("id"))
-
-            self.right_sidebar.append(main_box)
-            self.right_sidebar.set_vexpand(True)
-            self.right_sidebar.set_hexpand(False)
-
-        # Thread-safe function to build individual rows onto the UI loop
-        # Thread-safe function to build individual rows onto the UI loop
-        def populate_ui_cards(posts_data):
-            print("Populating UI cards cleanly...")
-
-            # =========================================================================
-            # 1. BULLETPROOF CLEAR: Clear out EVERYTHING attached inside content_box
-            # =========================================================================
-            # This climbs out of your group to the parent container box, and completely 
-            # flushes every single layout element on screen so duplication or warnings are impossible.
-            if hasattr(self, 'local_posts_group') and self.local_posts_group.get_parent():
-                content_box = self.local_posts_group.get_parent()
-                
-                # Gather all children in the parent box safely
-                box_children = []
-                child = content_box.get_first_child()
-                while child:
-                    box_children.append(child)
-                    child = child.get_next_sibling()
-                    
-                # Wipe the slate entirely blank
-                for box_child in box_children:
-                    content_box.remove(box_child)
-                    
-                # Recreate a fresh, clean preferences group container on the empty box canvas
-                self.local_posts_group = Adw.PreferencesGroup()
-                self.local_posts_group.set_title("Posts")
-                content_box.append(self.local_posts_group)
-
-            # -------------------------------------------------------------------------
-            # 2. POPULATE CARDS: Draw brand-new ActionRow cards on the clean layout
-            # -------------------------------------------------------------------------
-            for item in posts_data:
-                self.local_posts_items.append(item)
-                c = CardComponent()
-                c.build(item, "text-x-generic-symbolic", "posts")
-                c.set_activatable(True)
-                # Bind item payload context directly to row object
-                c.payload = item
-                c.connect("activated", card_clicked)
-                self.local_posts_group.add(c)
-            
-            # Force layout refresh and switch focus state
-            self.local_posts_group.set_visible(True)
-            self.local_posts_group.queue_resize()
-            return False
-
-        # Background processing worker thread function
-        def test_fetch_worker():
-            print("test_fetch worker running in thread background...")
-            import threading
-            import time
-            
-            # Safe non-blocking delay inside thread
-            time.sleep(0.1)  
-            
-            """file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
-
-            if not os.path.exists(file_path):
-                print("no json file found")
-                return"""
-
-            #
-            #self.read_json_file(populate_ui_cards, "data", "posts")
-            self.handle_json_file.read_json_file(populate_ui_cards, "data", "posts")
-            
-
-
-            
-
-        # Fire off the data fetch routine inside a detached background worker thread
-        worker_thread = threading.Thread(target=test_fetch_worker, daemon=True)
-        worker_thread.start()
-
-
-    def build_test_comments_by_postId_view(self, parent_container, postId):
-       print(f"build_test_comments_by_postId_view : {postId}")
-       #
-       def test_fetch():
-            print("test_fetch")
-            import time
-
-
-            #for child in self.right_sidebar.observe_children():
-                    #self.right_sidebar.remove(child)
-
-            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
-            
-            """file_path = os.path.join(GLib.get_current_dir(), "./data/comments.json")
-
-            if not os.path.exists(file_path):
-                print("no json file")
-                return False
-            
-            print("json file exists!")"""
-
-           
-
-             # Create a preferences group for comments
-            comments_group = Adw.PreferencesGroup()
-            comments_group.set_margin_start(8)
-            comments_group.set_margin_end(8)
-            comments_group.set_margin_bottom(16)
-            
-            # Create scrolled window for comments
-            scroll_win = Gtk.ScrolledWindow()
-            scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-            scroll_win.set_min_content_height(200)  # Give it a minimum height
-            scroll_win.set_vexpand(True)  # Allow it to expand
-            scroll_win.set_child(comments_group)
-            
-            # Add a frame around the comments section (optional)
-            # frame = Adw.PreferencesGroup()
-            # frame.add(scroll_win)
-            
-            # Add the scrolled window to the parent container
-            parent_container.append(scroll_win)
-            #
-            def populate_ui_cards(data):
-                    comment_count = 0
-                    
-                    for item in data:
-                        pid = item.get("postId")
-                        #id = item.get("id")
-                        if pid == postId:
-                            c = CardComponent()
-                            c.build(item, "text-x-generic-symbolic", "comments")
-                            c.set_activatable(False)
-                            c.set_margin_bottom(5)
-                            comments_group.add(c)
-                    
-                    
-                     # If no comments found, show a message
-                    if comment_count == 0:
-                        empty_label = Gtk.Label(label="No comments for this post")
-                        empty_label.add_css_class("dim-label")
-                        empty_label.set_margin_top(12)
-                        empty_label.set_margin_bottom(12)
-                        comments_group.add(empty_label)
-                    
-                    comments_group.queue_resize()
-
-            #
-            self.handle_json_file.read_json_file(populate_ui_cards, "data", "comments")
-            
-
-
-            
-
-            return False # Stop the GLib idle loop from repeating this function
-       
-       test_fetch()
-
-
-    
-    def build_test_todos_view(self):
-        #
-        #print(f"state#: {self.state}")
-        #
-        local_wrapper = Adw.ToolbarView()
-
-        local_action_bar = Gtk.HeaderBar()
-        local_action_bar.set_show_title_buttons(False) 
-        local_title = Gtk.Label(label="Todos Manager")
-        local_title.add_css_class("heading")
-        local_action_bar.set_title_widget(local_title)
-
-        local_wrapper.add_top_bar(local_action_bar)
-
-
-        scroll_win = Gtk.ScrolledWindow()
-        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(24)
-        content_box.set_margin_bottom(24)
-        content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-
-        self.local_todos_group = Adw.PreferencesGroup()
-        self.local_todos_group.set_title("Todos")
-
-
-        # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
-        content_box.append(self.local_todos_group)
-        scroll_win.set_child(content_box)
-        local_wrapper.set_content(scroll_win)
-        
-        # Mount layout to stack structure immediately 
-        self.center_stack.add_named(local_wrapper, "local_test_todos_view")
-
-
-        
-
-
-        def test_fetch():
-            #print("test_fetch")
-            import time
-            time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
-
-            def card_clicked(row):
-                print(f"card_clicked: {row.payload}")
-
-                item = row.payload
-
-                #
-                while child := self.right_sidebar.get_first_child():
-                    self.right_sidebar.remove(child)
-                #
-                self.right_sidebar.set_margin_top(16)
-                self.right_sidebar.set_margin_start(12)
-                self.right_sidebar.set_margin_end(12)
-                self.right_sidebar.set_margin_bottom(16)
-                #
-                title_label = Gtk.Label(label=item.get("title"))
-                title_label.add_css_class("title-1") # built-in font bold
-                title_label.set_margin_bottom(12)
-                title_label.set_halign(Gtk.Align.START)
-                self.right_sidebar.append(title_label)
-                #
-                
-            def populate_ui_cards(data):
-                for item in data:
-                        c = CardComponent()
-                        c.build(item, "text-x-generic-symbolic", "todos")
-                        self.local_todos_items.append(item)
-                        c.set_activatable(True)
-                        c.payload = item
-                        c.connect("activated", card_clicked)
-                        self.local_todos_group.add(c)
-                    
-                    
-                    
-
-                self.local_todos_group.queue_resize()
-            self.handle_json_file.read_json_file(populate_ui_cards, "data", "todos")
-            #
-            return False # Stop the GLib idle loop from repeating this function
-        
-        # Queue the function to run as soon as the main loop is ready
-        GLib.idle_add(test_fetch)
 
 
     def build_shell_view(self):
