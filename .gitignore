@@ -1,6 +1,4 @@
 *
-*/*.json
-storage/accounts.json
 
 !main.py
 !README
