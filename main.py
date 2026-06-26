@@ -289,8 +289,10 @@ class I18n():
                                     "logout_title": "Logout",
                                     "login_failure_msg": "Login failed: Email and password fields cannot be empty.",
                                     #"register_title": "Register",
-                                    "register_success_msg": "Register successful! Welcome.",
-                                    "register_failure_msg": "Register failed: Email and password fields cannot be empty.",
+                                    "register_success_msg": "Account created successfully! Please login.",
+                                    "register_failure_msg": "Registration failed: All fields are required.",
+                                    #"register_success_msg": "Register successful! Welcome.",
+                                    #"register_failure_msg": "Register failed: Email and password fields cannot be empty.",
                                     "setting_general_item": "General",
                                     "setting_account_item": "Account",
                                     "setting_notifications_item": "Notifications",
@@ -358,6 +360,8 @@ class I18n():
                                     "setting_colors_item": "الألوان",
                                     "setting_keyboard_item": "لوحة المفاتيح",
                                     "register_title": "إنشاء حساب",
+                                    "register_success_msg": "تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.",
+                                    "register_failure_msg": "فشل التسجيل: جميع الحقول مطلوبة.",
                                     "username": "اسم المستخدم",
                                     "enter_username": "أدخل اسم المستخدم",
                                     "btn_register": "تسجيل",
@@ -1280,7 +1284,7 @@ class MyApp(Adw.Application):
         #
         print("Layout interface canvas unlocked.")
         #
-        success_message = self.i18n._("register_success_msg") if hasattr(self, 'i18n') else "Register successul! Welcome."
+        success_message = self.i18n._("register_success_msg") if hasattr(self, 'i18n') else "Account created successfully! Please login."
         toast = Adw.Toast.new(success_message)
         toast.set_timeout(3)
         self.toast_overlay.add_toast(toast)
