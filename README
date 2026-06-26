@@ -16,9 +16,12 @@ Development features:
 3. Real-time in-memory storage array filtering with immediate interface clearances to prevent duplicate data stacking bugs.
 4. Optimized, thread-safe background processing workers that prevent system stutters.
 
+You can run the app under linux only.
 
 Install packages
 $ sudo apt gnome-builder 
 or
 $ flatpak install flathub org.gnome.Builder
 
+Run:
+python3 main.py
