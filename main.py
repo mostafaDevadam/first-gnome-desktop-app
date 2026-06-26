@@ -1552,109 +1552,7 @@ class MyApp(Adw.Application):
 
 
 
-        """
-        # register
-        register_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        register_box.set_valign(Gtk.Align.CENTER)
-        register_box.set_halign(Gtk.Align.CENTER)
-        register_box.set_size_request(300, -1)
-        # register form layout
-        register_title = Gtk.Label(label=self.i18n._("register_title") if hasattr(self, 'i18n') else "Welcome")
-        register_title.add_css_class("title-1")
-        register_title.set_margin_bottom(12)
-        self.register_widget(register_title, "label", "register_title")
-        register_box.append(register_title)
-
-        #
-         # register form input name
-        self.input_register_name = Gtk.Entry()
-        self.input_register_name.set_input_purpose(Gtk.InputPurpose.NAME)
-        self.register_widget(self.input_register_name, "placeholder", "enter_name")
-        register_box.append(self.input_register_name)
-
-        # register form input email
-        self.input_register_email = Gtk.Entry() #(placeholder_text=self.i18n._("enter_email"))
-        self.input_register_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
-        self.register_widget(self.input_register_email, "placeholder", "enter_email")
-        register_box.append(self.input_register_email)
-
-        # register form input password
-        self.input_register_pass = Gtk.Entry(placeholder_text=self.i18n._("enter_password"))
-        self.input_register_pass.set_visibility(False)
-        self.input_register_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
-        self.register_widget(self.input_register_pass, "placeholder", "enter_password")
-        register_box.append(self.input_register_pass)
-
-        # register button
-        self.register_btn = Gtk.Button() #(label="login_title")
-        self.register_widget(self.register_btn, "label", "btn_register")
-        self.register_btn.add_css_class("suggested-action")
-        #self.register_btn.add_css_class("register_btn")
-        self.register_btn.set_margin_top(8)
-        self.register_btn.connect("clicked", self.on_register_button_clicked)
-        register_box.append(self.register_btn)
-        # link to switch to login screen layout
-        to_login_btn = Gtk.Button()
-        to_login_btn.set_has_frame(False)
-        to_login_btn.set_margin_top(4)
-        self.register_widget(to_login_btn, "label", "switch_to_login")
-        to_login_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("login_screen_layout"))
-        register_box.append(to_login_btn)
-
-
-       
-
-
-        # login
-        login_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        login_box.set_valign(Gtk.Align.CENTER)
-        login_box.set_halign(Gtk.Align.CENTER)
-        login_box.set_size_request(300, -1)
-        # login form layout
-        login_title = Gtk.Label(label=self.i18n._("login_title") if hasattr(self, 'i18n') else "Welcome Back")
-        login_title.add_css_class("title-1")
-        login_title.set_margin_bottom(12)
-        self.register_widget(login_title, "label", "login_title")
-        login_box.append(login_title)
-        # login form input email
-        self.input_login_email = Gtk.Entry() #(placeholder_text=self.i18n._("enter_email"))
-        self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
-        self.register_widget(self.input_login_email, "placeholder", "enter_email")
-        login_box.append(self.input_login_email)
-
-        # login form input password
-        self.input_login_pass = Gtk.Entry(placeholder_text=self.i18n._("enter_password"))
-        self.input_login_pass.set_visibility(False)
-        self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
-        self.register_widget(self.input_login_pass, "placeholder", "enter_password")
-        login_box.append(self.input_login_pass)
-
-        # login button
-        #self.login_btn = Gtk.Button(label=self.i18n._("login_title"))
-        self.login_btn = Gtk.Button() #(label="login_title")
-        self.register_widget(self.login_btn, "label", "login_title")
-        self.login_btn.add_css_class("suggested-action")
-        #self.login_btn.add_css_class("login_btn")
-        self.login_btn.set_margin_top(8)
-        self.login_btn.connect("clicked", self.on_login_button_clicked)
-        login_box.append(self.login_btn)
         
-        # link to switch to register screen layout
-        to_register_btn = Gtk.Button()
-        to_register_btn.set_has_frame(False)
-        to_register_btn.set_margin_top(4)
-        self.register_widget(to_register_btn, "label", "switch_to_register")
-        to_register_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("register_screen_layout"))
-        login_box.append(to_register_btn)
-
-        # stacks
-        # 1. auth stack
-        self.auth_nav_stack = Gtk.Stack()
-        self.auth_nav_stack.add_named(login_box, "login_screen_layout")
-        self.auth_nav_stack.add_named(register_box, "register_screen_layout")
-        # active layout in auth stack is login_screen_layout
-        self.auth_nav_stack.set_visible_child_name("register_screen_layout")
-        """
 
         # use AuthComponent
         auth_panel_view = AuthComponent(app=self)
@@ -1687,8 +1585,8 @@ class MyApp(Adw.Application):
         toolbar_view.set_content(self.root_navigation_stack)
         self.win.set_content(toolbar_view)
         #win.set_content(box)
-        
         self.win.present()
+        #
 
 
     def on_login_button_clicked(self, button):
