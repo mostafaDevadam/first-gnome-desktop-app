@@ -255,9 +255,11 @@ class I18n():
                                     "add_new": "Add New One",
                                     "enter_name": "Enter name...",
                                     "no_items": "No items recorded yet.",
+                                    #
                                     "tab_home": "Home",
                                     "tab_settings": "Settings",
                                     "tab_profile" : "Profile",
+                                    #
                                     "item_test": "Test",
                                     "item_local": "Local",
                                     "item_storage": "Storage",
@@ -265,6 +267,7 @@ class I18n():
                                     "item_posts": "Posts",   # Pure English value mapping
                                     "item_todos": "Todos",
                                     "item_shell": "Shell Terminal",
+                                    #
                                     "shell_manager": "System Shell Workspace",
                                     "shell_run_btn": "Execute",
                                     "shell_placeholder": "Type shell command here...",
@@ -280,6 +283,7 @@ class I18n():
                                     "empty_list_text": "No items recorded yet. click 'Add' above to build a list.",
                                     "group_disk_title": "Stored Data in Disk with Entries",
                                     "disk_manager": "Disk List Manager",
+                                    #
                                     "login_title": "Login",
                                     "email": "Email",
                                     "password": "Password",
@@ -299,6 +303,11 @@ class I18n():
                                     "setting_display_item": "display",
                                     "setting_colors_item": "Colors" ,
                                     "setting_keyboard_item": "Keyboard",
+                                    #
+                                    "profile_info": "Info",
+                                    "profile_address": "Address",
+                                    "profile_company": "Company",
+                                    #
                                     "register_title": "Create Account",
                                     "username": "Username",
                                     "enter_username": "Enter Username",
@@ -318,9 +327,11 @@ class I18n():
                                     "add_new": "إضافة عنصر جديد",
                                     "enter_name": "أدخل الاسم...",
                                     "no_items": "لم يتم تسجيل أي عناصر بعد.",
+                                    #
                                     "tab_home": "الرئيسية",
                                     "tab_settings": "الاعدادات",
                                     "tab_profile" : "حسابي", #"الملف الشخصي",
+                                    #
                                     "item_test": "تجربة",
                                     "item_local": "محلي",
                                     "item_storage": "التخزين",
@@ -329,6 +340,7 @@ class I18n():
                                     "item_todos": "المهام",
                                     "item_shell": "الشل",
                                     "item_text" : "محطة الشل",
+                                    #
                                     "shell_manager": "مساحة عمل الشل نظام",
                                     "shell_run_btn": "تنفيذ",
                                     "shell_placeholder": "اكتب أمر الشل هنا...",
@@ -344,6 +356,7 @@ class I18n():
                                     "empty_list_text": "لم يتم تسجيل أي عناصر بعد. انقر فوق 'إضافة' أعلاه لإنشاء قائمة.",
                                     "group_disk_title": "البيانات المحفوظة في القرص مع العناصر",
                                     "disk_manager": "مدير قائمة القرص",
+                                    #
                                     "login_title": "دخول",
                                     #"register_title": "تسجيل",
                                     "email": "Email",
@@ -353,12 +366,19 @@ class I18n():
                                     "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
                                     "logout_title": "خروج",
                                     "login_failure_msg": "فشل تسجيل الدخول: لا يمكن ترك حقول البريد الإلكتروني وكلمة المرور فارغة.",
+                                    # setting
                                     "setting_general_item": "عام",
                                     "setting_account_item": "الحساب",
                                     "setting_notifications_item": "الإشعارات",
                                     "setting_display_item": "العرض",
                                     "setting_colors_item": "الألوان",
                                     "setting_keyboard_item": "لوحة المفاتيح",
+                                    # profile
+                                    "profile_info": "معلومات",
+                                    "profile_address": "العنوان",
+                                    "profile_company": "الشركة",
+
+                                    #
                                     "register_title": "إنشاء حساب",
                                     "register_success_msg": "تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.",
                                     "register_failure_msg": "فشل التسجيل: جميع الحقول مطلوبة.",
@@ -367,16 +387,74 @@ class I18n():
                                     "btn_register": "تسجيل",
                                     "switch_to_register": "ليس لديك حساب؟ سجل الآن",
                                     "switch_to_login": "لديك حساب بالفعل؟ تسجيل الدخول",
+                               
+                                },
+                                  "de": {
+                                    "posts": "Beiträge",
+                                    "posts_mgmt": "Beitragsverwaltung",
+                                    "add_new": "Neu hinzufügen",
+                                    "enter_name": "Name eingeben...",
+                                    "no_items": "Noch keine Einträge aufgezeichnet.",
+                                    #
+                                    "tab_home": "Startseite",
+                                    "tab_settings": "Einstellungen",
+                                    "tab_profile" : "Konto",  # Fits best in your compact tab bar layout
+                                    #
+                                    "item_test": "Test",
+                                    "item_local": "Lokal",
+                                    "item_storage": "Speicher",
+                                    "item_users": "Benutzer",
+                                    "item_posts": "Beiträge",
+                                    "item_todos": "Aufgaben",
+                                    "item_shell": "Shell-Terminal",
+                                    #
+                                    "shell_manager": "System-Shell-Arbeitsbereich",
+                                    "shell_run_btn": "Ausführen",
+                                    "shell_placeholder": "Shell-Befehl hier eingeben...",
+                                    "gnome_app": "Meine Gnome-App",
+                                    "search_placeholder": "Einträge suchen...",
+                                    "local_manager": "Lokaler Listen-Manager",
+                                    "btn_add": "Hinzufügen",
+                                    "popover_add_title": "Neu hinzufügen",
+                                    "input_name_ph": "Name eingeben...",
+                                    "input_desc_ph": "Beschreibung eingeben",
+                                    "btn_submit": "Absenden",
+                                    "group_title": "Gespeicherte lokale Einträge",
+                                    "empty_list_text": "Noch keine Einträge aufgezeichnet. Klicken Sie oben auf 'Hinzufügen', um eine Liste zu erstellen.",
+                                    "group_disk_title": "Gespeicherte Daten auf Datenträger mit Einträgen",
+                                    "disk_manager": "Datenträger-Listen-Manager",
+                                    #
+                                    "login_title": "Anmelden",
+                                    "email": "E-Mail",
+                                    "password": "Passwort",
+                                    "enter_email": "E-Mail eingeben",
+                                    "enter_password": "Passwort eingeben",
+                                    "login_success_msg": "Anmeldung erfolgreich! Willkommen zurück.",
+                                    "logout_title": "Abmelden",
+                                    "login_failure_msg": "Anmeldung fehlgeschlagen: E-Mail- und Passwortfelder dürfen nicht leer sein.",
+                                    "register_success_msg": "Konto erfolgreich erstellt! Bitte einloggen.",
+                                    "register_failure_msg": "Registrierung fehlgeschlagen: Alle Felder sind erforderlich.",
+                                    # setting
+                                    "setting_general_item": "Allgemein",
+                                    "setting_account_item": "Konto",
+                                    "setting_notifications_item": "Benachrichtigungen",
+                                    "setting_display_item": "Anzeige",
+                                    "setting_colors_item": "Farben",
+                                    "setting_keyboard_item": "Tastatur",
+                                    # profile
+                                    "profile_info": "Info",
+                                    "profile_address": "Adresse",
+                                    "profile_company": "Firma",
 
-
-
-                               
-                               
-                               
-                               
-                               
-                               
+                                    #
+                                    "register_title": "Konto erstellen",
+                                    "username": "Benutzername",
+                                    "enter_username": "Benutzername eingeben",
+                                    "btn_register": "Registrieren",
+                                    "switch_to_register": "Kein Konto? Jetzt registrieren",
+                                    "switch_to_login": "Bereits ein Konto? Anmelden",
                                 }
+
                 }
 
 
@@ -389,6 +467,302 @@ class I18n():
         # Return the translated text or return the raw key string if not found
         return lang_dict.get(key, self.translations["en"].get(key, key))
 
+# Auth component
+class AuthComponent(Gtk.Box):
+
+    def __init__(self, app):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.app = app
+        #
+        # stacks
+        # 1. auth stack
+        self.auth_nav_stack = Gtk.Stack()
+        self.auth_nav_stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+        self.auth_nav_stack.set_transition_duration(250)
+        self.append(self.auth_nav_stack)
+        #self.auth_nav_stack.add_named(login_box, "login_screen_layout")
+        #self.auth_nav_stack.add_named(register_box, "register_screen_layout")
+        #active layout in auth stack is login_screen_layout
+        #self.auth_nav_stack.set_visible_child_name("register_screen_layout")   
+        #
+        self.handle_json_file = HandleJsonFile()
+        #
+        self.build_login_layout()
+        self.build_register_layout()
+        #
+
+
+
+    def build_login_layout(self):
+        # login
+        login_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        login_box.set_valign(Gtk.Align.CENTER)
+        login_box.set_halign(Gtk.Align.CENTER)
+        login_box.set_size_request(300, -1)
+        # login form layout
+        login_title = Gtk.Label(label=self.app.i18n._("login_title"))
+        login_title.add_css_class("title-1")
+        login_title.set_margin_bottom(12)
+        self.app.register_widget(login_title, "label", "login_title")
+        login_box.append(login_title)
+        # login form input email
+        self.input_login_email = Gtk.Entry()
+        self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        self.app.register_widget(self.input_login_email, "placeholder", "enter_email")
+        login_box.append(self.input_login_email)
+
+        # login form input password
+        self.input_login_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
+        self.input_login_pass.set_visibility(False)
+        self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        self.app.register_widget(self.input_login_pass, "placeholder", "enter_password")
+        login_box.append(self.input_login_pass)
+
+        # login button
+        self.login_btn = Gtk.Button() #(label="login_title")
+        self.app.register_widget(self.login_btn, "label", "login_title")
+        self.login_btn.add_css_class("suggested-action")
+        #self.login_btn.add_css_class("login_btn")
+        self.login_btn.set_margin_top(8)
+        self.login_btn.connect("clicked", self.on_login_button_clicked)
+        login_box.append(self.login_btn)
+        
+        # link to switch to register screen layout
+        to_register_btn = Gtk.Button()
+        to_register_btn.set_has_frame(False)
+        to_register_btn.set_margin_top(4)
+        self.app.register_widget(to_register_btn, "label", "switch_to_register")
+        to_register_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("register_screen_layout"))
+        login_box.append(to_register_btn)
+        #
+        self.auth_nav_stack.add_named(login_box, "login_screen_layout")
+
+
+
+    def build_register_layout(self):
+        # register
+        register_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        register_box.set_valign(Gtk.Align.CENTER)
+        register_box.set_halign(Gtk.Align.CENTER)
+        register_box.set_size_request(300, -1)
+        # register form layout
+        register_title = Gtk.Label(label=self.app.i18n._("register_title"))
+        register_title.add_css_class("title-1")
+        register_title.set_margin_bottom(12)
+        self.app.register_widget(register_title, "label", "register_title")
+        register_box.append(register_title)
+
+        #
+         # register form input name
+        self.input_register_name = Gtk.Entry()
+        self.input_register_name.set_input_purpose(Gtk.InputPurpose.NAME)
+        self.app.register_widget(self.input_register_name, "placeholder", "enter_name")
+        register_box.append(self.input_register_name)
+
+        # register form input email
+        self.input_register_email = Gtk.Entry()
+        self.input_register_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        self.app.register_widget(self.input_register_email, "placeholder", "enter_email")
+        register_box.append(self.input_register_email)
+
+        # register form input password
+        self.input_register_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
+        self.input_register_pass.set_visibility(False)
+        self.input_register_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        self.app.register_widget(self.input_register_pass, "placeholder", "enter_password")
+        register_box.append(self.input_register_pass)
+
+        # register button
+        self.register_btn = Gtk.Button() #(label="login_title")
+        self.app.register_widget(self.register_btn, "label", "btn_register")
+        self.register_btn.add_css_class("suggested-action")
+        #self.register_btn.add_css_class("register_btn")
+        self.register_btn.set_margin_top(8)
+        self.register_btn.connect("clicked", self.on_register_button_clicked)
+        register_box.append(self.register_btn)
+        # link to switch to login screen layout
+        to_login_btn = Gtk.Button()
+        to_login_btn.set_has_frame(False)
+        to_login_btn.set_margin_top(4)
+        self.app.register_widget(to_login_btn, "label", "switch_to_login")
+        to_login_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("login_screen_layout"))
+        register_box.append(to_login_btn)
+        #
+        self.auth_nav_stack.add_named(register_box, "register_screen_layout")
+
+    def on_login_button_clicked(self, button):
+        email = self.input_login_email.get_text().strip()
+        password = self.input_login_pass.get_text().strip()
+
+        if not email or not password:
+            print("Authentication Failure Email or Password is incorrect")
+            self.isLogin = False
+            self.logout_btn.set_visible(False)
+            failure_msg = self.app.i18n._("login_failure_msg") 
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(failure_toast)
+            return
+        #
+        self.app.isLogin = True
+        self.app.logout_btn.set_visible(True)
+
+        # check login in json file
+        base_dir = GLib.get_current_dir()
+        storage_dir = os.path.join(base_dir, "storage")
+        file_path = os.path.join(storage_dir, "accounts.json")
+
+        #
+        if not os.path.exists(file_path):
+            error_text = self.app.i18m._("login_failure_msg")
+            self.app.toast_overlay.add_toast(Adw.Toast.new(error_text))
+            return
+        #
+        authenticated = False
+        active_username = ""
+        #
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                db = json.load(f)
+
+                #
+                if isinstance(db, list):
+                    for account in db:
+                        if account.get("email") == email and account.get("password") == password:
+                            authenticated = True
+                            active_username = account.get("username")
+                            break
+
+        except Exception as e:
+            print(f"Error Login: {e}")
+            self.app.toast_overlay.add_toast(Adw.Toast.new("Database Error"))
+        #
+        if authenticated:
+            print(f"Authentication success for profile")
+             # clear inputs
+            self.input_login_email.set_text("")
+            self.input_login_pass.set_text("")
+            #
+            print("Layout interface canvas unlocked.")
+            #
+            success_message = self.app.i18n._("login_success_msg") 
+            toast = Adw.Toast.new(success_message)
+            toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(toast)
+            #
+            #self.menu.append("Logout", "app.logout")
+            #self.app.rebuild_menu()
+            GLib.idle_add(self.app.rebuild_menu)
+            #
+            self.app.fire_notify("Mein Gnome Login", "Login in success for Mein Gnome App!")
+            #
+            self.app.root_navigation_stack.set_visible_child_name("main_layout")
+        else:
+            error_text = self.app.i18n._("login_failure_msg")
+            self.app.toast_overlay.add_toast(Adw.Toast.new(error_text))
+
+
+
+        
+
+       
+       
+
+    def on_register_button_clicked(self, button):
+        name = self.input_register_name.get_text().strip()
+        email = self.input_register_email.get_text().strip()
+        password = self.input_register_pass.get_text().strip()
+
+        if not name or not email or not password:
+            print("Authentication Register Failure Email or Password is incorrect")
+            #self.isLogin = False
+            #self.logout_btn.set_visible(False)
+            failure_msg = self.app.i18n._("register_failure_msg")
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(failure_toast)
+            return
+        #
+        #
+        #self.isLogin = True
+        #self.logout_btn.set_visible(True)
+        #self.logout_action.set_enabled(True)
+
+        # save
+        user = {
+            "name": name,
+            "email": email,
+            "password": password,
+        }
+        print(f"regsitered user: {user}")
+        print(f"regsitered : name: {name} , email: {email}, password: {password}")
+        #self.handle_json_file.save_data_to_json_file()
+        base_dir = GLib.get_current_dir()
+        storage_dir = os.path.join(base_dir, "storage")
+        file_path = os.path.join(storage_dir, "accounts.json")
+        #file_path = os.path.join(GLib.get_current_dir(), f"./storage/accounts.json")
+        
+        os.makedirs(storage_dir, exist_ok=True)
+
+        db = []
+
+        try:
+            if os.path.exists(file_path):
+                with open(file_path, "r", encoding="utf-8") as f:
+                    
+                    try:
+                        db = json.load(f)
+                        if not isinstance(db, list):
+                            db = []
+                    except json.JSONDecodeError:
+                        db = []
+                       
+        except Exception as e:
+            print(f"Error saving data file: {e}")
+            db = []
+
+        
+        db.append(user)
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(db, f, indent=4, ensure_ascii=False)
+                print(f"User account addedd successfully under: {file_path}")
+        except Exception as e:
+            print(f"Critical error writing updated json {e}")   
+
+
+        
+
+        # clear inputs
+        self.input_register_email.set_text("")
+        self.input_register_pass.set_text("")
+        self.input_register_name.set_text("")
+        #
+        print("Layout interface canvas unlocked.")
+        #
+        success_message = self.app.i18n._("register_success_msg")
+        toast = Adw.Toast.new(success_message)
+        toast.set_timeout(3)
+        self.app.toast_overlay.add_toast(toast)
+        #
+        self.auth_nav_stack.set_visible_child_name("login_screen_layout")
+        #
+        #self.menu.append("Logout", "app.logout")
+        #self.rebuild_menu()
+        #GLib.idle_add(self.rebuild_menu)
+
+            
+
+    
+
+
+       
+
+
+        
+
+                 
 
 
 # app
@@ -456,6 +830,7 @@ class MyApp(Adw.Application):
         #
         self.nav_rows = {}
         self.nav_settings_rows = {}
+        self.nav_profile_rows = {}
         #
         self.isLogin = False
         self.logout_btn = Gtk.Button(label=self.i18n._('logout_title'))
@@ -524,7 +899,7 @@ class MyApp(Adw.Application):
 
 
     def refresh_row_dictionaries(self):
-        for row_attr in ["nav_rows", "nav_settings_rows"]:
+        for row_attr in ["nav_rows", "nav_settings_rows", "nav_profile_rows"]:
             if hasattr(self, row_attr):
                 row_dict = getattr(self, row_attr)
                 if row_dict:
@@ -647,11 +1022,13 @@ class MyApp(Adw.Application):
         # add css-class to header-bar
         header_bar.add_css_class("custom-topbar")
         # add header_bar in toolbar
-        toolbar_view.add_top_bar(header_bar)
+        #
+        #toolbar_view.add_top_bar(header_bar)
 
         # menu: language-switcher 
         menu_lang = Gio.Menu.new()
         menu_lang.append("English", "app.lang::en")
+        menu_lang.append("Deutsch (German)", "app.lang::de")
         menu_lang.append("العربية (Arabic)", "app.lang::ar")
     
 
@@ -903,6 +1280,44 @@ class MyApp(Adw.Application):
         tab3_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab3_box.set_margin_top(12)
         #tab3_box.append(Gtk.Label(label="tab3"))
+        #
+        self.list3_box = Gtk.ListBox()
+        self.list3_box.add_css_class("boxed-list")
+
+        profile_items = [
+            ("profile_info", "user-info-symbolic"),
+            ("profile_address", "mark-location-symbolic"),
+            ("profile_company", "org.gnome.Settings-about-symbolic"),
+        ]
+
+        # Tracking dictionary to easily find rows during translation refresh cycles
+        
+
+        for key, icon_name in profile_items:
+            row = Adw.ActionRow()
+            
+            # Initial text mapping on initialization canvas
+            row.set_title(self.i18n._(key))
+            #row.set_title(key)
+            row.set_activatable(True)
+
+            # Store the translation key identifier tag property on the row instance
+            row.nav_item_key_id = key
+
+            prefix_icon = Gtk.Image.new_from_icon_name(icon_name)
+            row.add_prefix(prefix_icon)
+
+            suffix_arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
+            row.add_suffix(suffix_arrow)
+
+            row.connect("activated", self.on_home_item_clicked)
+
+            self.list3_box.append(row)
+            
+            # Save a link to this row matching its translation tracking key
+            self.nav_profile_rows[key] = row
+
+        tab3_box.append(self.list3_box)
 
         #page3 = view_stack.add_titled(tab3_box, "profile", "Profile")
         #page3.set_icon_name("avatar-default-symbolic")
@@ -1099,7 +1514,7 @@ class MyApp(Adw.Application):
 
 
 
-
+        """
         # register
         register_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         register_box.set_valign(Gtk.Align.CENTER)
@@ -1111,6 +1526,14 @@ class MyApp(Adw.Application):
         register_title.set_margin_bottom(12)
         self.register_widget(register_title, "label", "register_title")
         register_box.append(register_title)
+
+        #
+         # register form input name
+        self.input_register_name = Gtk.Entry()
+        self.input_register_name.set_input_purpose(Gtk.InputPurpose.NAME)
+        self.register_widget(self.input_register_name, "placeholder", "enter_name")
+        register_box.append(self.input_register_name)
+
         # register form input email
         self.input_register_email = Gtk.Entry() #(placeholder_text=self.i18n._("enter_email"))
         self.input_register_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
@@ -1193,6 +1616,11 @@ class MyApp(Adw.Application):
         self.auth_nav_stack.add_named(register_box, "register_screen_layout")
         # active layout in auth stack is login_screen_layout
         self.auth_nav_stack.set_visible_child_name("register_screen_layout")
+        """
+
+        # use AuthComponent
+        auth_panel_view = AuthComponent(app=self)
+
 
 
 
@@ -1201,22 +1629,24 @@ class MyApp(Adw.Application):
         self.root_navigation_stack = Gtk.Stack()
         self.root_navigation_stack.set_transition_type(Gtk.StackTransitionType.NONE)
         #self.root_navigation_stack.add_named(login_box, "login_screen_layout")
-        self.root_navigation_stack.add_named(self.auth_nav_stack, "auth_layout")
+        #self.root_navigation_stack.add_named(self.auth_nav_stack, "auth_layout")
+        self.root_navigation_stack.add_named(auth_panel_view, "auth_layout")
         self.root_navigation_stack.add_named(self.outer_split_view, "main_layout")
         #self.root_navigation_stack.set_visible_child_name("login_screen_layout")
 
 
         #
         self.toast_overlay = Adw.ToastOverlay()
-        self.toast_overlay.set_child(self.root_navigation_stack)
-       
+        #self.toast_overlay.set_child(self.root_navigation_stack)
+        self.toast_overlay.set_child(header_bar)
+        toolbar_view.add_top_bar(self.toast_overlay)
         
 
 
 
         #
-        toolbar_view.set_content(self.toast_overlay)
-        #toolbar_view.set_content(self.root_navigation_stack)
+        #toolbar_view.set_content(self.toast_overlay)
+        toolbar_view.set_content(self.root_navigation_stack)
         self.win.set_content(toolbar_view)
         #win.set_content(box)
         
@@ -1277,10 +1707,11 @@ class MyApp(Adw.Application):
         #self.isLogin = True
         #self.logout_btn.set_visible(True)
         #self.logout_action.set_enabled(True)
-        self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+        self.auth_nav_stack.set_visible_child_name("login_screen_layout")
 
         self.input_register_email.set_text("")
         self.input_register_pass.set_text("")
+        self.input_register_name.set_text("")
         #
         print("Layout interface canvas unlocked.")
         #
@@ -1373,7 +1804,7 @@ class MyApp(Adw.Application):
                 background-color: green;
             }
 
-            toastoverlay > widget {
+            toastoverlay widget {
                 valign: start;
                 margin-top: 12px;
             }
@@ -2079,7 +2510,7 @@ class MyApp(Adw.Application):
                         
                     # Recreate a fresh, clean preferences group container on the empty box canvas
                     self.local_posts_group = Adw.PreferencesGroup()
-                    self.local_posts_group.set_title("Posts#")
+                    self.local_posts_group.set_title("Posts")
                     content_box.append(self.local_posts_group)
 
                 # -------------------------------------------------------------------------
@@ -2697,6 +3128,8 @@ class MyApp(Adw.Application):
         # Queue the function to run as soon as the main loop is ready
         GLib.idle_add(test_fetch)
 
+        """
+
     def build_test_posts_view(self):
         #
         print("build_test_posts_view----------------------------------")
@@ -2722,7 +3155,7 @@ class MyApp(Adw.Application):
         content_box.set_margin_end(24)
 
         local_posts_group = Adw.PreferencesGroup()
-        local_posts_group.set_title("Posts#")
+        local_posts_group.set_title("Posts")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
@@ -2748,13 +3181,7 @@ class MyApp(Adw.Application):
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
 
-            """file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
-
-            if not os.path.exists(file_path):
-                print("no json file")
-                return False
-            
-            print("json file exists posts!")"""
+           
 
             def card_clicked(row):
                 #print(f"card_clicked: {row.payload}")
@@ -2832,53 +3259,19 @@ class MyApp(Adw.Application):
             self.read_json_file(populate_ui_cards, "data", "posts")
                 
 
-            """try:
-                success, content = GLib.file_get_contents(file_path)
-
-                if success:
-                    if isinstance(content, bytes):
-                        content = content.decode("utf-8")
-                        
-                    data = json.loads(content)
-                    print(f"data size posts#: {len(data)}")
-                    print(f"data posts#: {data(0)}")
-
-                    for item in data:
-                        print(f"#item post>>>>>># {item}")
-                    
-                    for item in data:
-                        print(f"item post#: {item}")
-                        print("------------------------")
-                        #docs.append(item)
-                        #self.local_posts_items(item)
-                        card = Adw.ActionRow()
-                        card.set_title(item.get("title", "test"))
-                        card.set_subtitle(item.get("body", "test"))
-                        #card.set_activatable(True)
-                        #card.payload = item
-                        #card.connect("activated", card_clicked)
-                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
-                        local_posts_group.add(card)
-                    
-                    # --- ACTION TAKEN HERE ---
-                    # Now that docs is populated, safely trigger your UI updates or prints:
-                    #print(f"len docs inside callback: {len(docs)}")
-
-                    local_posts_group.queue_resize()
-                    
-                    
-
-                else:
-                    print("GLib failed to read file contents successfully.")
-            except Exception as e:
-                print(f"ERROR: {e}")"""
+            
 
             return False # Stop the GLib idle loop from repeating this function
         
         # Queue the function to run as soon as the main loop is ready
         GLib.idle_add(test_fetch)
 
-
+"""
+    
+    
+    
+    
+    
     def build_test_posts_view2(self):
         print("build_test_posts_view2----------------------------------")
         
@@ -2903,7 +3296,7 @@ class MyApp(Adw.Application):
 
         # Make local_posts_group an instance variable so UI callbacks can access it reliably
         self.local_posts_group = Adw.PreferencesGroup()
-        self.local_posts_group.set_title("Posts#")
+        self.local_posts_group.set_title("Posts")
 
         content_box.append(self.local_posts_group)
         scroll_win.set_child(content_box)
@@ -2985,7 +3378,7 @@ class MyApp(Adw.Application):
                     
                 # Recreate a fresh, clean preferences group container on the empty box canvas
                 self.local_posts_group = Adw.PreferencesGroup()
-                self.local_posts_group.set_title("Posts#")
+                self.local_posts_group.set_title("Posts")
                 content_box.append(self.local_posts_group)
 
             # -------------------------------------------------------------------------
@@ -3267,7 +3660,7 @@ class MyApp(Adw.Application):
 
     def build_test_todos_view(self):
         #
-        print(f"state#: {self.state}")
+        #print(f"state#: {self.state}")
         #
         local_wrapper = Adw.ToolbarView()
 
@@ -3290,7 +3683,7 @@ class MyApp(Adw.Application):
         content_box.set_margin_end(24)
 
         self.local_todos_group = Adw.PreferencesGroup()
-        self.local_todos_group .set_title("test ui")
+        self.local_todos_group.set_title("Todos")
 
 
         # PRE-PACK HIERARCHY: Assemble the structure before the async population starts
@@ -3306,17 +3699,9 @@ class MyApp(Adw.Application):
 
 
         def test_fetch():
-            print("test_fetch")
+            #print("test_fetch")
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
-            
-            """file_path = os.path.join(GLib.get_current_dir(), "./data/todos.json")
-
-            if not os.path.exists(file_path):
-                print("no json file")
-                return False
-            
-            print("json file exists!")"""
 
             def card_clicked(row):
                 print(f"card_clicked: {row.payload}")
