@@ -288,12 +288,21 @@ class I18n():
                                     "login_success_msg": "Login successful! Welcome back.",
                                     "logout_title": "Logout",
                                     "login_failure_msg": "Login failed: Email and password fields cannot be empty.",
+                                    #"register_title": "Register",
+                                    "register_success_msg": "Register successful! Welcome.",
+                                    "register_failure_msg": "Register failed: Email and password fields cannot be empty.",
                                     "setting_general_item": "General",
                                     "setting_account_item": "Account",
                                     "setting_notifications_item": "Notifications",
                                     "setting_display_item": "display",
                                     "setting_colors_item": "Colors" ,
                                     "setting_keyboard_item": "Keyboard",
+                                    "register_title": "Create Account",
+                                    "username": "Username",
+                                    "enter_username": "Enter Username",
+                                    "btn_register": "Register",
+                                    "switch_to_register": "Don't have an account? Sign Up",
+                                    "switch_to_login": "Already have an account? Sign In",
                                     
 
 
@@ -334,10 +343,11 @@ class I18n():
                                     "group_disk_title": "البيانات المحفوظة في القرص مع العناصر",
                                     "disk_manager": "مدير قائمة القرص",
                                     "login_title": "دخول",
+                                    #"register_title": "تسجيل",
                                     "email": "Email",
                                     "password": "Password",
-                                    "enter_email": "Enter Email",
-                                    "enter_password": "Enter Password",
+                                    "enter_email": "ادخل البريد الالكترونى",
+                                    "enter_password": "ادخل كلمة السر",
                                     "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
                                     "logout_title": "خروج",
                                     "login_failure_msg": "فشل تسجيل الدخول: لا يمكن ترك حقول البريد الإلكتروني وكلمة المرور فارغة.",
@@ -347,6 +357,12 @@ class I18n():
                                     "setting_display_item": "العرض",
                                     "setting_colors_item": "الألوان",
                                     "setting_keyboard_item": "لوحة المفاتيح",
+                                    "register_title": "إنشاء حساب",
+                                    "username": "اسم المستخدم",
+                                    "enter_username": "أدخل اسم المستخدم",
+                                    "btn_register": "تسجيل",
+                                    "switch_to_register": "ليس لديك حساب؟ سجل الآن",
+                                    "switch_to_login": "لديك حساب بالفعل؟ تسجيل الدخول",
 
 
 
@@ -1077,6 +1093,50 @@ class MyApp(Adw.Application):
         # or
         self.outer_split_view.set_max_sidebar_width(360)
 
+
+
+
+        # register
+        register_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        register_box.set_valign(Gtk.Align.CENTER)
+        register_box.set_halign(Gtk.Align.CENTER)
+        register_box.set_size_request(300, -1)
+        # register form layout
+        register_title = Gtk.Label(label=self.i18n._("register_title") if hasattr(self, 'i18n') else "Welcome")
+        register_title.add_css_class("title-1")
+        register_title.set_margin_bottom(12)
+        self.register_widget(register_title, "label", "register_title")
+        register_box.append(register_title)
+        # register form input email
+        self.input_register_email = Gtk.Entry() #(placeholder_text=self.i18n._("enter_email"))
+        self.input_register_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        self.register_widget(self.input_register_email, "placeholder", "enter_email")
+        register_box.append(self.input_register_email)
+
+        # register form input password
+        self.input_register_pass = Gtk.Entry(placeholder_text=self.i18n._("enter_password"))
+        self.input_register_pass.set_visibility(False)
+        self.input_register_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        self.register_widget(self.input_register_pass, "placeholder", "enter_password")
+        register_box.append(self.input_register_pass)
+
+        # register button
+        self.register_btn = Gtk.Button() #(label="login_title")
+        self.register_widget(self.register_btn, "label", "btn_register")
+        self.register_btn.add_css_class("suggested-action")
+        #self.register_btn.add_css_class("register_btn")
+        self.register_btn.set_margin_top(8)
+        self.register_btn.connect("clicked", self.on_register_button_clicked)
+        register_box.append(self.register_btn)
+        # link to switch to login screen layout
+        to_login_btn = Gtk.Button()
+        to_login_btn.set_has_frame(False)
+        to_login_btn.set_margin_top(4)
+        self.register_widget(to_login_btn, "label", "switch_to_login")
+        to_login_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("login_screen_layout"))
+        register_box.append(to_login_btn)
+
+
        
 
 
@@ -1101,6 +1161,7 @@ class MyApp(Adw.Application):
         self.input_login_pass = Gtk.Entry(placeholder_text=self.i18n._("enter_password"))
         self.input_login_pass.set_visibility(False)
         self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        self.register_widget(self.input_login_pass, "placeholder", "enter_password")
         login_box.append(self.input_login_pass)
 
         # login button
@@ -1112,14 +1173,33 @@ class MyApp(Adw.Application):
         self.login_btn.set_margin_top(8)
         self.login_btn.connect("clicked", self.on_login_button_clicked)
         login_box.append(self.login_btn)
+        
+        # link to switch to register screen layout
+        to_register_btn = Gtk.Button()
+        to_register_btn.set_has_frame(False)
+        to_register_btn.set_margin_top(4)
+        self.register_widget(to_register_btn, "label", "switch_to_register")
+        to_register_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("register_screen_layout"))
+        login_box.append(to_register_btn)
+
+        # stacks
+        # 1. auth stack
+        self.auth_nav_stack = Gtk.Stack()
+        self.auth_nav_stack.add_named(login_box, "login_screen_layout")
+        self.auth_nav_stack.add_named(register_box, "register_screen_layout")
+        # active layout in auth stack is login_screen_layout
+        self.auth_nav_stack.set_visible_child_name("register_screen_layout")
 
 
 
-        # stack
+
+        # 2. root nav stack
         self.root_navigation_stack = Gtk.Stack()
         self.root_navigation_stack.set_transition_type(Gtk.StackTransitionType.NONE)
-        self.root_navigation_stack.add_named(login_box, "login_screen_layout")
+        #self.root_navigation_stack.add_named(login_box, "login_screen_layout")
+        self.root_navigation_stack.add_named(self.auth_nav_stack, "auth_layout")
         self.root_navigation_stack.add_named(self.outer_split_view, "main_layout")
+        #self.root_navigation_stack.set_visible_child_name("login_screen_layout")
 
 
         #
@@ -1135,7 +1215,7 @@ class MyApp(Adw.Application):
         #toolbar_view.set_content(self.root_navigation_stack)
         self.win.set_content(toolbar_view)
         #win.set_content(box)
-        self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+        
         self.win.present()
 
 
@@ -1175,13 +1255,48 @@ class MyApp(Adw.Application):
         self.fire_notify("Mein Gnome Login", 
                          "Login in success for Mein Gnome App!")
 
+    def on_register_button_clicked(self, button):
+        email = self.input_register_email.get_text().strip()
+        password = self.input_register_pass.get_text().strip()
+
+        if not email or not password:
+            print("Authentication Register Failure Email or Password is incorrect")
+            #self.isLogin = False
+            #self.logout_btn.set_visible(False)
+            failure_msg = self.i18n._("register_failure_msg") if hasattr(self, 'i18n') else "Register failed: Email and password fields cannot be empty."
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.toast_overlay.add_toast(failure_toast)
+            return
+        #
+        #
+        #self.isLogin = True
+        #self.logout_btn.set_visible(True)
+        #self.logout_action.set_enabled(True)
+        self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+
+        self.input_register_email.set_text("")
+        self.input_register_pass.set_text("")
+        #
+        print("Layout interface canvas unlocked.")
+        #
+        success_message = self.i18n._("register_success_msg") if hasattr(self, 'i18n') else "Register successul! Welcome."
+        toast = Adw.Toast.new(success_message)
+        toast.set_timeout(3)
+        self.toast_overlay.add_toast(toast)
+        #
+        #self.menu.append("Logout", "app.logout")
+        #self.rebuild_menu()
+        #GLib.idle_add(self.rebuild_menu)
+
             
     def on_logout_button_clicked(self, button):
         self.isLogin = False
         
         #
         if hasattr(self, 'root_navigation_stack'):
-            self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+            self.root_navigation_stack.set_visible_child_name("auth_layout")
+            #self.auth_nav_stack.set_visible_child_name("login_screen_layout")
             print("Session cleared. Interface state locked back to login")
         self.logout_btn.set_visible(False)
         GLib.idle_add(self.rebuild_menu)
@@ -4509,7 +4624,9 @@ class MyApp(Adw.Application):
         # rebuild menu
        
         if hasattr(self, 'root_navigation_stack'):
-            self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+            #self.root_navigation_stack.set_visible_child_name("login_screen_layout")
+            self.root_navigation_stack.set_visible_child_name("auth_layout")
+            #self.auth_nav_stack.set_visible_child_name("login_screen_layout")
             print("Session cleared. Interface state locked back to login")
         #self.logout_action.set_enabled(False)
         GLib.idle_add(self.rebuild_menu)
