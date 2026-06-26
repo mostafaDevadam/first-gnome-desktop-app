@@ -642,7 +642,8 @@ class AuthComponent(Gtk.Box):
             #
             #self.menu.append("Logout", "app.logout")
             #self.app.rebuild_menu()
-            GLib.idle_add(self.app.rebuild_menu)
+            #GLib.idle_add(self.app.rebuild_menu)
+            self.app.main_menu_component.rebuild_menu()
             #
             self.app.fire_notify("Mein Gnome Login", "Login in success for Mein Gnome App!")
             #
@@ -843,7 +844,80 @@ class CardComponent(Adw.ActionRow):
         self.add_prefix(Gtk.Image.new_from_icon_name(icon_name))
 
         
+class MainMenuComponent(Gio.Menu):
 
+    def __init__(self, app):
+        super().__init__()
+        self.app = app
+        self.setup_actions()
+        self.build()
+
+
+    def build(self):
+        self.remove_all()
+
+        # =========================================================================
+        # FIX 1: Reuse or instantiate your menu container model shell cleanly
+        # =========================================================================
+
+        # 1. Append global navigation options common to both application states
+        self.append("About", "app.about")
+        self.append("Quit", "app.quit")
+        self.append("Restart", "app.restart")
+
+        # 2. Append conditional menu entries based on active authentication parameters
+        if getattr(self.app, 'isLogin', False):
+            self.append("Logout", "app.logout")
+            print("Visual Logout option item appended to menu model tree.")
+        else:
+            print("Visual Logout option item hidden from menu model tree.")
+
+        # =========================================================================
+        # FIX 2: Removed self.add_action() from here to prevent duplicate registration lag
+        # =========================================================================
+        return False
+
+    def setup_actions(self):
+        """ Registers all application framework GActions EXACTLY ONCE on startup """
+        print("Initializing master GAction registration pipeline...")
+
+        # 1. Register your system default helper actions (About, Quit, Restart)
+        # ... (your existing action setups for about, quit, restart) ...
+        # Quite Action
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", self.app.on_quit_clicked)
+        self.app.add_action(quit_action)
+
+        # About Action
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.app.on_about_clicked)
+        self.app.add_action(about_action)
+
+        # restart Action
+        if not self.app.lookup_action("restart"):
+            restart_action = Gio.SimpleAction.new("restart", None)
+            restart_action.connect("activate", lambda action, param:  self.app.fire_notify("Gnome App","Restart Gnome App") )
+            self.app.add_action(restart_action)
+        # Logout Action
+        if not self.app.lookup_action("logout"):
+            logout_action = Gio.SimpleAction.new("logout", None)
+            logout_action.connect("activate", self.app.on_logout_clicked)
+            self.app.add_action(logout_action)
+            print("System Logout action successfully registered to app scope runtime channels.")
+
+
+    def rebuild_menu(self):
+         GLib.idle_add(self.build)
+         
+
+    def get_menu_button(self):
+        # menu button
+        menu_button = Gtk.MenuButton()
+        menu_button.set_menu_model(self)
+        menu_button.set_icon_name("open-menu-symbolic")
+        return menu_button
+
+    
         
     
     
@@ -933,6 +1007,11 @@ class MyApp(Adw.Application):
         #self.logout_action = Gio.SimpleAction.new("logout", None)
         #
         self.menu = Gio.Menu.new()
+        #
+        self.main_menu_component = MainMenuComponent(app=self)
+        #
+
+
         #
 
         
@@ -1146,25 +1225,23 @@ class MyApp(Adw.Application):
         self.logout_btn.set_visible(False)
         header_bar.pack_start(self.logout_btn)
 
-        # menu in header_bar
-        """self.menu = Gio.Menu.new()
-        self.menu.append("About", "app.about")
-        self.menu.append("Quit", "app.quit")
-        self.menu.append("Restart", "app.restart")"""
-        #self.menu.append("Logout", "app.logout")
-        #self.logout_action.set_enabled(False)
+        
 
-        GLib.idle_add(self.rebuild_menu)
+        """GLib.idle_add(self.rebuild_menu)
         self.setup_actions()
 
 
         # menu button
         menu_button = Gtk.MenuButton()
         menu_button.set_menu_model(self.menu)
-        menu_button.set_icon_name("open-menu-symbolic")
+        menu_button.set_icon_name("open-menu-symbolic")"""
 
         # add in header_bar
-        header_bar.pack_end(menu_button)
+        #header_bar.pack_end(menu_button)
+        #self.main_menu_component.rebuild_menu()
+        main_menu_button = self.main_menu_component.get_menu_button()
+        header_bar.pack_end(main_menu_button)
+
 
 
 
@@ -1592,79 +1669,7 @@ class MyApp(Adw.Application):
         self.win.present()
         #
 
-
-    def on_login_button_clicked(self, button):
-        email = self.input_login_email.get_text().strip()
-        password = self.input_login_pass.get_text().strip()
-
-        if not email or not password:
-            print("Authentication Failure Email or Password is incorrect")
-            self.isLogin = False
-            self.logout_btn.set_visible(False)
-            failure_msg = self.i18n._("login_failure_msg") if hasattr(self, 'i18n') else "Login failed: Email and password fields cannot be empty."
-            failure_toast = Adw.Toast.new(failure_msg)
-            failure_toast.set_timeout(3)
-            self.toast_overlay.add_toast(failure_toast)
-            return
-        #
-        self.isLogin = True
-        self.logout_btn.set_visible(True)
-        #self.logout_action.set_enabled(True)
-        self.root_navigation_stack.set_visible_child_name("main_layout")
-
-        self.input_login_email.set_text("")
-        self.input_login_pass.set_text("")
-        #
-        print("Layout interface canvas unlocked.")
-        #
-        success_message = self.i18n._("login_success_msg") if hasattr(self, 'i18n') else "Login successul! Welcome back."
-        toast = Adw.Toast.new(success_message)
-        toast.set_timeout(3)
-        self.toast_overlay.add_toast(toast)
-        #
-        #self.menu.append("Logout", "app.logout")
-        #self.rebuild_menu()
-        GLib.idle_add(self.rebuild_menu)
-        #
-        self.fire_notify("Mein Gnome Login", 
-                         "Login in success for Mein Gnome App!")
-
-    def on_register_button_clicked(self, button):
-        email = self.input_register_email.get_text().strip()
-        password = self.input_register_pass.get_text().strip()
-
-        if not email or not password:
-            print("Authentication Register Failure Email or Password is incorrect")
-            #self.isLogin = False
-            #self.logout_btn.set_visible(False)
-            failure_msg = self.i18n._("register_failure_msg") if hasattr(self, 'i18n') else "Register failed: Email and password fields cannot be empty."
-            failure_toast = Adw.Toast.new(failure_msg)
-            failure_toast.set_timeout(3)
-            self.toast_overlay.add_toast(failure_toast)
-            return
-        #
-        #
-        #self.isLogin = True
-        #self.logout_btn.set_visible(True)
-        #self.logout_action.set_enabled(True)
-        self.auth_nav_stack.set_visible_child_name("login_screen_layout")
-
-        self.input_register_email.set_text("")
-        self.input_register_pass.set_text("")
-        self.input_register_name.set_text("")
-        #
-        print("Layout interface canvas unlocked.")
-        #
-        success_message = self.i18n._("register_success_msg") if hasattr(self, 'i18n') else "Account created successfully! Please login."
-        toast = Adw.Toast.new(success_message)
-        toast.set_timeout(3)
-        self.toast_overlay.add_toast(toast)
-        #
-        #self.menu.append("Logout", "app.logout")
-        #self.rebuild_menu()
-        #GLib.idle_add(self.rebuild_menu)
-
-            
+      
     def on_logout_button_clicked(self, button):
         self.isLogin = False
         
@@ -1674,7 +1679,8 @@ class MyApp(Adw.Application):
             #self.auth_nav_stack.set_visible_child_name("login_screen_layout")
             print("Session cleared. Interface state locked back to login")
         self.logout_btn.set_visible(False)
-        GLib.idle_add(self.rebuild_menu)
+        #GLib.idle_add(self.rebuild_menu)
+        self.main_menu_component.rebuild_menu()
         self.fire_notify("Gnome App","Logout is success!")
 
 
@@ -2995,13 +3001,9 @@ class MyApp(Adw.Application):
                         self.local_users_items.append(item)
                         c = CardComponent()
                         c.build(item, "text-x-generic-symbolic", "users")
-                        card = Adw.ActionRow()
-                        #card.set_title(item.get("name", "test"))
-                        #card.set_subtitle(item.get("email", "test"))
                         c.set_activatable(True)
                         c.payload = item
                         c.connect("activated", self.user_card_clicked)
-                        #c.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
                         self.local_users_group.add(c)
                         #
                     
@@ -3314,15 +3316,10 @@ class MyApp(Adw.Application):
                 self.local_posts_items.append(item)
                 c = CardComponent()
                 c.build(item, "text-x-generic-symbolic", "posts")
-                #card = Adw.ActionRow()
-                #c.set_title(item.get("title", "test"))
-                #c.set_subtitle(item.get("body", "test"))
                 c.set_activatable(True)
-                
                 # Bind item payload context directly to row object
                 c.payload = item
                 c.connect("activated", card_clicked)
-                #c.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
                 self.local_posts_group.add(c)
             
             # Force layout refresh and switch focus state
@@ -3410,18 +3407,9 @@ class MyApp(Adw.Application):
                         if pid == postId:
                             c = CardComponent()
                             c.build(item, "text-x-generic-symbolic", "comments")
-                            #card = Adw.ActionRow()
-                            #card.set_title(item.get("name", "test"))
-                            #card.set_subtitle(item.get("body", "test"))
                             c.set_activatable(False)
-                            #card.payload = item
-                            #card.connect("activated", card_clicked)
-                            #c.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
                             c.set_margin_bottom(5)
-                            #local_items_group.add(card)
-                            #sidebar_group.add(card)
                             comments_group.add(c)
-                            #sidebar_group.add(card)
                     
                     
                      # If no comments found, show a message
@@ -3515,25 +3503,18 @@ class MyApp(Adw.Application):
                 
             def populate_ui_cards(data):
                 for item in data:
-                        #print(f"item: {item}")
                         c = CardComponent()
                         c.build(item, "text-x-generic-symbolic", "todos")
                         self.local_todos_items.append(item)
-                        #card = Adw.ActionRow()
-                        #card.set_title(item.get("title", "test"))
-                        #card.set_subtitle(item.get("author", "test"))
                         c.set_activatable(True)
                         c.payload = item
                         c.connect("activated", card_clicked)
-                        #card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
                         self.local_todos_group.add(c)
                     
                     
                     
 
                 self.local_todos_group.queue_resize()
-
-            #self.read_json_file(populate_ui_cards, "data", "todos")
             self.handle_json_file.read_json_file(populate_ui_cards, "data", "todos")
             #
             return False # Stop the GLib idle loop from repeating this function
@@ -4714,9 +4695,9 @@ class MyApp(Adw.Application):
         self.add_action(restart_action)
 
         #"""
-
+    """
     def setup_actions(self):
-        """ Registers all application framework GActions EXACTLY ONCE on startup """
+       
         print("Initializing master GAction registration pipeline...")
 
         # 1. Register your system default helper actions (About, Quit, Restart)
@@ -4746,7 +4727,7 @@ class MyApp(Adw.Application):
 
 
     def rebuild_menu(self):
-        """ Safe, optimized layout rebuilder that resets menu items cleanly """
+        
         print(f"rebuild_menu executing... User Authenticated: {self.isLogin}")
 
         # =========================================================================
@@ -4758,13 +4739,13 @@ class MyApp(Adw.Application):
             self.menu.remove_all() # Clears out old options to prevent layout accumulation
 
         # 1. Append global navigation options common to both application states
-        self.menu.append("About", "app.about")
-        self.menu.append("Quit", "app.quit")
-        self.menu.append("Restart", "app.restart")
+        self.append("About", "app.about")
+        self.append("Quit", "app.quit")
+        self.append("Restart", "app.restart")
 
         # 2. Append conditional menu entries based on active authentication parameters
         if self.isLogin:
-            self.menu.append("Logout", "app.logout")
+            self.append("Logout", "app.logout")
             print("Visual Logout option item appended to menu model tree.")
         else:
             print("Visual Logout option item hidden from menu model tree.")
@@ -4773,7 +4754,7 @@ class MyApp(Adw.Application):
         # FIX 2: Removed self.add_action() from here to prevent duplicate registration lag
         # =========================================================================
         return False
-
+    """
 
 
 
@@ -4809,7 +4790,8 @@ class MyApp(Adw.Application):
             #self.auth_nav_stack.set_visible_child_name("login_screen_layout")
             print("Session cleared. Interface state locked back to login")
         #self.logout_action.set_enabled(False)
-        GLib.idle_add(self.rebuild_menu)
+        #GLib.idle_add(self.rebuild_menu)
+        self.main_menu_component.rebuild_menu()
         self.logout_btn.set_visible(False)
         #
         self.fire_notify("Mein Gnome Notify", "Hallo, Wilkommen!!")
