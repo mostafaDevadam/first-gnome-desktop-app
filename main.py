@@ -176,6 +176,67 @@ class Jasmin():
             #self.center_stack.add_named(local_wrapper, "local_test_view")
            
 
+class HandleJsonFile():
+
+    def read_json_file(self, populate_ui_cards, folder_name, json_file_name):
+        #
+        docs = []
+        import time
+        time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
+        
+        file_path = os.path.join(GLib.get_current_dir(), f"./{folder_name}/{json_file_name}.json")
+
+        if not os.path.exists(file_path):
+            print("no json file")
+            return False
+        
+        print("json file exists!")
+        #
+        
+        #
+        try:
+            success, content = GLib.file_get_contents(file_path)
+
+            if success:
+                if isinstance(content, bytes):
+                    content = content.decode("utf-8")
+                    
+                data = json.loads(content)
+                #docs = data
+                print(f"data size: {len(data)}")
+                GLib.idle_add(populate_ui_cards, data)
+                return
+            else:
+                print("GLib failed to read file contents successfully.")
+                return []
+
+
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return []
+        
+        return False
+
+    def load_data_from_json_file(self, folder_name, json_file_name):
+        file_path = os.path.join(GLib.get_current_dir(), f"./{folder_name}/{json_file_name}.json")
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "r") as f:
+                    
+                    return json.load(f)
+              
+            except Exception as e:
+                print(f"Error reading data file: {e}")
+        return []
+
+    def save_data_to_json_file(self, arr, folder_name, json_file_name):
+        file_path = os.path.join(GLib.get_current_dir(), f"./{folder_name}/{json_file_name}.json")
+
+        try:
+            with open(file_path, "w") as f:
+                json.dump(arr, f, indent=4)
+        except Exception as e:
+            print(f"Error saving data file: {e}")
 
 # i18n
 
@@ -322,6 +383,7 @@ class MyApp(Adw.Application):
             flags=Gio.ApplicationFlags.FLAGS_NONE
             )
         #
+        self.handle_json_file = HandleJsonFile()
         
         
         #
@@ -336,8 +398,10 @@ class MyApp(Adw.Application):
         #self.state = ""
         #
         curr_dir = os.path.dirname(os.path.abspath(__file__))
-        self.data_file_path = os.path.join(curr_dir, "local_data.json")
-        self.disk_items_storage = self.load_data_from_disk()
+        self.data_file_path = os.path.join(curr_dir, "./storage/local_data.json")
+        #self.disk_items_storage = self.load_data_from_disk()
+        self.disk_items_storage = self.handle_json_file.load_data_from_json_file("storage", "local_data")
+            
         self.disk_items_group = Adw.PreferencesGroup()
         #
         self.test_items_group = Adw.PreferencesGroup()
@@ -475,11 +539,12 @@ class MyApp(Adw.Application):
         return []
     
     def save_data_to_disk(self):
-        try:
+        self.handle_json_file.save_data_to_json_file(self.disk_items_storage, "storage", "local_data")
+        """try:
             with open(self.data_file_path, "w") as f:
                 json.dump(self.disk_items_storage, f, indent=4)
         except Exception as e:
-            print(f"Error saving data file: {e}")
+            print(f"Error saving data file: {e}")"""
 
     def sidebar_items(self):
         return  [
@@ -2160,6 +2225,7 @@ class MyApp(Adw.Application):
 
     # builds
 
+    #
     def build_test_view(self):
         #
         print(f"state#: {self.state}")
@@ -2196,6 +2262,8 @@ class MyApp(Adw.Application):
         # Mount layout to stack structure immediately 
         self.center_stack.add_named(local_wrapper, "local_test_view")
 
+        #handle = self.handle_json_file()
+
 
         #docs = []   
 
@@ -2205,13 +2273,13 @@ class MyApp(Adw.Application):
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
             
-            file_path = os.path.join(GLib.get_current_dir(), "./data/test.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/test.json")
 
             if not os.path.exists(file_path):
                 print("no json file")
                 return False
             
-            print("json file exists!")
+            print("json file exists!")"""
 
             def card_clicked(row):
                 print(f"card_clicked: {row.payload}")
@@ -2257,7 +2325,38 @@ class MyApp(Adw.Application):
                 #sidebar_group.set_margin_start(8)
                 #sidebar_group.set_margin_end(8)
 
-            try:
+
+
+            def populate_ui_cards(test_data):
+                for item in test_data:
+                        #print(f"item: {item}")
+                        #docs.append(item)
+                        self.test_items.append(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("title", "test"))
+                        card.set_subtitle(item.get("author", "test"))
+                        card.set_subtitle(str(item.get("year", 0)))
+                        card.set_activatable(True)
+                        card.payload = item
+                        card.connect("activated", card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        self.test_items_group.add(card)
+                    
+                    # --- ACTION TAKEN HERE ---
+                    # Now that docs is populated, safely trigger your UI updates or prints:
+                    #print(f"len docs inside callback: {len(docs)}")
+
+                self.test_items_group.queue_resize()
+            
+
+            #self.read_json_file(populate_ui_cards, "data", "test")
+            self.handle_json_file.read_json_file(populate_ui_cards, "data", "test")
+            #print(f"read_json: {data}")
+            #
+            
+            
+
+            """try:
                 success, content = GLib.file_get_contents(file_path)
 
                 if success:
@@ -2292,7 +2391,7 @@ class MyApp(Adw.Application):
                 else:
                     print("GLib failed to read file contents successfully.")
             except Exception as e:
-                print(f"ERROR: {e}")
+                print(f"ERROR: {e}")"""
 
             return False # Stop the GLib idle loop from repeating this function
         
@@ -2355,16 +2454,16 @@ class MyApp(Adw.Application):
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
             
-            file_path = os.path.join(GLib.get_current_dir(), "./data/users.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/users.json")
 
             if not os.path.exists(file_path):
                 print("no json file")
                 return False
             
-            print("json file exists!")
+            print("json file exists!")"""
 
             def card_clicked(row):
-                print(f"card_clicked: {row.payload}")
+                #print(f"card_clicked: {row.payload}")
 
                 item = row.payload
 
@@ -2415,8 +2514,30 @@ class MyApp(Adw.Application):
                 sidebar_group.set_margin_start(8)
                 sidebar_group.set_margin_end(8)
 
+            def populate_ui_cards(data):
+                for item in data:
+                        #print(f"item: {item}")
+                        #docs.append(item)
+                        self.local_users_items.append(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("name", "test"))
+                        card.set_subtitle(item.get("email", "test"))
+                        card.set_activatable(True)
+                        card.payload = item
+                        card.connect("activated", self.user_card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        self.local_users_group.add(card)
+                        #
+                    
+                    
 
-            try:
+                self.local_users_group.queue_resize()
+
+
+            #self.read_json_file(populate_ui_cards, "data", "users")
+            self.handle_json_file.read_json_file(populate_ui_cards, "data", "users")
+
+            """try:
                 success, content = GLib.file_get_contents(file_path)
 
                 if success:
@@ -2450,7 +2571,7 @@ class MyApp(Adw.Application):
                 else:
                     print("GLib failed to read file contents successfully.")
             except Exception as e:
-                print(f"ERROR: {e}")
+                print(f"ERROR: {e}")"""
 
             return False # Stop the GLib idle loop from repeating this function
         
@@ -2508,19 +2629,16 @@ class MyApp(Adw.Application):
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
 
-
-           
-            
-            file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
 
             if not os.path.exists(file_path):
                 print("no json file")
                 return False
             
-            print("json file exists posts!")
+            print("json file exists posts!")"""
 
             def card_clicked(row):
-                print(f"card_clicked: {row.payload}")
+                #print(f"card_clicked: {row.payload}")
 
                 item = row.payload
 
@@ -2573,9 +2691,29 @@ class MyApp(Adw.Application):
                 self.right_sidebar.set_vexpand(True)
                 self.right_sidebar.set_hexpand(False)  # Keep horizontal expansion off
 
+            def populate_ui_cards(data):
+                for item in data:
+                        #print(f"item post#: {item}")
+                        print("------------------------")
+                        #docs.append(item)
+                        #self.local_posts_items(item)
+                        card = Adw.ActionRow()
+                        card.set_title(item.get("title", "test"))
+                        card.set_subtitle(item.get("body", "test"))
+                        #card.set_activatable(True)
+                        #card.payload = item
+                        #card.connect("activated", card_clicked)
+                        card.add_prefix(Gtk.Image.new_from_icon_name("text-x-generic-symbolic"))
+                        local_posts_group.add(card)
+                    
+                   
+                #
+                local_posts_group.queue_resize()
+
+            self.read_json_file(populate_ui_cards, "data", "posts")
                 
 
-            try:
+            """try:
                 success, content = GLib.file_get_contents(file_path)
 
                 if success:
@@ -2614,7 +2752,7 @@ class MyApp(Adw.Application):
                 else:
                     print("GLib failed to read file contents successfully.")
             except Exception as e:
-                print(f"ERROR: {e}")
+                print(f"ERROR: {e}")"""
 
             return False # Stop the GLib idle loop from repeating this function
         
@@ -2762,31 +2900,19 @@ class MyApp(Adw.Application):
             # Safe non-blocking delay inside thread
             time.sleep(0.1)  
             
-            file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/posts.json")
 
             if not os.path.exists(file_path):
                 print("no json file found")
-                return
+                return"""
 
-            try:
-                success, content = GLib.file_get_contents(file_path)
-                if success:
-                    if isinstance(content, bytes):
-                        content = content.decode("utf-8")
-                        
-                    data = json.loads(content)
-                    #print(f"data size posts#: {len(data)}")
-                    
-                    # FIX: Corrected list index bracket notation syntax [0]
-                    #if data:
-                        #print(f"data posts[0]#: {data[0]}")
+            #
+            #self.read_json_file(populate_ui_cards, "data", "posts")
+            self.handle_json_file.read_json_file(populate_ui_cards, "data", "posts")
+            
 
-                    # Hand data over to the main graphics thread safely for rendering
-                    GLib.idle_add(populate_ui_cards, data)
-                else:
-                    print("GLib failed to read file contents.")
-            except Exception as e:
-                print(f"THREAD ERROR: {e}")
+
+            
 
         # Fire off the data fetch routine inside a detached background worker thread
         worker_thread = threading.Thread(target=test_fetch_worker, daemon=True)
@@ -2806,13 +2932,13 @@ class MyApp(Adw.Application):
 
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
             
-            file_path = os.path.join(GLib.get_current_dir(), "./data/comments.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/comments.json")
 
             if not os.path.exists(file_path):
                 print("no json file")
                 return False
             
-            print("json file exists!")
+            print("json file exists!")"""
 
            
 
@@ -2835,26 +2961,14 @@ class MyApp(Adw.Application):
             
             # Add the scrolled window to the parent container
             parent_container.append(scroll_win)
-
-
-            try:
-                success, content = GLib.file_get_contents(file_path)
-
-                if success:
-                    if isinstance(content, bytes):
-                        content = content.decode("utf-8")
-                        
-                    data = json.loads(content)
-                    #print(f"data size: {len(data)}")
-
+            #
+            def populate_ui_cards(data):
                     comment_count = 0
                     
                     for item in data:
                         pid = item.get("postId")
                         #id = item.get("id")
                         if pid == postId:
-                            #print(f"comment item: {item}")
-                            #docs.append(item)
                             card = Adw.ActionRow()
                             card.set_title(item.get("name", "test"))
                             card.set_subtitle(item.get("body", "test"))
@@ -2868,12 +2982,7 @@ class MyApp(Adw.Application):
                             comments_group.add(card)
                             #sidebar_group.add(card)
                     
-                    # --- ACTION TAKEN HERE ---
-                    # Now that docs is populated, safely trigger your UI updates or prints:
-                    #print(f"len docs inside callback: {len(docs)}")
-
-                    #local_items_group.queue_resize()
-                    #sidebar_group.queue_resize()
+                    
                      # If no comments found, show a message
                     if comment_count == 0:
                         empty_label = Gtk.Label(label="No comments for this post")
@@ -2883,13 +2992,13 @@ class MyApp(Adw.Application):
                         comments_group.add(empty_label)
                     
                     comments_group.queue_resize()
-                    
-                    
 
-                else:
-                    print("GLib failed to read comments file contents successfully.")
-            except Exception as e:
-                print(f"ERROR: {e}")
+            #
+            self.handle_json_file.read_json_file(populate_ui_cards, "data", "comments")
+            
+
+
+            
 
             return False # Stop the GLib idle loop from repeating this function
        
@@ -3082,13 +3191,13 @@ class MyApp(Adw.Application):
             import time
             time.sleep(0.1)  # Note: blocking sleep here blocks the main thread if called via idle_add
             
-            file_path = os.path.join(GLib.get_current_dir(), "./data/todos.json")
+            """file_path = os.path.join(GLib.get_current_dir(), "./data/todos.json")
 
             if not os.path.exists(file_path):
                 print("no json file")
                 return False
             
-            print("json file exists!")
+            print("json file exists!")"""
 
             def card_clicked(row):
                 print(f"card_clicked: {row.payload}")
@@ -3111,18 +3220,8 @@ class MyApp(Adw.Application):
                 self.right_sidebar.append(title_label)
                 #
                 
-
-            try:
-                success, content = GLib.file_get_contents(file_path)
-
-                if success:
-                    if isinstance(content, bytes):
-                        content = content.decode("utf-8")
-                        
-                    data = json.loads(content)
-                    print(f"data size: {len(data)}")
-                    
-                    for item in data:
+            def populate_ui_cards(data):
+                for item in data:
                         print(f"item: {item}")
                         self.local_todos_items.append(item)
                         card = Adw.ActionRow()
@@ -3137,15 +3236,11 @@ class MyApp(Adw.Application):
                     
                     
 
-                    self.local_todos_group.queue_resize()
-                    
-                    
+                self.local_todos_group.queue_resize()
 
-                else:
-                    print("GLib failed to read file contents successfully.")
-            except Exception as e:
-                print(f"ERROR: {e}")
-
+            #self.read_json_file(populate_ui_cards, "data", "todos")
+            self.handle_json_file.read_json_file(populate_ui_cards, "data", "todos")
+            #
             return False # Stop the GLib idle loop from repeating this function
         
         # Queue the function to run as soon as the main loop is ready
@@ -3539,6 +3634,9 @@ class MyApp(Adw.Application):
             
         # Append the new data row to your single local tracking array
         self.disk_items_storage.append(new_entry)
+        #
+        #save
+        self.save_data_to_disk()
 
         # =========================================================================
         # REUSE RENDER ENGINE: Let the display helper update rows and clear placeholders
