@@ -166,7 +166,7 @@ class Jasmin():
             #
            
 
-class HandleJsonFile():
+"""class HandleJsonFile():
 
     def read_json_file(self, populate_ui_cards, folder_name, json_file_name):
         #
@@ -227,10 +227,74 @@ class HandleJsonFile():
                 json.dump(arr, f, indent=4)
         except Exception as e:
             print(f"Error saving data file: {e}")
+"""
+
+class HandleJsonFile:
+
+    def read_json_file(self, populate_ui_cards, folder_name, json_file_name):
+        """
+        Loads JSON asynchronously in a background thread to prevent UI freezing,
+        then dispatches the dataset to the main UI loop via GLib.idle_add.
+        """
+        file_path = os.path.join(os.getcwd(), folder_name, f"{json_file_name}.json")
+
+        if not os.path.exists(file_path):
+            print(f"JSON file does not exist: {file_path}")
+            # Safely pass an empty dataset back to clear loading spin indicators
+            GLib.idle_add(populate_ui_cards, [])
+            return False
+
+        def async_worker():
+            try:
+                # 1. Open with explicit UTF-8 to safeguard Arabic localization text strings
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                
+                print(f"Data parsed successfully. Size: {len(data)} items.")
+                
+                # 2. Dispatch UI payload updates safely to the main main loop thread channel
+                GLib.idle_add(populate_ui_cards, data)
+                
+            except Exception as e:
+                print(f"ERROR reading/parsing JSON file asynchronously: {e}")
+                GLib.idle_add(populate_ui_cards, [])
+
+        # 3. Spin worker task out onto its own execution thread channel to completely eliminate frame lag
+        threading.Thread(target=async_worker, daemon=True).start()
+
+    def load_data_from_json_file(self, folder_name, json_file_name):
+        """Synchronously reads and returns a parsed list array from disk safely."""
+        file_path = os.path.join(os.getcwd(), folder_name, f"{json_file_name}.json")
+        
+        if os.path.exists(file_path):
+            try:
+                # Force UTF-8 stream bindings to preserve dynamic character arrays
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error reading historical database tracking data file: {e}")
+                
+        return []
+
+    def save_data_to_json_file(self, arr, folder_name, json_file_name):
+        """Synchronously dumps data to a localized JSON file with UTF-8 safety."""
+        # Ensure parent directory layout layer paths are physically present on disk before writing
+        target_dir = os.path.join(os.getcwd(), folder_name)
+        os.makedirs(target_dir, exist_ok=True)
+        
+        file_path = os.path.join(target_dir, f"{json_file_name}.json")
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                # ensure_ascii=False saves text natively instead of turning Arabic into hex characters
+                json.dump(arr, f, indent=4, ensure_ascii=False)
+            print(f"Database array synchronized safely down under: {file_path}")
+        except Exception as e:
+            print(f"Critical error updating physical JSON datastore block metrics: {e}")
+
+
 
 # i18n
-
-
 class I18n():
         
     def __init__(self):
@@ -304,7 +368,9 @@ class I18n():
                                     "btn_register": "Register",
                                     "switch_to_register": "Don't have an account? Sign Up",
                                     "switch_to_login": "Already have an account? Sign In",
-                                    
+                                    #
+                                    "welcome_user": "Welcome", 
+                                    #
 
 
                               
@@ -377,6 +443,9 @@ class I18n():
                                     "btn_register": "تسجيل",
                                     "switch_to_register": "ليس لديك حساب؟ سجل الآن",
                                     "switch_to_login": "لديك حساب بالفعل؟ تسجيل الدخول",
+                                    #
+                                    "welcome_user": "مرحباً",
+                                    #
                                
                                 },
                                   "de": {
@@ -443,6 +512,9 @@ class I18n():
                                     "btn_register": "Registrieren",
                                     "switch_to_register": "Kein Konto? Jetzt registrieren",
                                     "switch_to_login": "Bereits ein Konto? Anmelden",
+                                    #
+                                    "welcome_user": "Willkommen",
+                                    #
                                 }
 
                 }
@@ -479,6 +551,8 @@ class AuthComponent(Gtk.Box):
         #
         self.build_login_layout()
         self.build_register_layout()
+        #
+        self.active_username = ""
         #
 
 
@@ -609,7 +683,7 @@ class AuthComponent(Gtk.Box):
             return
         #
         authenticated = False
-        active_username = ""
+        active_username = "username"
         #
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -620,7 +694,8 @@ class AuthComponent(Gtk.Box):
                     for account in db:
                         if account.get("email") == email and account.get("password") == password:
                             authenticated = True
-                            active_username = account.get("username")
+                            active_username = account.get("name")
+                            #self.app.profile_lbl.set_text(active_username)
                             break
 
         except Exception as e:
@@ -629,7 +704,13 @@ class AuthComponent(Gtk.Box):
         #
         if authenticated:
             print(f"Authentication success for profile")
-             # clear inputs
+            # pass active_username to profile-label
+            #self.app.profile_lbl.set_text(active_username)
+            self.active_username = active_username
+            print(f"self.active_username: {self.active_username} , active_username: {active_username}")
+            self.app.active_username = active_username
+            self.app.refresh_profile_header()
+            # clear inputs
             self.input_login_email.set_text("")
             self.input_login_pass.set_text("")
             #
@@ -935,6 +1016,11 @@ class TabBox(Gtk.Box):
         self.page_wrapper = self.app.view_stack.add_titled(self, wrapper_title, self.app.i18n._(key))
         self.page_wrapper.set_icon_name(icon_name) 
         self.app.register_widget(self.page_wrapper, 'title', key)
+        #
+        """if wrapper_title == "profile":
+            row = Adw.ActionRow()
+            self.append(row)"""
+        #    
 
     def build(self, list_box: Gtk.ListBox, items, nav_rows):
         
@@ -1770,6 +1856,7 @@ class MyApp(Adw.Application):
 
         #
 
+
         
         #
         #self.list_box = Gtk.ListBox()
@@ -1789,6 +1876,7 @@ class MyApp(Adw.Application):
         #
         self.search_bar_component = SearchBarComponent(app=self)
         #
+        self.active_username = ""
 
 
         #
@@ -1850,7 +1938,22 @@ class MyApp(Adw.Application):
         #
         self.refresh_row_dictionaries()
         #
+        self.refresh_profile_header()
 
+    def refresh_profile_header(self):
+        if hasattr(self, 'profile_lbl') and self.profile_lbl:
+            #user_name = getattr(self, "active_username", '')
+
+            #print(f"username: {user_name}")
+
+
+            if self.active_username:
+                welcome_prefix = self.i18n._("welcome_user") if hasattr(self.i18n, "_") else "Welcome"
+                self.profile_lbl.set_text(f"{welcome_prefix}, {self.active_username}")
+            else:
+                print(f"cannot get active_name")
+                self.profile_lbl.set_text("")
+        #
 
     def refresh_row_dictionaries(self):
         target_dictionaries = ['nav_rows', 'nav_settings_rows', 'nav_profile_rows']
@@ -2131,6 +2234,12 @@ class MyApp(Adw.Application):
         #tab3_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab3_box = TabBox(app=self, wrapper_title="profile", key="tab_profile", icon_name="avatar-default-symbolic")
         tab3_box.set_margin_top(12)
+        # profile-label
+        self.profile_lbl = Gtk.Label()
+        self.profile_lbl.add_css_class("title-2")
+        self.profile_lbl.set_margin_bottom(16)
+        self.profile_lbl.set_justify(Gtk.Justification.CENTER)
+        tab3_box.append(self.profile_lbl)
         #tab3_box.append(Gtk.Label(label="tab3"))
         #
         self.list3_box = ListBoxComponent() #Gtk.ListBox()
