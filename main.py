@@ -529,6 +529,16 @@ class I18n():
         # Return the translated text or return the raw key string if not found
         return lang_dict.get(key, self.translations["en"].get(key, key))
 
+
+# input-box: build -> params: password-entry or email-entry
+
+# password-entry
+
+# email-entry
+
+
+
+
 # Auth component
 class AuthComponent(Gtk.Box):
 
@@ -581,6 +591,32 @@ class AuthComponent(Gtk.Box):
         self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
         self.app.register_widget(self.input_login_pass, "placeholder", "enter_password")
         login_box.append(self.input_login_pass)
+        # test input_box 
+        input_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        input_box.set_valign(Gtk.Align.CENTER)
+        input_box.set_halign(Gtk.Align.CENTER)
+        input_box.set_size_request(300, -1)
+
+        login_box.append(input_box)
+        # test password_entry
+        password_entry = Gtk.PasswordEntry()
+        password_entry.add_css_class("error")
+        # Set maximum length to 8 characters
+        text_widget = password_entry.get_delegate()
+        text_buffer = text_widget.get_buffer()
+        text_buffer.set_max_length(8)
+        #password_entry.set_max_length(8)
+
+        # Connect to the changed signal to validate the minimum length
+        password_entry.connect("notify::text", self.on_password_changed)
+        input_box.append(password_entry)
+        # validation password
+        self.validation_pass_lbl = Gtk.Label()
+        self.validation_pass_lbl.set_visible(False)
+        self.validation_pass_lbl.add_css_class("error-msg")
+        #self.validation_pass_lbl.add_css_class("visible")
+        input_box.append(self.validation_pass_lbl)
+
 
         # login button
         self.login_btn = Gtk.Button() #(label="login_title")
@@ -735,7 +771,22 @@ class AuthComponent(Gtk.Box):
 
 
 
-        
+    def on_password_changed(self, entry, pspec):
+        text = entry.get_text()
+        print(f"on_password_changed: {text}")
+
+        #
+        if len(text) == 0:
+            entry.add_css_class("error")  
+            self.validation_pass_lbl.set_text("Password is required")
+            self.validation_pass_lbl.set_visible(True)
+        elif len(text) < 3:
+            entry.add_css_class("error")
+            self.validation_pass_lbl.set_text("Too short! Password must be at least 3 characters.")
+            self.validation_pass_lbl.set_visible(True)
+        else:
+            entry.remove_css_class("error")
+            self.validation_pass_lbl.set_visible(False)
 
        
        
@@ -2588,6 +2639,26 @@ class MyApp(Adw.Application):
 
             .login_btn {
                 /*background-color: #fd0000;*/
+            }
+
+            entry.error {
+               border: 2px solid #ef4444;
+               background-color: #fef2f2;
+            
+            }
+
+            label.error-msg {
+               color: #ef4444;
+               font-size: 18px;
+               margin-top: 4px;
+               border: 1px solid #ef4444;
+               padding: 2px;
+
+               /*opacity: 0;*/
+            }
+
+            label.error-msg.visible {
+                /*opacity: 1;*/
             }
 
 
