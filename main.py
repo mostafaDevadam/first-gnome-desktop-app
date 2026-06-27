@@ -529,9 +529,17 @@ class I18n():
         # Return the translated text or return the raw key string if not found
         return lang_dict.get(key, self.translations["en"].get(key, key))
 
+# Form
+class Form():
+
+    def __init__(self):
+        pass
+
+
+
 
 # input-box: build -> params: password-entry or email-entry
-class FormFieldBox(Gtk.Box):
+class FormField(Gtk.Box):
 
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -542,12 +550,28 @@ class FormFieldBox(Gtk.Box):
     def build(self, entry: Gtk.Entry):
         self.append(entry)
 
+class Validation(Gtk.Label):
+
+    def __init__(self, title):
+        super().__init__(title=title)
+    
+
+# Field(Input(Validation),Validation)
+"""
+f = Field()
+v = Validation()
+i = Input(v)
+f.append(i)
+f.append(v)
+
+"""
+
 # password-entry
 class InputPassword(Gtk.PasswordEntry):
 
     def __init__(self, form, app):
         super().__init__()
-        self.input_box = FormFieldBox()
+        self.input_box = FormField()
         self.input_box.append(self)
         
         self.form = form
