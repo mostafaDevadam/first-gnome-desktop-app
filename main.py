@@ -831,7 +831,7 @@ class AuthForm(Gtk.Box):
         self.submit_btn.add_css_class("suggested-action")
         #self.login_btn.add_css_class("login_btn")
         self.submit_btn.set_margin_top(8)
-        self.submit_btn.connect("clicked", self.on_submit_button_clicked)
+        self.submit_btn.connect("clicked", self.on_submit)
         self.append(self.submit_btn)
 
         # if register
@@ -851,6 +851,36 @@ class AuthForm(Gtk.Box):
             self.app.register_widget(to_register_btn, "label", "switch_to_register")
             to_register_btn.connect("clicked", lambda x: self.auth.auth_nav_stack.set_visible_child_name("register_screen_layout"))
             self.append(to_register_btn)
+
+    def on_submit(self, button):
+        input_email = self.input_email
+        input_pass = self.input_pass
+        email = input_email.get_text().strip()
+        password = input_pass.get_text().strip()
+
+        print(f"login password: {password}")
+
+        if (self.isRegister and (not self.input_name or not email or not password)) or (not self.isRegister and (not email or not password)) :
+            print("Authentication Failure Email or Password is incorrect")
+            self.app.isLogin = False
+            self.app.logout_btn.set_visible(False)
+            failure_msg = self.app.i18n._("login_failure_msg") 
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(failure_toast)
+            return
+        #
+        if not input_email.isValid or not input_pass.isValid:
+            print("Authentication Failure Email or Password is invalid")
+            self.app.isLogin = False
+            self.app.logout_btn.set_visible(False)
+            failure_msg = self.app.i18n._("login_failure_msg") 
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(failure_toast)
+            return
+        # callback
+        self.on_submit_button_clicked(button)
 
 
 
@@ -888,158 +918,22 @@ class AuthComponent(Gtk.Box):
 
     def build_login_layout(self):
         # login
-        login_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        login_box.set_valign(Gtk.Align.CENTER)
-        login_box.set_halign(Gtk.Align.CENTER)
-        login_box.set_size_request(300, -1)
-        # login form layout
-        login_title = Gtk.Label(label=self.app.i18n._("login_title"))
-        login_title.add_css_class("title-1")
-        login_title.set_margin_bottom(12)
-        self.app.register_widget(login_title, "label", "login_title")
-
-        login_box.append(login_title)
-        # login form input email
-        login_email_form_field = FormField()
-        validation_login_email = Validation()
-        self.input_login_email = InputBasicEmail(app=self.app, placeholder_text=self.app.i18n._("enter_email"), validation=validation_login_email)
-        #self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
-        self.app.register_widget(self.input_login_email, "placeholder", "enter_email")
-        login_email_form_field.append(self.input_login_email)
-        login_email_form_field.append(validation_login_email)
-        login_box.append(login_email_form_field)
-
-        # login form input password
-        #self.input_login_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
-        #self.input_login_pass.set_visibility(False)
-        #self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
-        login_pass_form_field = FormField()
-        validation_login_password = Validation()
-        self.input_login_pass = InputBasicPassword(app=self.app, placeholder_text=self.app.i18n._("enter_password"), validation=validation_login_password)
-        #self.input_login_pass.connect("notify::text", self.on_password_changed)
-        self.app.register_widget(self.input_login_pass, "placeholder", "enter_password")
-        #self.app.register_widget(self.validation_login_password, "label", "validation_login_password_1")
-        login_pass_form_field.append(self.input_login_pass)
-        login_pass_form_field.append(validation_login_password)
-        login_box.append(login_pass_form_field)
-        # test input_box 
-        """input_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        input_box.set_valign(Gtk.Align.CENTER)
-        input_box.set_halign(Gtk.Align.CENTER)
-        input_box.set_size_request(300, -1)
-
-        login_box.append(input_box)
-        # test password_entry
-        password_entry = Gtk.PasswordEntry()
-        password_entry.add_css_class("error")
-        # Set maximum length to 8 characters
-        text_widget = password_entry.get_delegate()
-        text_buffer = text_widget.get_buffer()
-        text_buffer.set_max_length(8)
-        #password_entry.set_max_length(8)
-
-        # Connect to the changed signal to validate the minimum length
-        password_entry.connect("notify::text", self.on_password_changed)
-        input_box.append(password_entry)
-        # validation password
-        self.validation_pass_lbl = Gtk.Label()
-        self.validation_pass_lbl.set_visible(False)
-        self.validation_pass_lbl.add_css_class("error-msg")
-        #self.validation_pass_lbl.add_css_class("visible")
-        input_box.append(self.validation_pass_lbl)"""
-
-        #test_input_password = InputPassword(form=self, app=self.app)
-        #login_box.append(test_input_password.input_box)
-        #test_form_field = FormField()
-        #validation_password = Validation()
-        #input_password = InputPassword(app=self, validation=validation_password, placeholder_text=self.app.i18n._("enter_password"))
-        #self.input_login_pass = input_password
-        #test_form_field.append(input_password)
-        #test_form_field.append(validation_password)
-        #login_box.append(test_form_field)
-
-
-
-
-        # login button
-        self.login_btn = Gtk.Button() #(label="login_title")
-        self.app.register_widget(self.login_btn, "label", "login_title")
-        self.login_btn.add_css_class("suggested-action")
-        #self.login_btn.add_css_class("login_btn")
-        self.login_btn.set_margin_top(8)
-        self.login_btn.connect("clicked", self.on_login_button_clicked)
-        login_box.append(self.login_btn)
-        
-        # link to switch to register screen layout
-        to_register_btn = Gtk.Button()
-        to_register_btn.set_has_frame(False)
-        to_register_btn.set_margin_top(4)
-        self.app.register_widget(to_register_btn, "label", "switch_to_register")
-        to_register_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("register_screen_layout"))
-        login_box.append(to_register_btn)
-        #
-        #self.auth_nav_stack.add_named(login_box, "login_screen_layout")
-        #
-        self.login_form = AuthForm(app=self.app, auth=self, isRegister=False,title="login_title", submit_btn_title="login_title",submit_event=self.test_submit)
+        self.login_form = AuthForm(app=self.app, auth=self, isRegister=False,title="login_title", 
+                                   submit_btn_title="login_title",submit_event=self.on_login_button_clicked)
         self.auth_nav_stack.add_named(self.login_form, "login_screen_layout")
+
+   
+
+    def build_register_layout(self):
+        # register
+        self.register_form = AuthForm(app=self.app, auth=self, isRegister=True,title="register_title", 
+                                      submit_btn_title="btn_register", submit_event=self.on_register_button_clicked)
+        self.auth_nav_stack.add_named(self.register_form, "register_screen_layout")
+
 
     def test_submit(self, button):
         print("test_submit")
         pass
-
-    def build_register_layout(self):
-        # register
-        register_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        register_box.set_valign(Gtk.Align.CENTER)
-        register_box.set_halign(Gtk.Align.CENTER)
-        register_box.set_size_request(300, -1)
-        # register form layout
-        register_title = Gtk.Label(label=self.app.i18n._("register_title"))
-        register_title.add_css_class("title-1")
-        register_title.set_margin_bottom(12)
-        self.app.register_widget(register_title, "label", "register_title")
-        register_box.append(register_title)
-
-        #
-         # register form input name
-        self.input_register_name = Gtk.Entry()
-        self.input_register_name.set_input_purpose(Gtk.InputPurpose.NAME)
-        self.app.register_widget(self.input_register_name, "placeholder", "enter_name")
-        register_box.append(self.input_register_name)
-
-        # register form input email
-        self.input_register_email = Gtk.Entry()
-        self.input_register_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
-        self.app.register_widget(self.input_register_email, "placeholder", "enter_email")
-        register_box.append(self.input_register_email)
-
-        # register form input password
-        self.input_register_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
-        self.input_register_pass.set_visibility(False)
-        self.input_register_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
-        self.app.register_widget(self.input_register_pass, "placeholder", "enter_password")
-        register_box.append(self.input_register_pass)
-
-        # register button
-        self.register_btn = Gtk.Button() #(label="login_title")
-        self.app.register_widget(self.register_btn, "label", "btn_register")
-        self.register_btn.add_css_class("suggested-action")
-        #self.register_btn.add_css_class("register_btn")
-        self.register_btn.set_margin_top(8)
-        self.register_btn.connect("clicked", self.on_register_button_clicked)
-        register_box.append(self.register_btn)
-        # link to switch to login screen layout
-        to_login_btn = Gtk.Button()
-        to_login_btn.set_has_frame(False)
-        to_login_btn.set_margin_top(4)
-        self.app.register_widget(to_login_btn, "label", "switch_to_login")
-        to_login_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("login_screen_layout"))
-        register_box.append(to_login_btn)
-        #
-        #self.auth_nav_stack.add_named(register_box, "register_screen_layout")
-        #
-        self.register_form = AuthForm(app=self.app, auth=self, isRegister=True,title="register_title", submit_btn_title="btn_register", submit_event=self.test_submit)
-        self.auth_nav_stack.add_named(self.register_form, "register_screen_layout")
 
     def on_login_button_clicked(self, button):
         #email = self.input_login_email.get_text().strip()
@@ -1051,7 +945,7 @@ class AuthComponent(Gtk.Box):
 
         print(f"login password: {password}")
 
-        if not email or not password :
+        """if not email or not password :
             print("Authentication Failure Email or Password is incorrect")
             self.app.isLogin = False
             self.app.logout_btn.set_visible(False)
@@ -1069,7 +963,7 @@ class AuthComponent(Gtk.Box):
             failure_toast = Adw.Toast.new(failure_msg)
             failure_toast.set_timeout(3)
             self.app.toast_overlay.add_toast(failure_toast)
-            return
+            return"""
 
         #
         
@@ -1140,8 +1034,6 @@ class AuthComponent(Gtk.Box):
             error_text = self.app.i18n._("login_failure_msg")
             self.app.toast_overlay.add_toast(Adw.Toast.new(error_text))
 
-
-
     def on_password_changed(self, entry, pspec):
         text = entry.get_text()
         print(f"on_password_changed: {text}")
@@ -1159,24 +1051,19 @@ class AuthComponent(Gtk.Box):
             entry.remove_css_class("error")
             self.validation_pass_lbl.set_visible(False)"""
 
-       
-       
-
     def on_register_button_clicked(self, button):
-        name = self.input_register_name.get_text().strip()
-        email = self.input_register_email.get_text().strip()
-        password = self.input_register_pass.get_text().strip()
+        #name = self.input_register_name.get_text().strip()
+        #email = self.input_register_email.get_text().strip()
+        #password = self.input_register_pass.get_text().strip()
 
-        if not name or not email or not password:
-            print("Authentication Register Failure Email or Password is incorrect")
-            #self.isLogin = False
-            #self.logout_btn.set_visible(False)
-            failure_msg = self.app.i18n._("register_failure_msg")
-            failure_toast = Adw.Toast.new(failure_msg)
-            failure_toast.set_timeout(3)
-            self.app.toast_overlay.add_toast(failure_toast)
-            return
-        #
+        input_register_email = self.register_form.input_email
+        input_register_pass = self.register_form.input_pass
+        input_register_name = self.register_form.input_name
+        name = input_register_name.get_text().strip()
+        email = input_register_email.get_text().strip()
+        password = input_register_pass.get_text().strip()
+
+        
         #
         #self.isLogin = True
         #self.logout_btn.set_visible(True)
