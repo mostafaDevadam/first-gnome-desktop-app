@@ -4464,6 +4464,7 @@ class MyApp(Adw.Application):
         sidebar_group.set_visible(False)
         #
         close_btn = Gtk.Button(label="Close")
+        close_btn.add_css_class("pill")
         close_btn.set_halign(Gtk.Align.END)
         close_btn.set_margin_end(20)
         close_btn.set_visible(False)
@@ -4604,6 +4605,9 @@ class MyApp(Adw.Application):
 
         #
         edit_btn = Gtk.Button(label="Edit")
+        edit_btn.add_css_class("pill")
+        #edit_btn.set_size_request(150, -1) # width
+        edit_btn.set_halign(Gtk.Align.END)
         #edit_btn.set_margin_top(20)
         box.append(edit_btn)
         #
@@ -4814,6 +4818,8 @@ class MyApp(Adw.Application):
         #box.append(btn1)
         #
         edit_btn = Gtk.Button(label="Edit")
+        edit_btn.add_css_class("pill")
+        edit_btn.set_halign(Gtk.Align.END)
         #edit_btn.set_margin_top(5)
         edit_btn.connect("clicked", lambda x:  [
              
@@ -5042,6 +5048,8 @@ class MyApp(Adw.Application):
         #       print("submit add company")
         #])
         edit_btn = Gtk.Button(label="Edit")
+        edit_btn.add_css_class("pill")
+        edit_btn.set_halign(Gtk.Align.END)
         #edit_btn.set_margin_top(20)
         edit_btn.connect("clicked", lambda x:  [
              lbl4.set_visible(True),
