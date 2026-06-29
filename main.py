@@ -294,6 +294,113 @@ class HandleJsonFile:
         except Exception as e:
             print(f"Critical error updating physical JSON datastore block metrics: {e}")
 
+class UserService:
+
+    def __init__(self):
+        pass
+
+    
+    def get_user_email(self, email):
+                   json_file = HandleJsonFile()
+                   json_db = json_file.load_data_from_json_file("storage", "accounts")
+
+                   if not json_db:
+                       print("no data found for updating profile info")
+                       return
+
+                   print(f"json_db data: {json_db}")
+                   # get doc based on email
+                   account_user = {}
+                   #updated_account_user = {}
+                   is_account_found = False
+                   for account in json_db:
+                        if account.get("email") == email:
+                           is_account_found = True
+                           account_user = account
+                           print(f"found account user: {account}")
+                           #
+                           #account["name"] = name
+                           #account["email"] = email
+                           #account["username"] = username
+                           #account["phone"] = phone
+                           #account["website"] = website
+                           #
+                           #updated_account_user = account
+                           
+                           #
+
+
+
+                        else:
+                           is_account_found = False
+        
+        
+                   #
+                   return account_user
+
+    def update_user_by_email(self, target_email, data):
+                   json_file = HandleJsonFile()
+                   json_db = json_file.load_data_from_json_file("storage", "accounts")
+                   active_user = {}
+
+                   if not json_db:
+                       print("no data found for updating profile info")
+                       return
+
+                   print(f"json_db data: {json_db}")
+                   # get doc based on email
+                   account_user = {}
+                   updated_account_user = {}
+                   is_account_found = False
+                   for idx, account in enumerate(json_db):
+                        if account.get("email") == target_email:
+                           is_account_found = True
+                           account_user = account
+                           print(f"found account user: {account}")
+                           #
+                           #account["name"] = name
+                           #account["email"] = email
+                           #account["username"] = username
+                           #account["phone"] = phone
+                           #account["website"] = website
+                           #account.clear()
+                           json_db[idx] = data
+                           #
+                           updated_account_user = json_db[idx]
+                           break
+                           
+                           #
+
+
+
+                        else:
+                           is_account_found = False
+                    #
+                   if is_account_found:
+                        print(f"account user: {account}")
+                        print(f"updated_account_user: {updated_account_user}")
+                        #
+                        
+                        #
+                        json_file.save_data_to_json_file(json_db, "storage", "accounts")
+                        #
+                        print(f"after json_db FIXED: {json_db}")
+                        #
+                        #active_user = updated_account_user
+                        #self.active_user = updated_account_user
+                        #self.active_username = updated_account_user.get("name")
+                        #self.refresh_profile_header()
+                        #
+                        #if hasattr(self, 'toast_overlay'):
+                            #success = self.i18n._("success_update_msg")
+                            #self.toast_overlay.add_toast(Adw.Toast.new(success))
+                        return updated_account_user
+                    #
+                   else:
+                        #if hasattr(self, 'toast_overlay'):
+                            #failed = self.i18n._("failed_update_msg")
+                            #self.toast_overlay.add_toast(Adw.Toast.new("Account not found!"))
+                        return None
 
 
 # i18n
@@ -378,6 +485,7 @@ class I18n():
                                     #
                                     "welcome_user": "Welcome", 
                                     #
+                                    "success_update_msg": "Success updated!"
 
 
                               
@@ -459,6 +567,8 @@ class I18n():
                                     #
                                     "welcome_user": "مرحباً",
                                     #
+                                    "success_update_msg": "تم التحديث بنجاح!",
+
                                
                                 },
                                   "de": {
@@ -534,6 +644,8 @@ class I18n():
                                     #
                                     "welcome_user": "Willkommen",
                                     #
+                                    "success_update_msg": "Erfolgreich aktualisiert!",
+
                                 }
 
                 }
@@ -4405,7 +4517,72 @@ class MyApp(Adw.Application):
                    }
 
                    print(f"update_profile_info_data: {update_user}")
-                   #
+                   # get data from json file
+                   json_file = HandleJsonFile()
+                   json_db = json_file.load_data_from_json_file("storage", "accounts")
+
+                   if not json_db:
+                       print("no data found for updating profile info")
+                       return
+
+                   print(f"json_db data: {json_db}")
+                   # get doc based on email
+                   account_user = {}
+                   updated_account_user = {}
+                   is_account_found = False
+                   for account in json_db:
+                        if account.get("email") == self.active_user.get("email"):
+                           is_account_found = True
+                           account_user = account
+                           print(f"found account user: {account}")
+                           #
+                           account["name"] = name
+                           account["email"] = email
+                           account["username"] = username
+                           account["phone"] = phone
+                           account["website"] = website
+                           #
+                           updated_account_user = account
+                           
+                           #
+
+
+
+                        else:
+                           is_account_found = False
+                    #
+                   if is_account_found:
+                        print(f"account user: {account}")
+                        print(f"updated_account_user: {updated_account_user}")
+                        #
+                        print(f"after json_db: {json_db}")
+                        #
+                        json_file.save_data_to_json_file(json_db, "storage", "accounts")
+                        #
+                        self.active_user = updated_account_user
+                        self.active_username = updated_account_user.get("name")
+                        self.refresh_profile_header()
+                        #
+                        if hasattr(self, 'toast_overlay'):
+                            success = self.i18n._("success_update_msg")
+                            self.toast_overlay.add_toast(Adw.Toast.new(success))
+                    #
+                   else:
+                        if hasattr(self, 'toast_overlay'):
+                            #failed = self.i18n._("failed_update_msg")
+                            self.toast_overlay.add_toast(Adw.Toast.new("Account not found!"))
+
+
+
+
+
+                        #
+
+
+                       
+
+                   # 
+
 
                 
                 
@@ -4434,7 +4611,7 @@ class MyApp(Adw.Application):
         sidebar2_group.add(email_row)
         phone_row = Adw.ActionRow(title="Phone", subtitle=self.active_user.get("phone", "N/A"))
         sidebar2_group.add(phone_row)
-        web_row = Adw.ActionRow(title="Website", subtitle=self.active_user.get("Website", "N/A"))
+        web_row = Adw.ActionRow(title="Website", subtitle=self.active_user.get("website", "N/A"))
         sidebar2_group.add(web_row)
         box.append(sidebar2_group)
 
@@ -4544,21 +4721,46 @@ class MyApp(Adw.Application):
              submit_btn.set_margin_top(30)
              sidebar_group.add(submit_btn)
              #
+             def update_profile_address_data(button):
+                   street = input_street.get_text().strip()
+                   zipcode = input_zipcode.get_text().strip()
+                   city = input_city.get_text().strip()
+                   #
+                   update_address = {
+                       "street": street,
+                       "zipcode": zipcode,
+                       "city": city,
+                   }
+
+                   user_payload = dict(self.active_user)
+                   user_payload["address"] = update_address
+                       
+                   
+
+                   
+
+                   print(f"update_profile_address_data: {update_address}")
+                   print(f"update_profile_data: {user_payload}")
+                   #
+                   user_service = UserService()
+                   email = user_payload.get("email")
+                   saved = user_service.update_user_by_email(target_email=email, data=user_payload)
+
+                   #print(f"after updated self.active_user: {self.active_user}")
+                   if saved:
+                       print(f"saved: {saved}")
+                       self.active_user = saved
+                       pass
+                   else:
+                       print(f"cannot save profile address")
+                       pass
+                   #
 
 
-
-
-            
-
-             
              #
-             #name_row = Adw.ActionRow(title="Name",subtitle=self.active_user.get("name", "N/A"))
-             #sidebar_group.add(name_row)
-             #email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
-             #sidebar_group.add(email_row)
-             #lbl2 = Gtk.Label(label=self.active_user.get("email"))
-             #box.append(lbl2)
-             #box.append(sidebar_group)
+             submit_btn.connect("clicked", update_profile_address_data)
+                  
+             #
              self.right_sidebar.append(lbl4)
              self.right_sidebar.append(sidebar_group)
         
@@ -4577,20 +4779,21 @@ class MyApp(Adw.Application):
 
         box.append(btn1)
         #
-        submit_btn.connect("clicked", lambda x: [
-               print("submit add address")
-        ])
+        #submit_btn.connect("clicked", lambda x: [
+        #       print("submit add address")
+        #])
         #self.right_sidebar.append(lbl4)
         #box.append(lbl4)
 
         #
         sidebar_group2 = Adw.PreferencesGroup()
         #sidebar_group.set_title("User Information")
-        street_row = Adw.ActionRow(title="Street", subtitle="N/A")
+
+        street_row = Adw.ActionRow(title="Street", subtitle=address.get("street", "N/A"))
         sidebar_group2.add(street_row)
-        zipcode_row = Adw.ActionRow(title="Zipcode", subtitle="N/A")
+        zipcode_row = Adw.ActionRow(title="Zipcode", subtitle=address.get("zipcode", "N/A"))
         sidebar_group2.add(zipcode_row)
-        city_row = Adw.ActionRow(title="City", subtitle="N/A")
+        city_row = Adw.ActionRow(title="City", subtitle=address.get("city", "N/A"))
         sidebar_group2.add(city_row)
         box.append(sidebar_group2)
         
@@ -4722,8 +4925,6 @@ class MyApp(Adw.Application):
         
 
         if not company:
-             #lbl3 = Gtk.Label(label="No Company")
-             #box.append(lbl3)
              #
              sidebar_group.set_margin_top(20)
              sidebar_group.set_margin_start(20)
@@ -4752,6 +4953,44 @@ class MyApp(Adw.Application):
              #
              self.right_sidebar.append(lbl4)
              self.right_sidebar.append(sidebar_group)
+             #
+             def update_profile_company_data(button):
+                   name = input_name.get_text().strip()
+                   bs = input_bs.get_text().strip()
+                   #
+                   update_company = {
+                       "name": name,
+                       "bs": bs,
+                   }
+
+                   user_payload = dict(self.active_user)
+                   user_payload["company"] = update_company
+                       
+                   
+
+                   
+
+                   print(f"update_profile_company_data: {update_company}")
+                   print(f"update_profile_data: {user_payload}")
+                   #
+                   user_service = UserService()
+                   email = user_payload.get("email")
+                   saved = user_service.update_user_by_email(target_email=email, data=user_payload)
+
+                   #print(f"after updated self.active_user: {self.active_user}")
+                   if saved:
+                       print(f"saved: {saved}")
+                       self.active_user = saved
+                       pass
+                   else:
+                       print(f"cannot save profile address")
+                       pass
+                   #
+
+
+             #
+             submit_btn.connect("clicked", update_profile_company_data)
+
         #
         btn1.connect("clicked", lambda x:  [
              lbl4.set_visible(True),
@@ -4760,17 +4999,17 @@ class MyApp(Adw.Application):
             ])
         box.append(btn1)
         #
-        submit_btn.connect("clicked", lambda x: [
-               print("submit add company")
-        ])
+        #submit_btn.connect("clicked", lambda x: [
+        #       print("submit add company")
+        #])
         
 
         #
         sidebar2_group = Adw.PreferencesGroup()
         #sidebar_group.set_title("User Information")
-        name_row = Adw.ActionRow(title="Name", subtitle="N/A")
+        name_row = Adw.ActionRow(title="Name", subtitle=company.get("name","N/A"))
         sidebar2_group.add(name_row)
-        bs_row = Adw.ActionRow(title="Business", subtitle="N/A")
+        bs_row = Adw.ActionRow(title="Business", subtitle=company.get("bs","N/A"))
         sidebar2_group.add(bs_row)
         box.append(sidebar2_group)
 
