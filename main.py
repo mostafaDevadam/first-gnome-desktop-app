@@ -7,6 +7,7 @@ from gi.repository import Gtk, Adw, Gio, GLib, Gdk, Notify
 
 Notify.init('com.example.myapp')
 
+import re
 import sys
 import urllib.request
 import threading
@@ -14,6 +15,7 @@ import json
 import os
 
 print("start py")
+
 
 # dark, i18n, search, cache
 # save users, posts, comments in json files in init/background
@@ -343,6 +345,10 @@ class I18n():
                                     "password": "Password",
                                     "enter_email": "Enter Email",
                                     "enter_password": "Enter Password",
+                                    "validation_password": "Too short! Password must be at least 3 characters.",
+                                    "validation_email": "Invalid email format (e.g., user@example.com).",
+                                    "password_required": "Password is required",
+                                    "email_required": "Email is required",
                                     "login_success_msg": "Login successful! Welcome back.",
                                     "logout_title": "Logout",
                                     "login_failure_msg": "Login failed: Email and password fields cannot be empty.",
@@ -351,6 +357,7 @@ class I18n():
                                     "register_failure_msg": "Registration failed: All fields are required.",
                                     #"register_success_msg": "Register successful! Welcome.",
                                     #"register_failure_msg": "Register failed: Email and password fields cannot be empty.",
+                                    #
                                     "setting_general_item": "General",
                                     "setting_account_item": "Account",
                                     "setting_notifications_item": "Notifications",
@@ -419,6 +426,12 @@ class I18n():
                                     "password": "Password",
                                     "enter_email": "ادخل البريد الالكترونى",
                                     "enter_password": "ادخل كلمة السر",
+                                    "password_required": "كلمة المرور مطلوبة",
+                                    "email_required": "البريد الإلكتروني مطلوب",
+                                    "validation_password": "قصيرة جداً! يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+                                    "validation_email": "صيغة البريد الإلكتروني غير صالحة (مثال: user@example.com).",
+
+
                                     "login_success_msg": "تم تسجيل الدخول بنجاح! مرحبًا بعودتك.",
                                     "logout_title": "خروج",
                                     "login_failure_msg": "فشل تسجيل الدخول: لا يمكن ترك حقول البريد الإلكتروني وكلمة المرور فارغة.",
@@ -488,6 +501,12 @@ class I18n():
                                     "password": "Passwort",
                                     "enter_email": "E-Mail eingeben",
                                     "enter_password": "Passwort eingeben",
+                                    "password_required": "Passwort ist erforderlich",
+                                    "email_required": "E-Mail ist erforderlich",
+                                    "validation_password": "Zu kurz! Das Passwort muss mindestens 6 Zeichen lang sein.",
+                                    "validation_email": "Ungültiges E-Mail-Format (z. B. user@example.com).",
+
+
                                     "login_success_msg": "Anmeldung erfolgreich! Willkommen zurück.",
                                     "logout_title": "Abmelden",
                                     "login_failure_msg": "Anmeldung fehlgeschlagen: E-Mail- und Passwortfelder dürfen nicht leer sein.",
@@ -546,14 +565,26 @@ class FormField(Gtk.Box):
         self.set_valign(Gtk.Align.CENTER)
         self.set_halign(Gtk.Align.CENTER)
         self.set_size_request(300, -1)
+        #self.build()
 
     def build(self, entry: Gtk.Entry):
         self.append(entry)
 
 class Validation(Gtk.Label):
 
-    def __init__(self, title):
-        super().__init__(title=title)
+    def __init__(self):
+        super().__init__()
+        self.set_visible(False)
+        self.add_css_class("error-msg")
+
+    
+    def hide(self):
+        self.set_visible(False)
+
+    def visible(self):
+        self.set_visible(True)
+
+
     
 
 # Field(Input(Validation),Validation)
@@ -569,12 +600,14 @@ f.append(v)
 # password-entry
 class InputPassword(Gtk.PasswordEntry):
 
-    def __init__(self, form, app):
+    def __init__(self, app, validation: Validation, placeholder_text, ):
         super().__init__()
-        self.input_box = FormField()
-        self.input_box.append(self)
-        
-        self.form = form
+        self.validation = validation
+        #self.set_placeholder_text(placeholder_text)
+        self.placeholder_text = placeholder_text
+        #self.input_box = FormField()
+        #self.input_box.append(self)
+        #self.form = form
         self.app = app
         #
         self.build()
@@ -583,10 +616,11 @@ class InputPassword(Gtk.PasswordEntry):
     def build(self):
         #password_entry = Gtk.PasswordEntry(placeholder_text="enter pass")
         
-        self.add_css_class("error")
+        #self.add_css_class("error")
         # Set maximum length to 8 characters
         text_widget = self.get_delegate()
-        text_widget.set_placeholder_text("Enter 3 to 8 characters")
+        #text_widget.set_placeholder_text("Enter 3 to 8 characters")
+        text_widget.set_placeholder_text(self.placeholder_text)
         text_buffer = text_widget.get_buffer()
         text_buffer.set_max_length(8)
 
@@ -594,18 +628,18 @@ class InputPassword(Gtk.PasswordEntry):
         self.connect("notify::text", self.on_password_changed)
         #self.input_box.append(self)
         # validation password
-        self.validation_pass_lbl = Gtk.Label()
-        self.validation_pass_lbl.set_visible(False)
-        self.validation_pass_lbl.add_css_class("error-msg")
+        #self.validation_pass_lbl = Gtk.Label()
+        #self.validation_pass_lbl.set_visible(False)
+        #self.validation_pass_lbl.add_css_class("error-msg")
         #self.validation_pass_lbl.add_css_class("visible")
         #self.input_box.append(self.validation_pass_lbl)
         #self.validation_pass_lbl = Gtk.Label()
-        self.input_box.append(self.validation_pass_lbl)
+        #self.input_box.append(self.validation_pass_lbl)
         #
         #return self
 
-    def get(self):
-        return self
+    #def get(self):
+        #return self
 
 
 
@@ -616,19 +650,211 @@ class InputPassword(Gtk.PasswordEntry):
         #
         if len(text) == 0:
             entry.add_css_class("error")  
-            self.validation_pass_lbl.set_text("Password is required")
-            self.validation_pass_lbl.set_visible(True)
+            #self.validation_pass_lbl.set_text("Password is required")
+            #self.validation_pass_lbl.set_visible(True)
+            self.validation.set_text("Password is required")
+            self.validation.visible()
         elif len(text) < 3:
             entry.add_css_class("error")
-            self.validation_pass_lbl.set_text("Too short! Password must be at least 3 characters.")
-            self.validation_pass_lbl.set_visible(True)
+            #self.validation_pass_lbl.set_text("Too short! Password must be at least 3 characters.")
+            #self.validation_pass_lbl.set_visible(True)
+            self.validation.set_text("Too short! Password must be at least 3 characters.")
+            self.validation.visible()
         else:
             entry.remove_css_class("error")
-            self.validation_pass_lbl.set_visible(False)
+            #self.validation_pass_lbl.set_visible(False)
+            self.validation.hide()
+
+class InputBasicPassword(Gtk.Entry):
+
+    def __init__(self, app, placeholder_text, validation: Validation):
+         super().__init__(placeholder_text=placeholder_text)
+         #self.input_login_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
+         self.app = app
+         self.validation = validation
+         self.set_visibility(False)
+         self.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+         self.connect("notify::text", self.on_password_changed)
+         self.isValid = False
+        
+
+    def on_password_changed(self, entry, pspec):
+        text = entry.get_text()
+        print(f"on_password_changed: {text}")
+
+        #
+        if len(text) == 0:
+            entry.add_css_class("error")  
+            #self.validation_pass_lbl.set_text("Password is required")
+            #self.validation_pass_lbl.set_visible(True)
+            #self.validation.set_text("Password is required") #self.app.i18n._("password_required")
+            self.validation.set_text(self.app.i18n._("password_required"))
+            self.app.register_widget(self.validation, "label", "password_required")
+            # self.app.register_widget(self.validation, "label", "password_required")
+            self.validation.visible()
+        elif len(text) < 6:
+            entry.add_css_class("error")
+            #self.validation_pass_lbl.set_text("Too short! Password must be at least 3 characters.")
+            #self.validation_pass_lbl.set_visible(True)
+            #self.validation.set_text("Too short! Password must be at least 6 characters.") #self.app.i18n._("validation_login_password")
+            # self.app.register_widget(self.validation, "label", "validation_login_password")
+            self.validation.set_text(self.app.i18n._("validation_password"))
+            self.app.register_widget(self.validation, "label", "validation_password")
+            #
+            self.validation.visible()
+            self.isValid = False
+        else:
+            entry.remove_css_class("error")
+            #self.validation_pass_lbl.set_visible(False)
+            self.validation.hide()
+            self.isValid = True
 
 
-# email-entry
+EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
+
+class InputBasicEmail(Gtk.Entry):
+
+    def __init__(self, app, placeholder_text, validation: Validation):
+        super().__init__(placeholder_text=placeholder_text)
+        self.app = app
+        self.validation = validation
+        self.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        self.connect("notify::text", self.on_email_changed)
+        self.isValid = False
+    
+    def on_email_changed(self, entry, pspec):
+        text = entry.get_text()
+        print(f"on_email_changed: {text}")
+
+        #
+        if len(text) == 0:
+            entry.add_css_class("error")  
+            #self.validation_pass_lbl.set_text("Password is required")
+            #self.validation_pass_lbl.set_visible(True)
+            #self.validation.set_text("Email is required") #self.app.i18n._("email_required")
+            self.validation.set_text(self.app.i18n._("email_required"))
+            self.app.register_widget(self.validation, "label", "email_required")
+            # self.app.register_widget(self.validation, "label", "password_required")
+            self.validation.visible()
+        elif not re.match(EMAIL_REGEX, text):
+                entry.add_css_class("error")
+                #self.validation.set_text("Invalid email format (e.g., user@example.com).")
+                self.validation.set_text(self.app.i18n._("validation_email"))
+                self.app.register_widget(self.validation, "label", "validation_email")
+                self.validation.visible()
+                self.isValid = False
+                
+
+                """elif len(text) < 15:
+                    entry.add_css_class("error")
+                    #self.validation_pass_lbl.set_text("Too short! Password must be at least 3 characters.")
+                    #self.validation_pass_lbl.set_visible(True)
+                    self.validation.set_text("Too short! Email must be at least 15 characters.") #self.app.i18n._("validation_login_password")
+                    # self.app.register_widget(self.validation, "label", "validation_login_password")
+                    #
+                    self.validation.visible()"""
+        
+        else:
+            entry.remove_css_class("error")
+            #self.validation_pass_lbl.set_visible(False)
+            self.validation.hide()
+            self.isValid = True
+        
+        
+
+# AuthForm: form-title, fields: name(register), email, password
+class AuthForm(Gtk.Box):
+
+    def __init__(self, app, auth, isRegister, title, submit_btn_title, submit_event):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.set_valign(Gtk.Align.CENTER)
+        self.set_halign(Gtk.Align.CENTER)
+        self.set_size_request(300, -1)
+        self.app = app
+        self.auth = auth
+        #
+        self.isRegister = isRegister
+        self.title = title
+        #
+        self.on_submit_button_clicked = submit_event
+        self.submit_btn_title = submit_btn_title
+
+        #
+        self.build()
+
+
+    
+    def build(self):
+        # title
+        title_lbl = Gtk.Label(label=self.title)
+        title_lbl.add_css_class("title-1")
+        title_lbl.set_margin_bottom(12)
+        self.app.register_widget(title_lbl, "label", self.title)
+        self.append(title_lbl)
+
+        if self.isRegister:
+           # input name
+            name_form_field = FormField()
+            validation_name = Validation()
+            self.input_name = Gtk.Entry()
+            self.input_name.set_input_purpose(Gtk.InputPurpose.NAME)
+            self.app.register_widget(self.input_name, "placeholder", "enter_name")
+            #self.input_name = InputBasicName(app=self.app, placeholder_text=self.app.i18n._("enter_name"), validation=validation_name)
+            #self.app.register_widget(self.input_name, "placeholder", "enter_name")
+            name_form_field.append(self.input_name)
+            name_form_field.append(validation_name)
+            self.append(name_form_field)
+
+           
+
+        # input email
+        email_form_field = FormField()
+        validation_email = Validation()
+        self.input_email = InputBasicEmail(app=self.app, placeholder_text=self.app.i18n._("enter_email"), validation=validation_email)
+        self.app.register_widget(self.input_email, "placeholder", "enter_email")
+        email_form_field.append(self.input_email)
+        email_form_field.append(validation_email)
+        self.append(email_form_field)
+
+        # input password
+        pass_form_field = FormField()
+        validation_password = Validation()
+        self.input_pass = InputBasicPassword(app=self.app, placeholder_text=self.app.i18n._("enter_password"), validation=validation_password)
+        pass_form_field.append(self.input_pass)
+        pass_form_field.append(validation_password)
+        self.append(pass_form_field)
+
+        # btn
+        self.submit_btn = Gtk.Button() #(label="login_title")
+        self.app.register_widget(self.submit_btn, "label", self.submit_btn_title )
+        self.submit_btn.add_css_class("suggested-action")
+        #self.login_btn.add_css_class("login_btn")
+        self.submit_btn.set_margin_top(8)
+        self.submit_btn.connect("clicked", self.on_submit_button_clicked)
+        self.append(self.submit_btn)
+
+        # if register
+        if self.isRegister:
+             # link to switch to login screen layout
+            to_login_btn = Gtk.Button()
+            to_login_btn.set_has_frame(False)
+            to_login_btn.set_margin_top(4)
+            self.app.register_widget(to_login_btn, "label", "switch_to_login")
+            to_login_btn.connect("clicked", lambda x: self.auth.auth_nav_stack.set_visible_child_name("login_screen_layout"))
+            self.append(to_login_btn)
+        else:
+             # link to switch to register screen layout
+            to_register_btn = Gtk.Button()
+            to_register_btn.set_has_frame(False)
+            to_register_btn.set_margin_top(4)
+            self.app.register_widget(to_register_btn, "label", "switch_to_register")
+            to_register_btn.connect("clicked", lambda x: self.auth.auth_nav_stack.set_visible_child_name("register_screen_layout"))
+            self.append(to_register_btn)
+
+
+
+        
 
 
 
@@ -671,19 +897,31 @@ class AuthComponent(Gtk.Box):
         login_title.add_css_class("title-1")
         login_title.set_margin_bottom(12)
         self.app.register_widget(login_title, "label", "login_title")
+
         login_box.append(login_title)
         # login form input email
-        self.input_login_email = Gtk.Entry()
-        self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
+        login_email_form_field = FormField()
+        validation_login_email = Validation()
+        self.input_login_email = InputBasicEmail(app=self.app, placeholder_text=self.app.i18n._("enter_email"), validation=validation_login_email)
+        #self.input_login_email.set_input_purpose(Gtk.InputPurpose.EMAIL)
         self.app.register_widget(self.input_login_email, "placeholder", "enter_email")
-        login_box.append(self.input_login_email)
+        login_email_form_field.append(self.input_login_email)
+        login_email_form_field.append(validation_login_email)
+        login_box.append(login_email_form_field)
 
         # login form input password
-        self.input_login_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
-        self.input_login_pass.set_visibility(False)
-        self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        #self.input_login_pass = Gtk.Entry(placeholder_text=self.app.i18n._("enter_password"))
+        #self.input_login_pass.set_visibility(False)
+        #self.input_login_pass.set_input_purpose(Gtk.InputPurpose.PASSWORD)
+        login_pass_form_field = FormField()
+        validation_login_password = Validation()
+        self.input_login_pass = InputBasicPassword(app=self.app, placeholder_text=self.app.i18n._("enter_password"), validation=validation_login_password)
+        #self.input_login_pass.connect("notify::text", self.on_password_changed)
         self.app.register_widget(self.input_login_pass, "placeholder", "enter_password")
-        login_box.append(self.input_login_pass)
+        #self.app.register_widget(self.validation_login_password, "label", "validation_login_password_1")
+        login_pass_form_field.append(self.input_login_pass)
+        login_pass_form_field.append(validation_login_password)
+        login_box.append(login_pass_form_field)
         # test input_box 
         """input_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         input_box.set_valign(Gtk.Align.CENTER)
@@ -710,8 +948,19 @@ class AuthComponent(Gtk.Box):
         #self.validation_pass_lbl.add_css_class("visible")
         input_box.append(self.validation_pass_lbl)"""
 
-        test_input_password = InputPassword(form=self, app=self.app)
-        login_box.append(test_input_password.input_box)
+        #test_input_password = InputPassword(form=self, app=self.app)
+        #login_box.append(test_input_password.input_box)
+        #test_form_field = FormField()
+        #validation_password = Validation()
+        #input_password = InputPassword(app=self, validation=validation_password, placeholder_text=self.app.i18n._("enter_password"))
+        #self.input_login_pass = input_password
+        #test_form_field.append(input_password)
+        #test_form_field.append(validation_password)
+        #login_box.append(test_form_field)
+
+
+
+
         # login button
         self.login_btn = Gtk.Button() #(label="login_title")
         self.app.register_widget(self.login_btn, "label", "login_title")
@@ -729,9 +978,14 @@ class AuthComponent(Gtk.Box):
         to_register_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("register_screen_layout"))
         login_box.append(to_register_btn)
         #
-        self.auth_nav_stack.add_named(login_box, "login_screen_layout")
+        #self.auth_nav_stack.add_named(login_box, "login_screen_layout")
+        #
+        self.login_form = AuthForm(app=self.app, auth=self, isRegister=False,title="login_title", submit_btn_title="login_title",submit_event=self.test_submit)
+        self.auth_nav_stack.add_named(self.login_form, "login_screen_layout")
 
-
+    def test_submit(self, button):
+        print("test_submit")
+        pass
 
     def build_register_layout(self):
         # register
@@ -782,24 +1036,43 @@ class AuthComponent(Gtk.Box):
         to_login_btn.connect("clicked", lambda x: self.auth_nav_stack.set_visible_child_name("login_screen_layout"))
         register_box.append(to_login_btn)
         #
-        self.auth_nav_stack.add_named(register_box, "register_screen_layout")
+        #self.auth_nav_stack.add_named(register_box, "register_screen_layout")
+        #
+        self.register_form = AuthForm(app=self.app, auth=self, isRegister=True,title="register_title", submit_btn_title="btn_register", submit_event=self.test_submit)
+        self.auth_nav_stack.add_named(self.register_form, "register_screen_layout")
 
     def on_login_button_clicked(self, button):
-        email = self.input_login_email.get_text().strip()
-        password = self.input_login_pass.get_text().strip()
+        #email = self.input_login_email.get_text().strip()
+        #password = self.input_login_pass.get_text().strip()
+        input_login_email = self.login_form.input_email
+        input_login_pass = self.login_form.input_pass
+        email = input_login_email.get_text().strip()
+        password = input_login_pass.get_text().strip()
 
-        if not email or not password:
+        print(f"login password: {password}")
+
+        if not email or not password :
             print("Authentication Failure Email or Password is incorrect")
-            self.isLogin = False
-            self.logout_btn.set_visible(False)
+            self.app.isLogin = False
+            self.app.logout_btn.set_visible(False)
             failure_msg = self.app.i18n._("login_failure_msg") 
             failure_toast = Adw.Toast.new(failure_msg)
             failure_toast.set_timeout(3)
             self.app.toast_overlay.add_toast(failure_toast)
             return
         #
-        self.app.isLogin = True
-        self.app.logout_btn.set_visible(True)
+        if not input_login_email.isValid or not input_login_pass.isValid:
+            print("Authentication Failure Email or Password is invalid")
+            self.app.isLogin = False
+            self.app.logout_btn.set_visible(False)
+            failure_msg = self.app.i18n._("login_failure_msg") 
+            failure_toast = Adw.Toast.new(failure_msg)
+            failure_toast.set_timeout(3)
+            self.app.toast_overlay.add_toast(failure_toast)
+            return
+
+        #
+        
 
         # check login in json file
         base_dir = GLib.get_current_dir()
@@ -834,6 +1107,8 @@ class AuthComponent(Gtk.Box):
         #
         if authenticated:
             print(f"Authentication success for profile")
+            self.app.isLogin = True
+            self.app.logout_btn.set_visible(True)
             # pass active_username to profile-label
             #self.app.profile_lbl.set_text(active_username)
             self.active_username = active_username
@@ -841,8 +1116,10 @@ class AuthComponent(Gtk.Box):
             self.app.active_username = active_username
             self.app.refresh_profile_header()
             # clear inputs
-            self.input_login_email.set_text("")
-            self.input_login_pass.set_text("")
+            #self.input_login_email.set_text("")
+            #self.input_login_pass.set_text("")
+            input_login_email.set_text("")
+            input_login_pass.set_text("")
             #
             print("Layout interface canvas unlocked.")
             #
@@ -870,7 +1147,7 @@ class AuthComponent(Gtk.Box):
         print(f"on_password_changed: {text}")
 
         #
-        if len(text) == 0:
+        """if len(text) == 0:
             entry.add_css_class("error")  
             self.validation_pass_lbl.set_text("Password is required")
             self.validation_pass_lbl.set_visible(True)
@@ -880,7 +1157,7 @@ class AuthComponent(Gtk.Box):
             self.validation_pass_lbl.set_visible(True)
         else:
             entry.remove_css_class("error")
-            self.validation_pass_lbl.set_visible(False)
+            self.validation_pass_lbl.set_visible(False)"""
 
        
        
