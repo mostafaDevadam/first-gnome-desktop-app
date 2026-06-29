@@ -2476,6 +2476,9 @@ class MyApp(Adw.Application):
         #self.tab1_box.append(list_box)
          
 
+    def clear_right_sidebar(self):
+        while child := self.right_sidebar.get_first_child():
+                       self.right_sidebar.remove(child)
 
     def do_activate(self):
         # this is called g_application_activate() -> app.run()
@@ -4398,18 +4401,7 @@ class MyApp(Adw.Application):
         self.local_title.add_css_class("heading")
         local_action_bar.set_title_widget(self.local_title)
         #
-        #self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
-        #self.add_item_btn.add_css_class("suggested-action")
-        #local_action_bar.pack_end(self.add_item_btn)
-        # build the form as popover
         
-        # inputs
-        #self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
-        #form_box.append(self.input_name)
-
-        #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
-        #form_box.append(self.input_desc)
-       
         local_wrapper.add_top_bar(local_action_bar)
 
         #
@@ -4435,7 +4427,7 @@ class MyApp(Adw.Application):
         print(f"profile info user: {self.active_user.get("name")}")
         #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        box.set_margin_top(12)
+        box.set_margin_top(5)
         box.set_margin_bottom(12)
         box.set_margin_start(12)
         box.set_margin_end(12)
@@ -4462,142 +4454,168 @@ class MyApp(Adw.Application):
        
 
         # render edit profile form
-        def render_edit_profile_info_form(button):
-                lbl = Gtk.Label(label="Edit Profile")
-                lbl.set_margin_top(20)
-                self.right_sidebar.append(lbl)
-                #
-                sidebar_group = Adw.PreferencesGroup()
-                sidebar_group.set_margin_top(20)
-                sidebar_group.set_margin_start(20)
-                sidebar_group.set_margin_end(20)
-                #sidebar_group.set_title("User Information")
-                #
-                input_name = Gtk.Entry(placeholder_text="Name")
-                input_name.set_text(self.active_user.get("name"))
-                sidebar_group.add(input_name)
-                #
-                input_email = Gtk.Entry(placeholder_text="Email")
-                input_email.set_text(self.active_user.get("email"))
-                input_email.set_margin_top(20)
-                sidebar_group.add(input_email)
-                #
-                input_username = Gtk.Entry(placeholder_text="UserName")
-                input_username.set_margin_top(20)
-                sidebar_group.add(input_username)
-                #
-                input_phone = Gtk.Entry(placeholder_text="Phone")
-                input_phone.set_margin_top(20)
-                sidebar_group.add(input_phone)
-                #
-                 #
-                input_web = Gtk.Entry(placeholder_text="Website")
-                input_web.set_margin_top(20)
-                sidebar_group.add(input_web)
-                #
-                submit_btn = Gtk.Button(label="Update")
-                submit_btn.set_margin_top(30)
-                sidebar_group.add(submit_btn)
-                #
-                self.right_sidebar.append(sidebar_group)
-                #
-                def update_profile_info_data(button):
-                   name = input_name.get_text().strip()
-                   email = input_email.get_text().strip()
-                   username = input_username.get_text().strip()
-                   phone = input_phone.get_text().strip()
-                   website = input_web.get_text().strip()
-                   #
-                   update_user = {
-                       "name": name,
-                       "email": email,
-                       "username": username,
-                       "phone": phone,
-                       "website": website,
-                   }
+        #def render_edit_profile_info_form(button):
+        lbl = Gtk.Label(label="Edit Profile")
+        lbl.set_visible(False)
+        lbl.set_margin_top(20)
+        self.right_sidebar.append(lbl)
+        #
+        sidebar_group = Adw.PreferencesGroup()
+        sidebar_group.set_visible(False)
+        #
+        close_btn = Gtk.Button(label="Close")
+        close_btn.set_halign(Gtk.Align.END)
+        close_btn.set_margin_end(20)
+        close_btn.set_visible(False)
 
-                   print(f"update_profile_info_data: {update_user}")
-                   # get data from json file
-                   json_file = HandleJsonFile()
-                   json_db = json_file.load_data_from_json_file("storage", "accounts")
-
-                   if not json_db:
-                       print("no data found for updating profile info")
-                       return
-
-                   print(f"json_db data: {json_db}")
-                   # get doc based on email
-                   account_user = {}
-                   updated_account_user = {}
-                   is_account_found = False
-                   for account in json_db:
-                        if account.get("email") == self.active_user.get("email"):
-                           is_account_found = True
-                           account_user = account
-                           print(f"found account user: {account}")
-                           #
-                           account["name"] = name
-                           account["email"] = email
-                           account["username"] = username
-                           account["phone"] = phone
-                           account["website"] = website
-                           #
-                           updated_account_user = account
-                           
-                           #
+        def on_close(button):
+            #self.clear_right_sidebar()
+            #
+            lbl.set_visible(False)
+            close_btn.set_visible(False)
+            sidebar_group.set_visible(False)
+              
+        close_btn.connect("clicked", on_close)
+        self.right_sidebar.append(close_btn)
+        #
 
 
+        sidebar_group.set_margin_top(20)
+        sidebar_group.set_margin_start(20)
+        sidebar_group.set_margin_end(20)
+        #sidebar_group.set_title("User Information")
+        #
+        input_name = Gtk.Entry(placeholder_text="Name")
+        input_name.set_text(self.active_user.get("name"))
+        sidebar_group.add(input_name)
+        #
+        input_email = Gtk.Entry(placeholder_text="Email")
+        input_email.set_text(self.active_user.get("email"))
+        input_email.set_margin_top(20)
+        sidebar_group.add(input_email)
+        #
+        input_username = Gtk.Entry(placeholder_text="UserName")
+        input_username.set_margin_top(20)
+        sidebar_group.add(input_username)
+        #
+        input_phone = Gtk.Entry(placeholder_text="Phone")
+        input_phone.set_margin_top(20)
+        sidebar_group.add(input_phone)
+        #
+            #
+        input_web = Gtk.Entry(placeholder_text="Website")
+        input_web.set_margin_top(20)
+        sidebar_group.add(input_web)
+        #
+        submit_btn = Gtk.Button(label="Update")
+        submit_btn.set_margin_top(30)
+        sidebar_group.add(submit_btn)
+        #
+        self.right_sidebar.append(sidebar_group)
+        #
+        def update_profile_info_data(button):
+            name = input_name.get_text().strip()
+            email = input_email.get_text().strip()
+            username = input_username.get_text().strip()
+            phone = input_phone.get_text().strip()
+            website = input_web.get_text().strip()
+            #
+            update_user = {
+                "name": name,
+                "email": email,
+                "username": username,
+                "phone": phone,
+                "website": website,
+            }
 
-                        else:
-                           is_account_found = False
+            print(f"update_profile_info_data: {update_user}")
+            # get data from json file
+            json_file = HandleJsonFile()
+            json_db = json_file.load_data_from_json_file("storage", "accounts")
+
+            if not json_db:
+                print("no data found for updating profile info")
+                return
+
+            print(f"json_db data: {json_db}")
+            # get doc based on email
+            account_user = {}
+            updated_account_user = {}
+            is_account_found = False
+            for account in json_db:
+                if account.get("email") == self.active_user.get("email"):
+                    is_account_found = True
+                    account_user = account
+                    print(f"found account user: {account}")
                     #
-                   if is_account_found:
-                        print(f"account user: {account}")
-                        print(f"updated_account_user: {updated_account_user}")
-                        #
-                        print(f"after json_db: {json_db}")
-                        #
-                        json_file.save_data_to_json_file(json_db, "storage", "accounts")
-                        #
-                        self.active_user = updated_account_user
-                        self.active_username = updated_account_user.get("name")
-                        self.refresh_profile_header()
-                        #
-                        if hasattr(self, 'toast_overlay'):
-                            success = self.i18n._("success_update_msg")
-                            self.toast_overlay.add_toast(Adw.Toast.new(success))
+                    account["name"] = name
+                    account["email"] = email
+                    account["username"] = username
+                    account["phone"] = phone
+                    account["website"] = website
                     #
-                   else:
-                        if hasattr(self, 'toast_overlay'):
-                            #failed = self.i18n._("failed_update_msg")
-                            self.toast_overlay.add_toast(Adw.Toast.new("Account not found!"))
+                    updated_account_user = account
+                    
+                    #
+
+
+
+                else:
+                    is_account_found = False
+            #
+            if is_account_found:
+                print(f"account user: {account}")
+                print(f"updated_account_user: {updated_account_user}")
+                #
+                print(f"after json_db: {json_db}")
+                #
+                json_file.save_data_to_json_file(json_db, "storage", "accounts")
+                #
+                self.active_user = updated_account_user
+                self.active_username = updated_account_user.get("name")
+                self.refresh_profile_header()
+                #
+                if hasattr(self, 'toast_overlay'):
+                    success = self.i18n._("success_update_msg")
+                    self.toast_overlay.add_toast(Adw.Toast.new(success))
+            #
+            else:
+                if hasattr(self, 'toast_overlay'):
+                    #failed = self.i18n._("failed_update_msg")
+                    self.toast_overlay.add_toast(Adw.Toast.new("Account not found!"))
 
 
 
 
 
-                        #
-
-
-                       
-
-                   # 
+                #
 
 
                 
-                
-                #
-                submit_btn.connect("clicked", update_profile_info_data)
+
+            # 
+
+
+        
+        
+        #
+        submit_btn.connect("clicked", update_profile_info_data)
 
 
         #
         edit_btn = Gtk.Button(label="Edit")
-        edit_btn.set_margin_top(20)
+        #edit_btn.set_margin_top(20)
         box.append(edit_btn)
         #
         
         #
-        edit_btn.connect("clicked", render_edit_profile_info_form)
+        edit_btn.connect("clicked", lambda x: [
+                             lbl.set_visible(True),
+                             close_btn.set_visible(True),
+                             sidebar_group.set_visible(True),      
+        ])
+        #
+
 
        
 
@@ -4670,7 +4688,7 @@ class MyApp(Adw.Application):
         #
         #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        box.set_margin_top(12)
+        #box.set_margin_top(12)
         box.set_margin_bottom(12)
         box.set_margin_start(12)
         box.set_margin_end(12)
@@ -4688,85 +4706,101 @@ class MyApp(Adw.Application):
 
         
 
-        lbl4 = Gtk.Label(label="Add Address")
+        lbl4 = Gtk.Label(label="Add/Edit Address")
         lbl4.set_margin_top(20)
         lbl4.set_visible(False)
+        self.right_sidebar.append(lbl4)
+        #
         sidebar_group = Adw.PreferencesGroup()
         sidebar_group.set_visible(False)
         #
         submit_btn = Gtk.Button(label="Add")
+        #
+        close_btn = Gtk.Button(label="Close")
+        close_btn.set_halign(Gtk.Align.END)
+        close_btn.set_margin_end(20)
+        close_btn.set_visible(False)
+
+        def on_close(button):
+            #self.clear_right_sidebar()
+            #
+            lbl4.set_visible(False)
+            close_btn.set_visible(False)
+            sidebar_group.set_visible(False)
+              
+        close_btn.connect("clicked", on_close)
+        self.right_sidebar.append(close_btn)
+        #
         
 
 
-        if not address:
-             #lbl3 = Gtk.Label(label="No Address")
-             #box.append(lbl3)
-             sidebar_group.set_margin_top(20)
-             sidebar_group.set_margin_start(20)
-             sidebar_group.set_margin_end(20)
-             #sidebar_group.set_title("User Information")
-             #
-             input_street = Gtk.Entry(placeholder_text="Enter Street")
-             sidebar_group.add(input_street)
-             #
-             input_zipcode = Gtk.Entry(placeholder_text="Enter Zipcode")
-             input_zipcode.set_margin_top(20)
-             sidebar_group.add(input_zipcode)
-             #
-             input_city = Gtk.Entry(placeholder_text="Enter City")
-             input_city.set_margin_top(20)
-             sidebar_group.add(input_city)
-             #
-             #submit_btn = Gtk.Button(label="Add")
-             submit_btn.set_margin_top(30)
-             sidebar_group.add(submit_btn)
-             #
-             def update_profile_address_data(button):
-                   street = input_street.get_text().strip()
-                   zipcode = input_zipcode.get_text().strip()
-                   city = input_city.get_text().strip()
-                   #
-                   update_address = {
-                       "street": street,
-                       "zipcode": zipcode,
-                       "city": city,
-                   }
+        #if not address:
+        sidebar_group.set_margin_top(20)
+        sidebar_group.set_margin_start(20)
+        sidebar_group.set_margin_end(20)
+        #sidebar_group.set_title("User Information")
+        #
+        input_street = Gtk.Entry(placeholder_text="Enter Street")
+        sidebar_group.add(input_street)
+        #
+        input_zipcode = Gtk.Entry(placeholder_text="Enter Zipcode")
+        input_zipcode.set_margin_top(20)
+        sidebar_group.add(input_zipcode)
+        #
+        input_city = Gtk.Entry(placeholder_text="Enter City")
+        input_city.set_margin_top(20)
+        sidebar_group.add(input_city)
+        #
+        #submit_btn = Gtk.Button(label="Add")
+        submit_btn.set_margin_top(30)
+        sidebar_group.add(submit_btn)
+        #
+        def update_profile_address_data(button):
+            street = input_street.get_text().strip()
+            zipcode = input_zipcode.get_text().strip()
+            city = input_city.get_text().strip()
+            #
+            update_address = {
+                "street": street,
+                "zipcode": zipcode,
+                "city": city,
+            }
 
-                   user_payload = dict(self.active_user)
-                   user_payload["address"] = update_address
-                       
-                   
+            user_payload = dict(self.active_user)
+            user_payload["address"] = update_address
+                
+            
 
-                   
+            
 
-                   print(f"update_profile_address_data: {update_address}")
-                   print(f"update_profile_data: {user_payload}")
-                   #
-                   user_service = UserService()
-                   email = user_payload.get("email")
-                   saved = user_service.update_user_by_email(target_email=email, data=user_payload)
+            print(f"update_profile_address_data: {update_address}")
+            print(f"update_profile_data: {user_payload}")
+            #
+            user_service = UserService()
+            email = user_payload.get("email")
+            saved = user_service.update_user_by_email(target_email=email, data=user_payload)
 
-                   #print(f"after updated self.active_user: {self.active_user}")
-                   if saved:
-                       print(f"saved: {saved}")
-                       self.active_user = saved
-                       pass
-                   else:
-                       print(f"cannot save profile address")
-                       pass
-                   #
+            #print(f"after updated self.active_user: {self.active_user}")
+            if saved:
+                print(f"saved: {saved}")
+                self.active_user = saved
+                pass
+            else:
+                print(f"cannot save profile address")
+                pass
+            #
 
 
-             #
-             submit_btn.connect("clicked", update_profile_address_data)
+        #
+        submit_btn.connect("clicked", update_profile_address_data)
                   
              #
-             self.right_sidebar.append(lbl4)
-             self.right_sidebar.append(sidebar_group)
+        
+        self.right_sidebar.append(sidebar_group)
         
 
         #
-        btn1 = Gtk.Button(label="add")
+        """btn1 = Gtk.Button(label="add")
              
         # add lbl in right_sidebar
         
@@ -4775,9 +4809,19 @@ class MyApp(Adw.Application):
         btn1.connect("clicked", lambda x: [ 
                      lbl4.set_visible(True),
                      sidebar_group.set_visible(True)
-        ])
+        ])"""
 
-        box.append(btn1)
+        #box.append(btn1)
+        #
+        edit_btn = Gtk.Button(label="Edit")
+        #edit_btn.set_margin_top(5)
+        edit_btn.connect("clicked", lambda x:  [
+             
+             lbl4.set_visible(True),
+             close_btn.set_visible(True),
+             sidebar_group.set_visible(True),
+            ])
+        box.append(edit_btn)
         #
         #submit_btn.connect("clicked", lambda x: [
         #       print("submit add address")
@@ -4797,13 +4841,6 @@ class MyApp(Adw.Application):
         sidebar_group2.add(city_row)
         box.append(sidebar_group2)
         
-
-       
-
-        
-        
-        
-       
         local_wrapper.add_top_bar(local_action_bar)
 
         #
@@ -4860,23 +4897,7 @@ class MyApp(Adw.Application):
         self.local_title.add_css_class("heading")
         local_action_bar.set_title_widget(self.local_title)
         #
-        #self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
-        #self.add_item_btn.add_css_class("suggested-action")
-        #local_action_bar.pack_end(self.add_item_btn)
-        # build the form as popover
-        
-        # inputs
-        #self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
-        #form_box.append(self.input_name)
 
-        #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
-        #form_box.append(self.input_desc)
-
-       
-
-        
-        
-        
        
         local_wrapper.add_top_bar(local_action_bar)
 
@@ -4885,7 +4906,7 @@ class MyApp(Adw.Application):
         scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(24)
+        content_box.set_margin_top(20)
         content_box.set_margin_bottom(24)
         content_box.set_margin_start(24)
         content_box.set_margin_end(24)
@@ -4897,7 +4918,7 @@ class MyApp(Adw.Application):
         #
          #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        box.set_margin_top(12)
+        #box.set_margin_top(12)
         box.set_margin_bottom(12)
         box.set_margin_start(12)
         box.set_margin_end(12)
@@ -4913,95 +4934,121 @@ class MyApp(Adw.Application):
        
 
         #
-        lbl4 = Gtk.Label(label="Add Company")
+        lbl4 = Gtk.Label(label="Add/Edit Company")
         lbl4.set_margin_top(20)
         lbl4.set_visible(False)
+        self.right_sidebar.append(lbl4)
+        #
         sidebar_group = Adw.PreferencesGroup()
         sidebar_group.set_visible(False)
         #
-        btn1 = Gtk.Button(label="add")
-        #
         submit_btn = Gtk.Button(label="Add")
+        #
+        close_btn = Gtk.Button(label="Close")
+        close_btn.set_halign(Gtk.Align.END)
+        close_btn.set_margin_end(20)
+        close_btn.set_visible(False)
+
+        def on_close(button):
+            #self.clear_right_sidebar()
+            #
+            lbl4.set_visible(False)
+            close_btn.set_visible(False)
+            sidebar_group.set_visible(False)
+              
+        close_btn.connect("clicked", on_close)
+        self.right_sidebar.append(close_btn)
+        #
         
 
-        if not company:
+        #if not company:
              #
-             sidebar_group.set_margin_top(20)
-             sidebar_group.set_margin_start(20)
-             sidebar_group.set_margin_end(20)
-             #sidebar_group.set_title("User Information")
-             #
-             input_name = Gtk.Entry(placeholder_text="Enter Name")
-             sidebar_group.add(input_name)
-             #
-             input_bs = Gtk.Entry(placeholder_text="Enter Business")
-             input_bs.set_margin_top(20)
-             sidebar_group.add(input_bs)
-             #
-             #input_city = Gtk.Entry(placeholder_text="Enter City")
-             #input_city.set_margin_top(20)
-             #sidebar_group.add(input_city)
-             #
-             #submit_btn = Gtk.Button(label="Add")
-             submit_btn.set_margin_top(30)
-             sidebar_group.add(submit_btn)
-             #sidebar_group.set_title("User Information")
-             #name_row = Adw.ActionRow(title="Name", subtitle=self.active_user.get("name", "N/A"))
-             #sidebar_group.add(name_row)
-             #email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
-             #sidebar_group.add(email_row)
-             #
-             self.right_sidebar.append(lbl4)
-             self.right_sidebar.append(sidebar_group)
-             #
-             def update_profile_company_data(button):
-                   name = input_name.get_text().strip()
-                   bs = input_bs.get_text().strip()
-                   #
-                   update_company = {
-                       "name": name,
-                       "bs": bs,
-                   }
+        sidebar_group.set_margin_top(20)
+        sidebar_group.set_margin_start(20)
+        sidebar_group.set_margin_end(20)
+        #sidebar_group.set_title("User Information")
+        #
+        input_name = Gtk.Entry(placeholder_text="Enter Name")
+        sidebar_group.add(input_name)
+        #
+        input_bs = Gtk.Entry(placeholder_text="Enter Business")
+        input_bs.set_margin_top(20)
+        sidebar_group.add(input_bs)
+        #
+        #input_city = Gtk.Entry(placeholder_text="Enter City")
+        #input_city.set_margin_top(20)
+        #sidebar_group.add(input_city)
+        #
+        #submit_btn = Gtk.Button(label="Add")
+        submit_btn.set_margin_top(30)
+        sidebar_group.add(submit_btn)
+        #sidebar_group.set_title("User Information")
+        #name_row = Adw.ActionRow(title="Name", subtitle=self.active_user.get("name", "N/A"))
+        #sidebar_group.add(name_row)
+        #email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
+        #sidebar_group.add(email_row)
+        #
+        
+        self.right_sidebar.append(sidebar_group)
+        #
+        def update_profile_company_data(button):
+            name = input_name.get_text().strip()
+            bs = input_bs.get_text().strip()
+            #
+            update_company = {
+                "name": name,
+                "bs": bs,
+            }
 
-                   user_payload = dict(self.active_user)
-                   user_payload["company"] = update_company
-                       
-                   
+            user_payload = dict(self.active_user)
+            user_payload["company"] = update_company
+                
+            
 
-                   
+            
 
-                   print(f"update_profile_company_data: {update_company}")
-                   print(f"update_profile_data: {user_payload}")
-                   #
-                   user_service = UserService()
-                   email = user_payload.get("email")
-                   saved = user_service.update_user_by_email(target_email=email, data=user_payload)
+            print(f"update_profile_company_data: {update_company}")
+            print(f"update_profile_data: {user_payload}")
+            #
+            user_service = UserService()
+            email = user_payload.get("email")
+            saved = user_service.update_user_by_email(target_email=email, data=user_payload)
 
-                   #print(f"after updated self.active_user: {self.active_user}")
-                   if saved:
-                       print(f"saved: {saved}")
-                       self.active_user = saved
-                       pass
-                   else:
-                       print(f"cannot save profile address")
-                       pass
-                   #
+            #print(f"after updated self.active_user: {self.active_user}")
+            if saved:
+                print(f"saved: {saved}")
+                self.active_user = saved
+                pass
+            else:
+                print(f"cannot save profile address")
+                pass
+            #
 
-
-             #
-             submit_btn.connect("clicked", update_profile_company_data)
 
         #
-        btn1.connect("clicked", lambda x:  [
-             lbl4.set_visible(True),
-             sidebar_group.set_visible(True),
-            
-            ])
-        box.append(btn1)
+        submit_btn.connect("clicked", update_profile_company_data)
+
+
+
+
+        #
+        #btn1.connect("clicked", lambda x:  [
+        #     lbl4.set_visible(True),
+        #     sidebar_group.set_visible(True),
+        #    ])
+        #box.append(btn1)
         #
         #submit_btn.connect("clicked", lambda x: [
         #       print("submit add company")
         #])
+        edit_btn = Gtk.Button(label="Edit")
+        #edit_btn.set_margin_top(20)
+        edit_btn.connect("clicked", lambda x:  [
+             lbl4.set_visible(True),
+             close_btn.set_visible(True),
+             sidebar_group.set_visible(True),
+            ])
+        box.append(edit_btn)
         
 
         #
