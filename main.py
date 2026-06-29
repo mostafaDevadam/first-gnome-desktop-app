@@ -494,6 +494,8 @@ class I18n():
                                     "animations": "Enable Animations",
                                     "notifications_sound": "Play Sound on Alerts",
                                     "accent_color": "Accent Color",
+                                    "toolbar_color": "Toolbar Color",
+                                    "header_bar_color": "Headerbar Color",
                                     "layout_title": "Keyboard Layout",
 
 
@@ -588,6 +590,8 @@ class I18n():
                                     "animations": "تفعيل الحركات",
                                     "notifications_sound": "تشغيل صوت عند التنبيهات",
                                     "accent_color": "اللون الأساسي",
+                                    "toolbar_color": " اللون",
+                                    "header_bar_color": "اللون",
                                     "layout_title": "تخطيط لوحة المفاتيح",
 
 
@@ -675,6 +679,8 @@ class I18n():
                                     "animations": "Animationen aktivieren",
                                     "notifications_sound": "Ton bei Benachrichtigungen abspielen",
                                     "accent_color": "Akzentfarbe",
+                                    "toolbar_color": "Farbe",
+                                    "header_bar_color": "Farbe",
                                     "layout_title": "Tastaturlayout",
 
                                 }
@@ -5467,6 +5473,23 @@ class MyApp(Adw.Application):
         group.add(colors_dropdown_row)
         #
         box.append(group)
+        #
+        toolbar_dropdown_row = Adw.ComboRow()
+        self.register_widget(toolbar_dropdown_row, "title", "toolbar_color")
+        #color_model = Gtk.StringList.new(self.color_options)
+        toolbar_dropdown_row.set_model(color_model)
+        toolbar_dropdown_row.connect("notify::selected", self.on_toolbar_color_selection_changed)
+        group.add(toolbar_dropdown_row)
+        #
+        #
+        headerbar_dropdown_row = Adw.ComboRow()
+        self.register_widget(headerbar_dropdown_row, "title", "header_bar_color")
+        #color_model = Gtk.StringList.new(self.color_options)
+        headerbar_dropdown_row.set_model(color_model)
+        headerbar_dropdown_row.connect("notify::selected", self.on_headerbar_color_selection_changed)
+        group.add(headerbar_dropdown_row)
+        #
+
 
 
 
@@ -5508,6 +5531,13 @@ class MyApp(Adw.Application):
 
         #
 
+    def on_toolbar_color_selection_changed(self, combo_row, gparam_spec):
+        print("on_toolbar_color_selection_changed")
+        #
+
+    def on_headerbar_color_selection_changed(self, combo_row, gparam_spec):
+        print("on_headerbar_color_selection_changed")
+        #
 
 
     def build_settings_keyboard_view(self):
@@ -5523,13 +5553,26 @@ class MyApp(Adw.Application):
         lbl = Gtk.Label(label="keyboard test...")
         #box.append(lbl)
         #
+        self.clear_right_sidebar()
+        #
+        self.sidebar_image_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.sidebar_image_container.set_margin_top(20)
+        self.sidebar_image_container.set_margin_start(16)
+        self.sidebar_image_container.set_margin_end(16)
+        self.right_sidebar.append(self.sidebar_image_container)
+        #
         group = Adw.PreferencesGroup()
         self.register_widget(group, "title", "setting_keyboard_item")
         #
+        self.keyboard_options = ["English (US)", "Arabic", "German (QWERTZ)"]
         k_layout_row = Adw.ComboRow()
         self.register_widget(k_layout_row, "title", "layout_title")
-        k_model = Gtk.StringList.new(["English", "German", "Arabic"])
+        k_model = Gtk.StringList.new(self.keyboard_options)
         k_layout_row.set_model(k_model)
+        k_layout_row.connect("notify::selected", self.on_keyboard_selection_changed)
+
+        self.updated_sidebar_preview_keyboard(selected_index=k_layout_row.get_selected())
+
         group.add(k_layout_row)
         #
         box.append(group)
@@ -5541,6 +5584,66 @@ class MyApp(Adw.Application):
         self.build_settings_template_view(action_bar_title="General",layout_name="settings_keyboard_view", box=box)
         
     
+    def on_keyboard_selection_changed(self, combo_row, gparam_spec):
+        print("on_keyboard_selection_changed")
+        #
+        selected_index = combo_row.get_selected()
+        if selected_index == Gtk.INVALID_LIST_POSITION:
+            return
+        #
+        self.updated_sidebar_preview_keyboard(selected_index)
+        #
+
+
+    def updated_sidebar_preview_keyboard(self, selected_index):
+        print(f"updated_sidebar_preview_keyboard: {selected_index}")
+        #
+        if not hasattr(self, 'sidebar_image_container') or not self.sidebar_image_container:
+            return
+        #
+        while child := self.sidebar_image_container.get_first_child():
+            self.sidebar_image_container.remove(child)
+        #
+        image_files = {
+            0: "en.png",
+            1: "ar.png",
+            2: "de.png"
+        }
+        #
+        file_name = image_files.get(selected_index, "en.png")
+        #
+        image_path = os.path.join(GLib.get_current_dir(), "assets", file_name)
+        #
+        info_lbl = Gtk.Label()
+        info_lbl.add_css_class("caption")
+        info_lbl.set_margin_bottom(8)
+        #
+        chosen_name = self.keyboard_options[selected_index]
+        info_lbl.set_text(f"Visual Blueprint Preview: {chosen_name}")
+        self.sidebar_image_container.append(info_lbl)
+        #
+        print(f"image path: {image_path}")
+        #
+        #k = Gtk.Picture.new_for_filename(os.path.join(GLib.get_current_dir(), "assets", file_name))
+        #self.sidebar_image_container.append(k)
+        
+        #
+        if os.path.exists(image_path):
+            #keyboard_image = Gtk.Image.new_from_file(image_path)
+            keyboard_image = Gtk.Picture.new_for_filename(image_path)
+            #
+            #keyboard_image.set_hexpand(True)
+            #keyboard_image.set_vexpand(True)
+            #
+            
+            self.sidebar_image_container.append(keyboard_image)
+            #self.sidebar_image_container.append(Gtk.Image.new_from_file(os.path.join(GLib.get_current_dir(), "assets", "en.png")))
+        else:
+            return False
+        #
+        self.right_sidebar.queue_allocate()
+        #
+
 
 
 
