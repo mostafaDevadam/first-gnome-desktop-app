@@ -5103,44 +5103,100 @@ class MyApp(Adw.Application):
     
     def on_btn_add_profile_addess(self, button):
         print("add_profile_address")
+        
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
 
 
     def on_btn_add_profile_company(self, button):
         print("on_btn_add_company")
 
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
+
     # build settings view
     def build_settings_general_view(self):
         print("build_settings_general_view")
-        pass
+        
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
     def build_settings_account_view(self):
         print("build_settings_accounts_view")
-        pass
+        
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
     def build_settings_notifications_view(self):
         print("build_settings_notifications_view")
-        pass
+
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
     def build_settings_display_view(self):
         print("build_settings_display_view")
-        pass
+        
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
     def build_settings_colors_view(self):
         print("build_settings_colors_view")
-        pass
+
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
     def build_settings_keyboard_view(self):
         print("build_settings_keyboard_view")
-        pass
+        #action-bar-title
+        #action-bar: action-bar(action-bar-title)
+        #box: box(...)
+        #content-box: content-box(box)
+        #scroll: scroll(content-box)
+        #wrapper: wrapper(scroll), wrapper(action-bar)
+        #center_stack(wrapper)
 
 
 
     
     def on_home_item_clicked(self, row):
         #
-        while child := self.right_sidebar.get_first_child():
-                   self.right_sidebar.remove(child)
+        self.clear_right_sidebar()
 
         clicked_title = row.get_title()
 
