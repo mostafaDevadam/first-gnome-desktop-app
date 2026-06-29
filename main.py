@@ -1116,9 +1116,9 @@ class AuthComponent(Gtk.Box):
         
 
         # clear inputs
-        self.input_register_email.set_text("")
-        self.input_register_pass.set_text("")
-        self.input_register_name.set_text("")
+        input_register_email.set_text("")
+        input_register_pass.set_text("")
+        input_register_name.set_text("")
         #
         print("Layout interface canvas unlocked.")
         #
