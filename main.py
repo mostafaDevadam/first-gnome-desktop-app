@@ -2270,8 +2270,8 @@ class MyApp(Adw.Application):
                 self.build_profile_info_view()
                 #GLib.idle_add(self.build_profile_company_view)
                 #GLib.idle_add(self.build_profile_address_view)
-                self.build_profile_company_view()
-                self.build_profile_address_view()
+                #self.build_profile_company_view()
+                #self.build_profile_address_view()
                 
             else:
                 print(f"cannot get active_name")
@@ -4297,14 +4297,6 @@ class MyApp(Adw.Application):
 
         #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
         #form_box.append(self.input_desc)
-
-
-
-       
-
-        
-        
-        
        
         local_wrapper.add_top_bar(local_action_bar)
 
@@ -4322,9 +4314,9 @@ class MyApp(Adw.Application):
         local_items_group = Adw.PreferencesGroup()
         local_items_group.set_title("info title")
         #
-        lbl = Gtk.Label(label=self.active_user.get("name"))
+        #lbl = Gtk.Label(label=self.active_user.get("name"))
 
-        local_items_group.add(lbl)
+        #local_items_group.add(lbl)
 
         #
         
@@ -4337,11 +4329,114 @@ class MyApp(Adw.Application):
         box.set_margin_end(12)
         box.set_size_request(240, -1)
         #
-        lbl = Gtk.Label(label="test...")
-        box.append(lbl)
+        #lbl = Gtk.Label(label="test...")
+        #box.append(lbl)
         #
-        lbl2 = Gtk.Label(label=self.active_user.get("email"))
-        box.append(lbl2)
+        """box1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        box1.set_margin_top(12)
+        box1.set_margin_bottom(12)
+        box1.set_margin_start(12)
+        box1.set_margin_end(12)
+
+        
+        lbl2 = Gtk.Label(label="Name:")
+        box1.append(lbl2)
+
+        lbl2 = Gtk.Label(label=self.active_user.get("name"))
+        box1.append(lbl2)
+
+        box.append(box1)"""
+        #
+       
+
+        # render edit profile form
+        def render_edit_profile_info_form(button):
+                lbl = Gtk.Label(label="Edit Profile")
+                lbl.set_margin_top(20)
+                self.right_sidebar.append(lbl)
+                #
+                sidebar_group = Adw.PreferencesGroup()
+                sidebar_group.set_margin_top(20)
+                sidebar_group.set_margin_start(20)
+                sidebar_group.set_margin_end(20)
+                #sidebar_group.set_title("User Information")
+                #
+                input_name = Gtk.Entry(placeholder_text="Name")
+                input_name.set_text(self.active_user.get("name"))
+                sidebar_group.add(input_name)
+                #
+                input_email = Gtk.Entry(placeholder_text="Email")
+                input_email.set_text(self.active_user.get("email"))
+                input_email.set_margin_top(20)
+                sidebar_group.add(input_email)
+                #
+                input_username = Gtk.Entry(placeholder_text="UserName")
+                input_username.set_margin_top(20)
+                sidebar_group.add(input_username)
+                #
+                input_phone = Gtk.Entry(placeholder_text="Phone")
+                input_phone.set_margin_top(20)
+                sidebar_group.add(input_phone)
+                #
+                 #
+                input_web = Gtk.Entry(placeholder_text="Website")
+                input_web.set_margin_top(20)
+                sidebar_group.add(input_web)
+                #
+                submit_btn = Gtk.Button(label="Update")
+                submit_btn.set_margin_top(30)
+                sidebar_group.add(submit_btn)
+                #
+                self.right_sidebar.append(sidebar_group)
+                #
+                def update_profile_info_data(button):
+                   name = input_name.get_text().strip()
+                   email = input_email.get_text().strip()
+                   username = input_username.get_text().strip()
+                   phone = input_phone.get_text().strip()
+                   website = input_web.get_text().strip()
+                   #
+                   update_user = {
+                       "name": name,
+                       "email": email,
+                       "username": username,
+                       "phone": phone,
+                       "website": website,
+                   }
+
+                   print(f"update_profile_info_data: {update_user}")
+                   #
+
+                
+                
+                #
+                submit_btn.connect("clicked", update_profile_info_data)
+
+
+        #
+        edit_btn = Gtk.Button(label="Edit")
+        edit_btn.set_margin_top(20)
+        box.append(edit_btn)
+        #
+        
+        #
+        edit_btn.connect("clicked", render_edit_profile_info_form)
+
+       
+
+
+        #
+        sidebar2_group = Adw.PreferencesGroup()
+        #sidebar_group.set_title("User Information")
+        name_row = Adw.ActionRow(title="Name", subtitle=self.active_user.get("name", "N/A"))
+        sidebar2_group.add(name_row)
+        email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
+        sidebar2_group.add(email_row)
+        phone_row = Adw.ActionRow(title="Phone", subtitle=self.active_user.get("phone", "N/A"))
+        sidebar2_group.add(phone_row)
+        web_row = Adw.ActionRow(title="Website", subtitle=self.active_user.get("Website", "N/A"))
+        sidebar2_group.add(web_row)
+        box.append(sidebar2_group)
 
         
 
@@ -4356,7 +4451,15 @@ class MyApp(Adw.Application):
 
 
         #
+        existing =  self.center_stack.get_child_by_name("profile_info_view")
+        if existing:
+            self.center_stack.remove(existing)
+
         self.center_stack.add_named(local_wrapper, "profile_info_view")
+        #
+
+
+
 
     def build_profile_address_view(self):
         #
@@ -4372,7 +4475,7 @@ class MyApp(Adw.Application):
         local_action_bar.set_show_title_buttons(False)
 
         #
-        local_title = Gtk.Label(label="Profile Address")
+        local_title = Gtk.Label(label="Address")
         local_title.add_css_class("heading")
         local_action_bar.set_title_widget(local_title)
         #
@@ -4396,24 +4499,68 @@ class MyApp(Adw.Application):
         box.set_margin_end(12)
         box.set_size_request(240, -1)
         #
-        lbl = Gtk.Label(label="test...")
-        box.append(lbl)
+        #lbl = Gtk.Label(label="test...")
+        #box.append(lbl)
         #
-        lbl2 = Gtk.Label(label=self.active_user.get("email"))
-        box.append(lbl2)
+        #lbl2 = Gtk.Label(label=self.active_user.get("email"))
+        #box.append(lbl2)
 
         address = self.active_user.get("address")
 
+       
+
         
 
-        lbl4 = Gtk.Label(label="#....")
+        lbl4 = Gtk.Label(label="Add Address")
+        lbl4.set_margin_top(20)
         lbl4.set_visible(False)
-        self.right_sidebar.append(lbl4)
+        sidebar_group = Adw.PreferencesGroup()
+        sidebar_group.set_visible(False)
+        #
+        submit_btn = Gtk.Button(label="Add")
+        
 
 
         if not address:
-             lbl3 = Gtk.Label(label="No Address")
-             box.append(lbl3)
+             #lbl3 = Gtk.Label(label="No Address")
+             #box.append(lbl3)
+             sidebar_group.set_margin_top(20)
+             sidebar_group.set_margin_start(20)
+             sidebar_group.set_margin_end(20)
+             #sidebar_group.set_title("User Information")
+             #
+             input_street = Gtk.Entry(placeholder_text="Enter Street")
+             sidebar_group.add(input_street)
+             #
+             input_zipcode = Gtk.Entry(placeholder_text="Enter Zipcode")
+             input_zipcode.set_margin_top(20)
+             sidebar_group.add(input_zipcode)
+             #
+             input_city = Gtk.Entry(placeholder_text="Enter City")
+             input_city.set_margin_top(20)
+             sidebar_group.add(input_city)
+             #
+             #submit_btn = Gtk.Button(label="Add")
+             submit_btn.set_margin_top(30)
+             sidebar_group.add(submit_btn)
+             #
+
+
+
+
+            
+
+             
+             #
+             #name_row = Adw.ActionRow(title="Name",subtitle=self.active_user.get("name", "N/A"))
+             #sidebar_group.add(name_row)
+             #email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
+             #sidebar_group.add(email_row)
+             #lbl2 = Gtk.Label(label=self.active_user.get("email"))
+             #box.append(lbl2)
+             #box.append(sidebar_group)
+             self.right_sidebar.append(lbl4)
+             self.right_sidebar.append(sidebar_group)
         
 
         #
@@ -4423,10 +4570,29 @@ class MyApp(Adw.Application):
         
         #box.append(lbl3)
         #self.right_sidebar.append(lbl4)
-        btn1.connect("clicked", lambda x:  lbl4.set_visible(True))
+        btn1.connect("clicked", lambda x: [ 
+                     lbl4.set_visible(True),
+                     sidebar_group.set_visible(True)
+        ])
+
         box.append(btn1)
+        #
+        submit_btn.connect("clicked", lambda x: [
+               print("submit add address")
+        ])
         #self.right_sidebar.append(lbl4)
         #box.append(lbl4)
+
+        #
+        sidebar_group2 = Adw.PreferencesGroup()
+        #sidebar_group.set_title("User Information")
+        street_row = Adw.ActionRow(title="Street", subtitle="N/A")
+        sidebar_group2.add(street_row)
+        zipcode_row = Adw.ActionRow(title="Zipcode", subtitle="N/A")
+        sidebar_group2.add(zipcode_row)
+        city_row = Adw.ActionRow(title="City", subtitle="N/A")
+        sidebar_group2.add(city_row)
+        box.append(sidebar_group2)
         
 
        
@@ -4460,18 +4626,24 @@ class MyApp(Adw.Application):
         #self.local_items_group.add(self.empty_list_lbl)
         # attach list data in ui
         content_box.append(box)
-        content_box.append(local_items_group)
+        #content_box.append(local_items_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
 
 
         #
+        existing =  self.center_stack.get_child_by_name("profile_address_view")
+        if existing:
+            self.center_stack.remove(existing)
         self.center_stack.add_named(local_wrapper, "profile_address_view")
         #
-        return False
+        #return False
 
     
     def build_profile_company_view(self):
+        #
+        while child := self.right_sidebar.get_first_child():
+                   self.right_sidebar.remove(child)
         #
         print(f"state#: {self.state}")
         #
@@ -4481,7 +4653,7 @@ class MyApp(Adw.Application):
         local_action_bar.set_show_title_buttons(False)
 
         #
-        self.local_title = Gtk.Label(label="Profile Company")
+        self.local_title = Gtk.Label(label="Company")
         self.local_title.add_css_class("heading")
         local_action_bar.set_title_widget(self.local_title)
         #
@@ -4528,56 +4700,122 @@ class MyApp(Adw.Application):
         box.set_margin_end(12)
         box.set_size_request(240, -1)
         #
-        lbl = Gtk.Label(label="test...")
-        box.append(lbl)
+        #lbl = Gtk.Label(label="test...")
+        #box.append(lbl)
         #
-        lbl2 = Gtk.Label(label=self.active_user.get("email"))
-        box.append(lbl2)
+        #lbl2 = Gtk.Label(label=self.active_user.get("email"))
+        #box.append(lbl2)
 
         company = self.active_user.get("company")
+       
 
-        while child := self.right_sidebar.get_first_child():
-                   self.right_sidebar.remove(child)
+        #
+        lbl4 = Gtk.Label(label="Add Company")
+        lbl4.set_margin_top(20)
+        lbl4.set_visible(False)
+        sidebar_group = Adw.PreferencesGroup()
+        sidebar_group.set_visible(False)
+        #
+        btn1 = Gtk.Button(label="add")
+        #
+        submit_btn = Gtk.Button(label="Add")
+        
 
         if not company:
-             lbl3 = Gtk.Label(label="No Company")
-             box.append(lbl3)
-             btn1 = Gtk.Button(label="add")
-             
-             # add lbl in right_sidebar
-             lbl4 = Gtk.Label(label="Add Company")
-             lbl4.set_visible(False)
+             #lbl3 = Gtk.Label(label="No Company")
              #box.append(lbl3)
-             #self.right_sidebar.append(lbl4)
-             btn1.connect("clicked", lambda x:  lbl4.set_visible(True))
-             box.append(btn1)
+             #
+             sidebar_group.set_margin_top(20)
+             sidebar_group.set_margin_start(20)
+             sidebar_group.set_margin_end(20)
+             #sidebar_group.set_title("User Information")
+             #
+             input_name = Gtk.Entry(placeholder_text="Enter Name")
+             sidebar_group.add(input_name)
+             #
+             input_bs = Gtk.Entry(placeholder_text="Enter Business")
+             input_bs.set_margin_top(20)
+             sidebar_group.add(input_bs)
+             #
+             #input_city = Gtk.Entry(placeholder_text="Enter City")
+             #input_city.set_margin_top(20)
+             #sidebar_group.add(input_city)
+             #
+             #submit_btn = Gtk.Button(label="Add")
+             submit_btn.set_margin_top(30)
+             sidebar_group.add(submit_btn)
+             #sidebar_group.set_title("User Information")
+             #name_row = Adw.ActionRow(title="Name", subtitle=self.active_user.get("name", "N/A"))
+             #sidebar_group.add(name_row)
+             #email_row = Adw.ActionRow(title="Email", subtitle=self.active_user.get("email", "N/A"))
+             #sidebar_group.add(email_row)
+             #
              self.right_sidebar.append(lbl4)
+             self.right_sidebar.append(sidebar_group)
+        #
+        btn1.connect("clicked", lambda x:  [
+             lbl4.set_visible(True),
+             sidebar_group.set_visible(True),
+            
+            ])
+        box.append(btn1)
+        #
+        submit_btn.connect("clicked", lambda x: [
+               print("submit add company")
+        ])
         
 
         #
+        sidebar2_group = Adw.PreferencesGroup()
+        #sidebar_group.set_title("User Information")
+        name_row = Adw.ActionRow(title="Name", subtitle="N/A")
+        sidebar2_group.add(name_row)
+        bs_row = Adw.ActionRow(title="Business", subtitle="N/A")
+        sidebar2_group.add(bs_row)
+        box.append(sidebar2_group)
+
         #self.empty_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
         #self.empty_list_lbl.add_css_class("dim-label")
         #self.local_items_group.add(self.empty_list_lbl)
         # attach list data in ui
         content_box.append(box)
-        content_box.append(local_items_group)
+        #content_box.append(local_items_group)
         scroll_win.set_child(content_box)
         local_wrapper.set_content(scroll_win)
 
 
         #
+        existing =  self.center_stack.get_child_by_name("profile_company_view")
+        if existing:
+            self.center_stack.remove(existing)
         self.center_stack.add_named(local_wrapper, "profile_company_view")
         #
-        return False
+        #return False
 
     
-    def on_btn_add_company(self, button):
+    def on_btn_add_profile_addess(self, button):
+        print("add_profile_address")
+
+
+
+    def on_btn_add_profile_company(self, button):
         print("on_btn_add_company")
 
 
     
     def on_home_item_clicked(self, row):
+        #
+        while child := self.right_sidebar.get_first_child():
+                   self.right_sidebar.remove(child)
+
         clicked_title = row.get_title()
+
+        if not row or not hasattr(row, 'nav_item_key_id'):
+            return
+        
+        #
+        key = row.nav_item_key_id
+        print(f"Profile list row item activated: {key}")
 
 
 
@@ -4635,7 +4873,7 @@ class MyApp(Adw.Application):
             self.center_stack.set_visible_child_name("shell_console_view")
             
         # profile tabs
-        elif clicked_title == "Info":
+        """elif clicked_title == "Info":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
             #self.build_profile_info_view()
             self.center_stack.set_visible_child_name("profile_info_view")
@@ -4643,21 +4881,44 @@ class MyApp(Adw.Application):
         
         elif clicked_title == "Address":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ####?")
+            self.build_profile_address_view()
             self.center_stack.set_visible_child_name("profile_address_view")
             
         
         
         elif clicked_title == "Company":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ####!")
+            self.build_profile_company_view()
             self.center_stack.set_visible_child_name("profile_company_view")
+        """
 
 
-
-        else:
+        """else:
             #self.center_stack.set_visible_child_name("welcome_view")
             self.info_label.set_text(f"Selected Section: {clicked_title}")
             self.state = ""
-        # call fetching
+        # call fetching"""
+
+       #
+        if key == "profile_info":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
+            self.build_profile_info_view()
+            self.center_stack.set_visible_child_name("profile_info_view")
+
+        
+        elif key == "profile_address":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ####?")
+            self.build_profile_address_view()
+            self.center_stack.set_visible_child_name("profile_address_view")
+            
+        
+        
+        elif key == "profile_company":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ####!")
+            self.build_profile_company_view()
+            self.center_stack.set_visible_child_name("profile_company_view")
+        
+
 
     
      # fetch users
