@@ -3064,6 +3064,18 @@ class MyApp(Adw.Application):
                 /*opacity: 1;*/
             }
 
+            .custom-small-pill {
+                /*padding: 4px 12px;*/
+                min-wdith: 100px;
+                max-width: 200px;
+                font-size: 15px;
+                font-weight: bold;
+            }
+
+            .custom-small-pill:hover {
+               background-color: #b0c4de;
+            }
+
 
 
 
@@ -4465,6 +4477,7 @@ class MyApp(Adw.Application):
         #
         close_btn = Gtk.Button(label="Close")
         close_btn.add_css_class("pill")
+        close_btn.add_css_class("custom-small-pill")
         close_btn.set_halign(Gtk.Align.END)
         close_btn.set_margin_end(20)
         close_btn.set_visible(False)
@@ -4606,6 +4619,7 @@ class MyApp(Adw.Application):
         #
         edit_btn = Gtk.Button(label="Edit")
         edit_btn.add_css_class("pill")
+        edit_btn.add_css_class("custom-small-pill")
         #edit_btn.set_size_request(150, -1) # width
         edit_btn.set_halign(Gtk.Align.END)
         #edit_btn.set_margin_top(20)
@@ -5095,6 +5109,32 @@ class MyApp(Adw.Application):
     def on_btn_add_profile_company(self, button):
         print("on_btn_add_company")
 
+    # build settings view
+    def build_settings_general_view(self):
+        print("build_settings_general_view")
+        pass
+
+    def build_settings_account_view(self):
+        print("build_settings_accounts_view")
+        pass
+
+    def build_settings_notifications_view(self):
+        print("build_settings_notifications_view")
+        pass
+
+    def build_settings_display_view(self):
+        print("build_settings_display_view")
+        pass
+
+    def build_settings_colors_view(self):
+        print("build_settings_colors_view")
+        pass
+
+    def build_settings_keyboard_view(self):
+        print("build_settings_keyboard_view")
+        pass
+
+
 
     
     def on_home_item_clicked(self, row):
@@ -5109,7 +5149,7 @@ class MyApp(Adw.Application):
         
         #
         key = row.nav_item_key_id
-        print(f"Profile list row item activated: {key}")
+        print(f"left > row item activated: {key}")
 
 
 
@@ -5193,25 +5233,40 @@ class MyApp(Adw.Application):
             self.state = ""
         # call fetching"""
 
-       #
+        #
         if key == "profile_info":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
             self.build_profile_info_view()
             self.center_stack.set_visible_child_name("profile_info_view")
-
-        
         elif key == "profile_address":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ####?")
             self.build_profile_address_view()
             self.center_stack.set_visible_child_name("profile_address_view")
-            
-        
-        
         elif key == "profile_company":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ####!")
             self.build_profile_company_view()
             self.center_stack.set_visible_child_name("profile_company_view")
-        
+        # settings        
+        elif key == "setting_general_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_general_view()
+        elif key == "setting_account_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_account_view()
+        elif key == "setting_notifications_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_notifications_view()
+        elif key == "setting_display_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_display_view()
+        elif key == "setting_colors_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_colors_view()
+        elif key == "setting_keyboard_item":
+             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             self.build_settings_keyboard_view()
+        #
+
 
 
     
