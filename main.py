@@ -2282,8 +2282,9 @@ class MyApp(Adw.Application):
         
         #
         self.right_sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.right_sidebar.add_css_class("sidebar")
         self.center_stack = Gtk.Stack()
-        self.jam = Jasmin("jasmin", self.right_sidebar, self.center_stack)
+        #self.jam = Jasmin("jasmin", self.right_sidebar, self.center_stack)
         
         #os.system("sudo systemctl restart NetworkManager")
         #self.connect('activate', self.on_activate)
@@ -2345,6 +2346,8 @@ class MyApp(Adw.Application):
         #
         self.active_username = ""
         self.active_user = {}
+        #
+        self.color_options = ["clear", "Blue", "Teal", "Green", "Orange", "Red"]
 
 
         #
@@ -2576,6 +2579,7 @@ class MyApp(Adw.Application):
         self.win = Adw.ApplicationWindow(application=self)
         self.win.set_title(f"{self.i18n._('gnome_app')}")
         self.win.set_default_size(600, 400)
+        #self.win.add_css_class("bg-orange")
 
         #
         self.apply_custom_styles()
@@ -2590,13 +2594,19 @@ class MyApp(Adw.Application):
         
 
         # create toolbar
-        toolbar_view = Adw.ToolbarView()
+        self.toolbar_view = Adw.ToolbarView()
         header_bar = Adw.HeaderBar()
         # add css-class to header-bar
-        header_bar.add_css_class("custom-topbar")
+        #header_bar.add_css_class("custom-topbar")
+        #header_bar.add_css_class("bg-theme-red")
         # add header_bar in toolbar
         #
         #toolbar_view.add_top_bar(header_bar)
+        #
+        #self.test_btn = Gtk.Button(label="test")
+        #self.test_btn.add_css_class("bg-red")
+        
+        #header_bar.pack_end(self.test_btn)
 
         # menu: language-switcher 
         self.lang_menu_component = MenuLanguagesComponent(app=self)
@@ -2998,15 +3008,15 @@ class MyApp(Adw.Application):
         self.toast_overlay = Adw.ToastOverlay()
         #self.toast_overlay.set_child(self.root_navigation_stack)
         self.toast_overlay.set_child(header_bar)
-        toolbar_view.add_top_bar(self.toast_overlay)
+        self.toolbar_view.add_top_bar(self.toast_overlay)
         
 
 
 
         #
         #toolbar_view.set_content(self.toast_overlay)
-        toolbar_view.set_content(self.root_navigation_stack)
-        self.win.set_content(toolbar_view)
+        self.toolbar_view.set_content(self.root_navigation_stack)
+        self.win.set_content(self.toolbar_view)
         #win.set_content(box)
         self.win.present()
         #
@@ -3045,7 +3055,7 @@ class MyApp(Adw.Application):
     # handle css
     def apply_custom_styles(self):
         css_data = b"""
-                    .custom-topbar {
+            /*        .custom-topbar {
                 background-color: #1a3a5f;
                 color: #ffffff;
             }
@@ -3064,8 +3074,7 @@ class MyApp(Adw.Application):
                 background-color: #d0e1f9;
                 border-bottom: 1px solid #b0c4de;
                 transition: all 200ms ease;
-                /*padding: 6px 0px;*/
-                /*border-bottom: 1px solid #b0c4de;*/
+               
             }
 
             .view-switcher-rtl {
@@ -3088,7 +3097,7 @@ class MyApp(Adw.Application):
                 background-color: #cfd8dc;
                 border-left: 1px solid #b0bec5;
 
-            }
+            }*/
 
             .dim-label {
                 opacity: 0.7;
@@ -3172,6 +3181,27 @@ class MyApp(Adw.Application):
                background-color: #b0c4de;
             }
 
+            .bg-theme-blue.background {
+              background-color: #d0e1f9 !important;
+            }
+
+            .bg-theme-teal.background {
+              background-color: #e0f2f1 !important;
+            }
+
+            .bg-theme-green.background {
+              background-color: #e8f5e9 !important;
+            }
+
+            .bg-theme-orange.background {
+              background-color: #fff3e0 !important;
+            }
+
+            window.bg-theme-red, window.bg-theme-red .background {
+              background-color: #ffebee !important;
+            }
+
+
 
 
 
@@ -3191,7 +3221,8 @@ class MyApp(Adw.Application):
 
         try:
             #css_provider.load_from_data(css_file_path)  
-            css_provider.load_from_data(css_data)
+            #css_provider.load_from_data(css_data)
+            css_provider.load_from_path("style.css")
             #
             # attach css provider globally
             display = Gdk.Display.get_default()
@@ -5413,6 +5444,8 @@ class MyApp(Adw.Application):
     def build_settings_colors_view(self):
         print("build_settings_colors_view")
         #
+        self.clear_right_sidebar()
+        #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         #box.set_margin_top(12)
         box.set_margin_bottom(12)
@@ -5428,8 +5461,9 @@ class MyApp(Adw.Application):
         #
         colors_dropdown_row = Adw.ComboRow()
         self.register_widget(colors_dropdown_row, "title", "accent_color")
-        color_model = Gtk.StringList.new(["Blue", "Teal", "Green", "Orange", "Red"])
+        color_model = Gtk.StringList.new(self.color_options)
         colors_dropdown_row.set_model(color_model)
+        colors_dropdown_row.connect("notify::selected", self.on_color_selection_changed)
         group.add(colors_dropdown_row)
         #
         box.append(group)
@@ -5440,7 +5474,41 @@ class MyApp(Adw.Application):
         #
         self.build_settings_template_view(action_bar_title="General",layout_name="settings_colors_view", box=box)
 
-        
+    
+    def on_color_selection_changed(self, combo_row, gparam_spec):
+        print("on_color_selection_changed")
+        #
+        selected_index = combo_row.get_selected()
+        if selected_index == Gtk.INVALID_LIST_POSITION:
+            return
+        #
+        selected_color_name = self.color_options[selected_index].lower()
+        print(f"Color profile selected: {selected_color_name} , bg-theme-{selected_color_name}")
+        #
+        #if hasattr(self, 'win') and self.win:
+        if hasattr(self, 'toolbar_view') and self.toolbar_view:
+            for color in self.color_options:
+                if color != "clear":
+                   #self.win.remove_css_class(f"bg-{color.lower()}")
+                   self.toolbar_view.remove_css_class(f"bg-{color.lower()}")
+        #   
+            if selected_color_name != "clear":
+               #self.win.add_css_class(f"bg-{selected_color_name}")
+                self.toolbar_view.add_css_class(f"bg-{selected_color_name}")
+            else:
+                self.win.remove_css_class(f"bg-{selected_color_name}")
+                self.toolbar_view.remove_css_class(f"bg-{color.lower()}")
+            
+            # save in config.json
+
+        #
+            #self.win.add_css_class("bg-theme-red")
+
+        #
+
+        #
+
+
 
     def build_settings_keyboard_view(self):
         print("build_settings_keyboard_view")

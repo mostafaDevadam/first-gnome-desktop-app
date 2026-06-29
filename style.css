@@ -1,66 +1,367 @@
-.custom-topbar {
-    background-color: #1a3a5f;
-    color: #ffffff;
-}
+ /*        .custom-topbar {
+                background-color: #1a3a5f;
+                color: #ffffff;
+            }
 
-.custom-topbar windowcontrols button {
-    color: #ffffff;
-}
+            .custom-topbar windowcontrols button {
+                color: #ffffff;
+            }
 
-.sidebar-panel {
-    background-color: #e0e0e0;
-    border-left: 1px solid #cccccc;
-    border-right: 1px solid #cccccc;
-}
+            .sidebar-panel {
+                background-color: #e0e0e0;
+                border-left: 1px solid #cccccc;
+                border-right: 1px solid #cccccc;
+            }
 
-.custom-view-switcher-bg {
-    background-color: #d0e1f9;
-    padding: 6px;
-    border-bottom: 1px solid #b0c4de;
-}
+            .custom-view-switcher-bg {
+                background-color: #d0e1f9;
+                border-bottom: 1px solid #b0c4de;
+                transition: all 200ms ease;
+               
+            }
 
-splitview>box:last-child {
-    background-color: #cfd8dc;
-    border-left: 1px solid #b0bec5;
+            .view-switcher-rtl {
+               padding: 6px;
+            }
 
-}
+            .view-switcher-rtl label{
+               font-size: 11px;
+               font-weight: bold;
+               wrap: true;
+               text-wrap: wrap;
+               text-align: center;
+            }
 
-.dim-label {
-    opacity: 0.7;
-}
+            .view-switcher-ltr {
+               padding: 6px 0px;
+            }
 
-.bg-green {
-    background-color: green;
-}
+            splitview>box:last-child {
+                background-color: #cfd8dc;
+                border-left: 1px solid #b0bec5;
 
-.user-card {
-    background-color: green;
-}
+            }*/
 
-toastoverlay > widget {
-    valign: start;
-    margin-top: 12px;
-}
+            .dim-label {
+                opacity: 0.7;
+            }
 
-.boxed-list {
-    margin-bottom: 12px;
-}
+            .bg-green {
+                background-color: green;
+            }
 
-/* Target the text view widget class and its inner C-level text canvas node natively */
-/*.monospace textview, */
-.monospace textview text {
-    /* FIX: Changed letter 'l' to number '1' to create a valid dark charcoal color */
-    /*background-color: #1e1e1e;*/ 
-    
-    /* Clean cream-white typography style for terminal visibility */
-    color: #dfdbd2;
-}
+            .user-card {
+                background-color: green;
+            }
 
-.monospace  {
-    /*background-color: #1e1e1e;*/
-}
+            toastoverlay widget {
+                valign: start;
+                margin-top: 12px;
+            }
 
-.login_btn {
-    background-color: #fd0000;
-}
+            .boxed-list {
+                margin-bottom: 12px;
+            }
 
+            /* Target the text view widget class and its inner C-level text canvas node natively */
+            .monospace textview,
+            .monospace textview text {
+                /* FIX: Changed letter 'l' to number '1' to create a valid dark charcoal color */
+                /*background-color: #1e1e1e;*/
+                
+                /* Clean cream-white typography style for terminal visibility */
+               /* color: #dfdbd2;*/
+            }
+
+            .monospace textview text {
+              /* background-color: #1e1e1e;*/
+            }
+
+            .monospace  {
+                background-color: #1e1e1e;
+                color: #ff5555; /*#dfdbd2;*/
+            }
+
+            .prompt {
+              padding: 5px;
+               /*border: 2px solid red;*/
+                border-radius: 15px;
+            }
+
+            .login_btn {
+                background-color: #fd0000;
+            }
+
+            entry.error {
+               border: 2px solid #ef4444;
+               background-color: #fef2f2;
+            
+            }
+
+            label.error-msg {
+               color: #ef4444;
+               font-size: 18px;
+               margin-top: 4px;
+               border: 1px solid #ef4444;
+               padding: 2px;
+
+               /*opacity: 0;*/
+            }
+
+            label.error-msg.visible {
+                /*opacity: 1;*/
+            }
+
+            .custom-small-pill {
+                /*padding: 4px 12px;*/
+                min-wdith: 100px;
+                max-width: 200px;
+                font-size: 15px;
+                font-weight: bold;
+            }
+
+            .custom-small-pill:hover {
+               background-color: #b0c4de;
+            }
+
+            .bg-theme-blue.background {
+              background-color: #0266f3 !important;
+            }
+
+            .bg-theme-teal.background {
+              background-color: #02f5e9 !important;
+            }
+
+            .bg-theme-green.background {
+              background-color: #01ff16 !important;
+            }
+
+            .bg-theme-orange.background {
+              background-color: #cc8107 !important;
+            }
+
+            window.bg-theme-red, window.bg-theme-red .background {
+              background-color: #ee0125 !important;
+            }
+
+            /* bg-red */
+
+            .bg-red, 
+            .bg-red flap, 
+            .bg-red .sidebar, 
+            .bg-red scrolledwindow, 
+            .bg-red list,
+            .bg-red .content widget box,
+            .bg-red .content > box,
+            .bg-red box.vertical,
+            .bg-red box.horizontal {
+                background-color: #da4747 ;
+            }
+
+            /* =========================================================================
+            2. TEXT & ICON CONTRAST (Forces labels and symbols to turn crisp white)
+            ========================================================================= */
+            .bg-red label, 
+            .bg-red headerbar, 
+            .bg-red button,
+            .bg-red image,
+            .bg-red row label {
+                color: #ffffff ;
+            }
+
+            /* =========================================================================
+            3. SELECTION ROWS & INPUT FIELDS (Ensures menus and dropdowns stay readable)
+            ========================================================================= */
+            .bg-red row, 
+            .bg-red listbox, 
+            .bg-red comborow,
+            .bg-red entry {
+                /* Uses a semi-transparent white tint so row lines blend beautifully */
+                background-color: rgba(255, 255, 255, 0.15) ;
+                border: 1px solid rgba(255, 255, 255, 0.2) ;
+                color: #ffffff ;
+            }
+
+            /* Enhances text input cursor visibility inside your search bars */
+            .bg-red entry text {
+                color: #ffffff ;
+            }
+
+
+         
+            /* bg-blue */
+
+            .bg-blue, 
+            .bg-blue flap, 
+            .bg-blue .sidebar, 
+            .bg-blue scrolledwindow, 
+            .bg-blue list,
+            .bg-blue .content widget box,
+            .bg-blue .content > box,
+            .bg-blue box.vertical,
+            .bg-blue box.horizontal {
+                background-color: #0266f3 ;
+            }
+
+            /* =========================================================================
+            2. TEXT & ICON CONTRAST (Forces labels and symbols to turn crisp white)
+            ========================================================================= */
+            .bg-blue label, 
+            .bg-blue headerbar, 
+            .bg-blue button,
+            .bg-blue image,
+            .bg-blue row label {
+                color: #ffffff ;
+            }
+
+            /* =========================================================================
+            3. SELECTION ROWS & INPUT FIELDS (Ensures menus and dropdowns stay readable)
+            ========================================================================= */
+            .bg-blue row, 
+            .bg-blue listbox, 
+            .bg-blue comborow,
+            .bg-blue entry {
+                /* Uses a semi-transparent white tint so row lines blend beautifully */
+                background-color: rgba(255, 255, 255, 0.15) ;
+                border: 1px solid rgba(255, 255, 255, 0.2) ;
+                color: #ffffff ;
+            }
+
+            /* Enhances text input cursor visibility inside your search bars */
+            .bg-blue entry text {
+                color: #ffffff ;
+            }
+
+
+
+           /* bg-teal */
+
+            .bg-teal, 
+            .bg-teal flap, 
+            .bg-teal .sidebar, 
+            .bg-teal scrolledwindow, 
+            .bg-teal list,
+            .bg-teal .content widget box,
+            .bg-teal .content > box,
+            .bg-teal box.vertical,
+            .bg-teal box.horizontal {
+                background-color: #02f5e9 ;
+            }
+
+            /* =========================================================================
+            2. TEXT & ICON CONTRAST (Forces labels and symbols to turn crisp white)
+            ========================================================================= */
+            .bg-teal label, 
+            .bg-teal headerbar, 
+            .bg-teal button,
+            .bg-teal image,
+            .bg-teal row label {
+                color: #333 ;
+            }
+
+            /* =========================================================================
+            3. SELECTION ROWS & INPUT FIELDS (Ensures menus and dropdowns stay readable)
+            ========================================================================= */
+            .bg-teal row, 
+            .bg-teal listbox, 
+            .bg-teal comborow,
+            .bg-teal entry {
+                /* Uses a semi-transparent white tint so row lines blend beautifully */
+                background-color: rgba(255, 255, 255, 0.15) ;
+                border: 1px solid rgba(255, 255, 255, 0.2) ;
+                color: #333 ;
+            }
+
+            /* Enhances text input cursor visibility inside your search bars */
+            .bg-teal entry text {
+                color: #333 ;
+            }
+            /* green */
+
+            .bg-green, 
+            .bg-green flap, 
+            .bg-green .sidebar, 
+            .bg-green scrolledwindow, 
+            .bg-green list,
+            .bg-green .content widget box,
+            .bg-green .content > box,
+            .bg-green box.vertical,
+            .bg-green box.horizontal {
+                background-color: #1ad32a ;
+            }
+
+            /* =========================================================================
+            2. TEXT & ICON CONTRAST (Forces labels and symbols to turn crisp white)
+            ========================================================================= */
+            .bg-green label, 
+            .bg-green headerbar, 
+            .bg-green button,
+            .bg-green image,
+            .bg-green row label {
+                color: #fff ;
+            }
+
+            /* =========================================================================
+            3. SELECTION ROWS & INPUT FIELDS (Ensures menus and dropdowns stay readable)
+            ========================================================================= */
+            .bg-green row, 
+            .bg-green listbox, 
+            .bg-green comborow,
+            .bg-green entry {
+                /* Uses a semi-transparent white tint so row lines blend beautifully */
+                background-color: rgba(255, 255, 255, 0.15) ;
+                border: 1px solid rgba(255, 255, 255, 0.2) ;
+                color: #fff ;
+            }
+
+            /* Enhances text input cursor visibility inside your search bars */
+            .bg-green entry text {
+                color: #fff ;
+            }
+
+            /* orange */
+
+            .bg-orange {
+              background-color: #cc8107 ;
+            }
+
+            .bg-orange, 
+            .bg-orange flap, 
+            .bg-orange .sidebar, 
+            .bg-orange scrolledwindow, 
+            .bg-orange list,
+            .bg-orange .content widget box,
+            .bg-orange .content > box,
+            .bg-orange box.vertical,
+            .bg-orange box.horizontal {
+                background-color: #cc8107 ;
+            }
+
+            /* =========================================================================
+            2. TEXT & ICON CONTRAST (Forces labels and symbols to turn crisp white)
+            ========================================================================= */
+            .bg-orange label, 
+            .bg-orange headerbar, 
+            .bg-orange button,
+            .bg-orange image,
+            .bg-orange row label {
+                color: #fff ;
+            }
+
+            /* =========================================================================
+            3. SELECTION ROWS & INPUT FIELDS (Ensures menus and dropdowns stay readable)
+            ========================================================================= */
+            .bg-orange row, 
+            .bg-orange listbox, 
+            .bg-orange comborow,
+            .bg-orange entry {
+                /* Uses a semi-transparent white tint so row lines blend beautifully */
+                background-color: rgba(255, 255, 255, 0.15) ;
+                border: 1px solid rgba(255, 255, 255, 0.2) ;
+                color: #fff ;
+            }
+
+            /* Enhances text input cursor visibility inside your search bars */
+            .bg-orange entry text {
+                color: #fff ;
+            }
