@@ -485,7 +485,19 @@ class I18n():
                                     #
                                     "welcome_user": "Welcome", 
                                     #
-                                    "success_update_msg": "Success updated!"
+                                    "success_update_msg": "Success updated!",
+                                    #
+                                    # Inside your en dictionary:
+                                    "username_label": "Username",
+                                    "email_label": "Email Address",
+                                    "dark_mode": "Dark Theme",
+                                    "animations": "Enable Animations",
+                                    "notifications_sound": "Play Sound on Alerts",
+                                    "accent_color": "Accent Color",
+                                    "layout_title": "Keyboard Layout",
+
+
+
 
 
                               
@@ -568,6 +580,16 @@ class I18n():
                                     "welcome_user": "مرحباً",
                                     #
                                     "success_update_msg": "تم التحديث بنجاح!",
+                                    #
+                                    # Inside your ar dictionary:
+                                    "username_label": "اسم المستخدم",
+                                    "email_label": "البريد الإلكتروني",
+                                    "dark_mode": "المظهر الداكن",
+                                    "animations": "تفعيل الحركات",
+                                    "notifications_sound": "تشغيل صوت عند التنبيهات",
+                                    "accent_color": "اللون الأساسي",
+                                    "layout_title": "تخطيط لوحة المفاتيح",
+
 
                                
                                 },
@@ -645,6 +667,15 @@ class I18n():
                                     "welcome_user": "Willkommen",
                                     #
                                     "success_update_msg": "Erfolgreich aktualisiert!",
+                                    #
+                                    # Inside your de dictionary:
+                                    "username_label": "Benutzername",
+                                    "email_label": "E-Mail-Adresse",
+                                    "dark_mode": "Dunkles Design",
+                                    "animations": "Animationen aktivieren",
+                                    "notifications_sound": "Ton bei Benachrichtigungen abspielen",
+                                    "accent_color": "Akzentfarbe",
+                                    "layout_title": "Tastaturlayout",
 
                                 }
 
@@ -1126,6 +1157,14 @@ class AuthComponent(Gtk.Box):
             #
             print(f"active user: {active_user} , app.active_user: {self.app.active_user}")
             self.app.refresh_profile_header()
+            # config for autologin
+            json_file = HandleJsonFile()
+            config_data = {
+                "auto_login": True,
+                "saved_email": email,
+            }
+            json_file.save_data_to_json_file(config_data, "storage", "config")
+            #
             # clear inputs
             #self.input_login_email.set_text("")
             #self.input_login_pass.set_text("")
@@ -1143,6 +1182,8 @@ class AuthComponent(Gtk.Box):
             #self.app.rebuild_menu()
             #GLib.idle_add(self.app.rebuild_menu)
             self.app.main_menu_component.rebuild_menu()
+           
+
             #
             self.app.fire_notify("Mein Gnome Login", "Login in success for Mein Gnome App!")
             #
@@ -2307,6 +2348,35 @@ class MyApp(Adw.Application):
 
 
         #
+    
+
+    def check_auto_login_status(self):
+        
+        json_file = HandleJsonFile()
+        config = json_file.load_data_from_json_file("storage", "config")
+        #
+        if not isinstance(config, dict) or not config.get("auto_login"):
+            print("Auto-login not enabled or configuration missong")
+            return False
+        #
+        saved_email = config.get("saved_email")
+        if not saved_email:
+            return False
+        #
+        userService = UserService()
+        account = userService.get_user_email(saved_email)
+        if not account:
+            print("Account not found and cannot auto-login!")
+            return False
+            #
+        #
+        self.active_user = account
+        self.active_username = account.get("name")
+        print(f"Auto-login verified successfully for user profile: {account}")
+        return True
+        #
+        #     
+
 
         
     def register_widget(self, widget, prop, key):
@@ -2480,6 +2550,10 @@ class MyApp(Adw.Application):
         while child := self.right_sidebar.get_first_child():
                        self.right_sidebar.remove(child)
 
+    def clear_center_stack(self):
+        while child := self.center_stack.get_first_child():
+                       self.center_stack.remove(child)
+
     def do_activate(self):
         # this is called g_application_activate() -> app.run()
 
@@ -2508,6 +2582,9 @@ class MyApp(Adw.Application):
 
         #
         self.refresh_row_dictionaries()
+        # auto-login
+        auto_login_success = self.check_auto_login_status()
+
         #
 
         
@@ -2907,6 +2984,15 @@ class MyApp(Adw.Application):
         self.root_navigation_stack.add_named(self.outer_split_view, "main_layout")
         #self.root_navigation_stack.set_visible_child_name("login_screen_layout")
 
+        #
+        if auto_login_success:
+            self.refresh_profile_header()
+            if hasattr(self, 'main_menu_component'):
+                self.main_menu_component.rebuild_menu()
+            #
+            self.root_navigation_stack.set_visible_child_name("main_layout")
+        else:
+            self.root_navigation_stack.set_visible_child_name("auth_layout")
 
         #
         self.toast_overlay = Adw.ToastOverlay()
@@ -2936,7 +3022,17 @@ class MyApp(Adw.Application):
             print("Session cleared. Interface state locked back to login")
         self.logout_btn.set_visible(False)
         #GLib.idle_add(self.rebuild_menu)
-        self.main_menu_component.rebuild_menu()
+        # clear config for auto_login
+        json_file = HandleJsonFile()
+        empty_config = {
+            "auto_login": False,
+            "saved_email": "",
+        }
+        json_file.save_data_to_json_file(empty_config, "storage", "config")
+        #
+        if hasattr(self, "main_menu_component"):
+            self.main_menu_component.rebuild_menu()
+        #
         self.fire_notify("Gnome App","Logout is success!")
 
 
@@ -5104,30 +5200,25 @@ class MyApp(Adw.Application):
     def on_btn_add_profile_addess(self, button):
         print("add_profile_address")
         
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+       
 
 
 
     def on_btn_add_profile_company(self, button):
         print("on_btn_add_company")
 
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+    
+    def safely_add_to_center_stack(self, widget, key):
+        existing =  self.center_stack.get_child_by_name(key)
+        if existing:
+            self.center_stack.remove(existing)
+        self.center_stack.add_named(widget, key)
+
+       
 
     # build settings view
-    def build_settings_general_view(self):
-        print("build_settings_general_view")
+    def build_settings_template_view(self, action_bar_title, layout_name, box: Gtk.Box):
+        print("build_settings_template_view")
         
         #action-bar-title
         #action-bar: action-bar(action-bar-title)
@@ -5136,60 +5227,233 @@ class MyApp(Adw.Application):
         #scroll: scroll(content-box)
         #wrapper: wrapper(scroll), wrapper(action-bar)
         #center_stack(wrapper)
+        #
+        
+        action_bar = Gtk.HeaderBar()
+        action_bar.set_show_title_buttons(False)
+        actionBar_title = Gtk.Label(label= "Settings") #action_bar_title)
+        actionBar_title.add_css_class("heading")
+        # add actionBar_title in action_bar
+        action_bar.set_title_widget(actionBar_title)
+        wrapper = Adw.ToolbarView()
+        # add action_bar in wrapper
+        wrapper.add_top_bar(action_bar)
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        #
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(20)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+        # add box in content-box
+        content_box.append(box)
+        # add content-box in scroll
+        scroll_win.set_child(content_box)
+        # add scroll in wrapper
+        wrapper.set_content(scroll_win)
+
+        #
+        self.safely_add_to_center_stack(wrapper, layout_name)
+        #
+        #existing =  self.center_stack.get_child_by_name(layout_name)
+        #if existing:
+        #    self.center_stack.remove(existing)
+        #self.center_stack.add_named(wrapper, layout_name)
+
+
+    def build_settings_general_view(self):
+        print("build_settings_general_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="general test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_general_item")
+        #
+        animation_row = Adw.SwitchRow()
+        self.register_widget(animation_row, "title", "animations")
+        group.add(animation_row)
+        box.append(group)
+
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_general_view", box=box)
+        
+       
 
     def build_settings_account_view(self):
         print("build_settings_accounts_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="account test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_account_item")
+
+        #
+        username_row = Adw.EntryRow()
+        self.register_widget(username_row, "title", "username_label")
+        username_row.set_text(self.active_user.get("username", "N/A"))
+        group.add(username_row)
+        #
+        email_row = Adw.EntryRow()
+        self.register_widget(email_row, "title", "email_label")
+        email_row.set_text(self.active_user.get("email", "N/A"))
+        group.add(email_row)
+        #
+
+        #
+        box.append(group) 
+
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_account_view", box=box)
         
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+       
 
     def build_settings_notifications_view(self):
         print("build_settings_notifications_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="notifications test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_notifications_item")
+        #
+        sound_row = Adw.SwitchRow()
+        self.register_widget(sound_row, "title", "setting_notifications_item")
+        group.add(sound_row)
+        #
+        box.append(group)
 
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_notifications_view", box=box)
+
+       
 
     def build_settings_display_view(self):
         print("build_settings_display_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="display test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_display_item")
+        #
+        dark_mode_row = Adw.SwitchRow()
+        self.register_widget(dark_mode_row, "title", "dark_mode")
+        group.add(dark_mode_row)
+        #
+        box.append(group)
+
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_display_view", box=box)
         
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+       
 
     def build_settings_colors_view(self):
         print("build_settings_colors_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="colors test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_colors_item")
+        #
+        colors_dropdown_row = Adw.ComboRow()
+        self.register_widget(colors_dropdown_row, "title", "accent_color")
+        color_model = Gtk.StringList.new(["Blue", "Teal", "Green", "Orange", "Red"])
+        colors_dropdown_row.set_model(color_model)
+        group.add(colors_dropdown_row)
+        #
+        box.append(group)
 
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_colors_view", box=box)
+
+        
 
     def build_settings_keyboard_view(self):
         print("build_settings_keyboard_view")
-        #action-bar-title
-        #action-bar: action-bar(action-bar-title)
-        #box: box(...)
-        #content-box: content-box(box)
-        #scroll: scroll(content-box)
-        #wrapper: wrapper(scroll), wrapper(action-bar)
-        #center_stack(wrapper)
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="keyboard test...")
+        #box.append(lbl)
+        #
+        group = Adw.PreferencesGroup()
+        self.register_widget(group, "title", "setting_keyboard_item")
+        #
+        k_layout_row = Adw.ComboRow()
+        self.register_widget(k_layout_row, "title", "layout_title")
+        k_model = Gtk.StringList.new(["English", "German", "Arabic"])
+        k_layout_row.set_model(k_model)
+        group.add(k_layout_row)
+        #
+        box.append(group)
+
+
+
+
+        #
+        self.build_settings_template_view(action_bar_title="General",layout_name="settings_keyboard_view", box=box)
+        
+    
 
 
 
@@ -5197,6 +5461,9 @@ class MyApp(Adw.Application):
     def on_home_item_clicked(self, row):
         #
         self.clear_right_sidebar()
+        #
+        #self.clear_center_stack()
+        #
 
         clicked_title = row.get_title()
 
@@ -5304,23 +5571,29 @@ class MyApp(Adw.Application):
             self.center_stack.set_visible_child_name("profile_company_view")
         # settings        
         elif key == "setting_general_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_general_view()
+             self.center_stack.set_visible_child_name("settings_general_view")
         elif key == "setting_account_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_account_view()
+             self.center_stack.set_visible_child_name("settings_account_view")
         elif key == "setting_notifications_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_notifications_view()
+             self.center_stack.set_visible_child_name("settings_notifications_view")
         elif key == "setting_display_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_display_view()
+             self.center_stack.set_visible_child_name("settings_display_view")
         elif key == "setting_colors_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_colors_view()
+             self.center_stack.set_visible_child_name("settings_colors_view")
         elif key == "setting_keyboard_item":
-             self.info_label.set_text(f"Selected Section: {clicked_title} ")
+             #self.info_label.set_text(f"Selected Section: {clicked_title} ")
              self.build_settings_keyboard_view()
+             self.center_stack.set_visible_child_name("settings_keyboard_view")
         #
 
 
@@ -6032,8 +6305,20 @@ class MyApp(Adw.Application):
             print("Session cleared. Interface state locked back to login")
         #self.logout_action.set_enabled(False)
         #GLib.idle_add(self.rebuild_menu)
-        self.main_menu_component.rebuild_menu()
+        #self.main_menu_component.rebuild_menu()
         self.logout_btn.set_visible(False)
+        # clear config for auto_login
+        json_file = HandleJsonFile()
+        empty_config = {
+            "auto_login": False,
+            "saved_email": "",
+        }
+        json_file.save_data_to_json_file(empty_config, "storage", "config")
+        #
+        if hasattr(self, "main_menu_component"):
+            self.main_menu_component.rebuild_menu()
+
+
         #
         self.fire_notify("Mein Gnome Notify", "Hallo, Wilkommen!!")
 
