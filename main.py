@@ -981,6 +981,7 @@ class AuthComponent(Gtk.Box):
         #
         authenticated = False
         active_username = "username"
+        active_user = {}
         #
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -992,6 +993,7 @@ class AuthComponent(Gtk.Box):
                         if account.get("email") == email and account.get("password") == password:
                             authenticated = True
                             active_username = account.get("name")
+                            active_user = account
                             #self.app.profile_lbl.set_text(active_username)
                             break
 
@@ -1008,6 +1010,9 @@ class AuthComponent(Gtk.Box):
             self.active_username = active_username
             print(f"self.active_username: {self.active_username} , active_username: {active_username}")
             self.app.active_username = active_username
+            self.app.active_user = active_user
+            #
+            print(f"active user: {active_user} , app.active_user: {self.app.active_user}")
             self.app.refresh_profile_header()
             # clear inputs
             #self.input_login_email.set_text("")
@@ -2186,6 +2191,7 @@ class MyApp(Adw.Application):
         self.search_bar_component = SearchBarComponent(app=self)
         #
         self.active_username = ""
+        self.active_user = {}
 
 
         #
@@ -2257,8 +2263,16 @@ class MyApp(Adw.Application):
 
 
             if self.active_username:
+                print(f"re active_user: {self.active_user}")
                 welcome_prefix = self.i18n._("welcome_user") if hasattr(self.i18n, "_") else "Welcome"
                 self.profile_lbl.set_text(f"{welcome_prefix}, {self.active_username}")
+                # re-render
+                self.build_profile_info_view()
+                #GLib.idle_add(self.build_profile_company_view)
+                #GLib.idle_add(self.build_profile_address_view)
+                self.build_profile_company_view()
+                self.build_profile_address_view()
+                
             else:
                 print(f"cannot get active_name")
                 self.profile_lbl.set_text("")
@@ -2540,9 +2554,14 @@ class MyApp(Adw.Application):
 
 
         #tab3
+        # profile_info
+        
+
         #tab3_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         tab3_box = TabBox(app=self, wrapper_title="profile", key="tab_profile", icon_name="avatar-default-symbolic")
         tab3_box.set_margin_top(12)
+        #
+      
         # profile-label
         self.profile_lbl = Gtk.Label()
         self.profile_lbl.add_css_class("title-2")
@@ -2562,6 +2581,10 @@ class MyApp(Adw.Application):
 
         # Tracking dictionary to easily find rows during translation refresh cycles
         self.nav_profile_rows = tab3_box.build(self.list3_box, profile_items,  self.nav_profile_rows)
+
+       
+
+
         
 
         
@@ -2696,6 +2719,13 @@ class MyApp(Adw.Application):
         self.build_disk_tabs_view()
         # View : Shell
         self.build_shell_view()
+
+        # View : Profile-info
+        #self.build_profile_info_view()
+        # View : Profile-address
+        #self.build_profile_address_view()
+        # View : Profile-company
+        #self.build_profile_company_view()
 
 
         # View S: Posts
@@ -4242,6 +4272,309 @@ class MyApp(Adw.Application):
 
          
 
+    def build_profile_info_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False)
+
+        #
+        self.local_title = Gtk.Label(label="Profile Info")
+        self.local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(self.local_title)
+        #
+        #self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
+        #self.add_item_btn.add_css_class("suggested-action")
+        #local_action_bar.pack_end(self.add_item_btn)
+        # build the form as popover
+        
+        # inputs
+        #self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
+        #form_box.append(self.input_name)
+
+        #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
+        #form_box.append(self.input_desc)
+
+
+
+       
+
+        
+        
+        
+       
+        local_wrapper.add_top_bar(local_action_bar)
+
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        #
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("info title")
+        #
+        lbl = Gtk.Label(label=self.active_user.get("name"))
+
+        local_items_group.add(lbl)
+
+        #
+        
+        print(f"profile info user: {self.active_user.get("name")}")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="test...")
+        box.append(lbl)
+        #
+        lbl2 = Gtk.Label(label=self.active_user.get("email"))
+        box.append(lbl2)
+
+        
+
+        #
+        #self.empty_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
+        #self.empty_list_lbl.add_css_class("dim-label")
+        #self.local_items_group.add(self.empty_list_lbl)
+        # attach list data in ui
+        content_box.append(box)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+
+
+        #
+        self.center_stack.add_named(local_wrapper, "profile_info_view")
+
+    def build_profile_address_view(self):
+        #
+        while child := self.right_sidebar.get_first_child():
+                   self.right_sidebar.remove(child)
+        #self.right_sidebar.append(Gtk.Label(label="test..."))
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False)
+
+        #
+        local_title = Gtk.Label(label="Profile Address")
+        local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(local_title)
+        #
+        #self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
+        #self.add_item_btn.add_css_class("suggested-action")
+        #local_action_bar.pack_end(self.add_item_btn)
+        # build the form as popover
+        
+        # inputs
+        #self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
+        #form_box.append(self.input_name)
+
+        #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
+        #form_box.append(self.input_desc)
+        #
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="test...")
+        box.append(lbl)
+        #
+        lbl2 = Gtk.Label(label=self.active_user.get("email"))
+        box.append(lbl2)
+
+        address = self.active_user.get("address")
+
+        
+
+        lbl4 = Gtk.Label(label="#....")
+        lbl4.set_visible(False)
+        self.right_sidebar.append(lbl4)
+
+
+        if not address:
+             lbl3 = Gtk.Label(label="No Address")
+             box.append(lbl3)
+        
+
+        #
+        btn1 = Gtk.Button(label="add")
+             
+        # add lbl in right_sidebar
+        
+        #box.append(lbl3)
+        #self.right_sidebar.append(lbl4)
+        btn1.connect("clicked", lambda x:  lbl4.set_visible(True))
+        box.append(btn1)
+        #self.right_sidebar.append(lbl4)
+        #box.append(lbl4)
+        
+
+       
+
+        
+        
+        
+       
+        local_wrapper.add_top_bar(local_action_bar)
+
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        #
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("Address title")
+
+        #
+        
+
+        #
+        #self.empty_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
+        #self.empty_list_lbl.add_css_class("dim-label")
+        #self.local_items_group.add(self.empty_list_lbl)
+        # attach list data in ui
+        content_box.append(box)
+        content_box.append(local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+
+
+        #
+        self.center_stack.add_named(local_wrapper, "profile_address_view")
+        #
+        return False
+
+    
+    def build_profile_company_view(self):
+        #
+        print(f"state#: {self.state}")
+        #
+        local_wrapper = Adw.ToolbarView()
+
+        local_action_bar = Gtk.HeaderBar()
+        local_action_bar.set_show_title_buttons(False)
+
+        #
+        self.local_title = Gtk.Label(label="Profile Company")
+        self.local_title.add_css_class("heading")
+        local_action_bar.set_title_widget(self.local_title)
+        #
+        #self.add_item_btn = Gtk.Button(label=self.i18n._("btn_add"))
+        #self.add_item_btn.add_css_class("suggested-action")
+        #local_action_bar.pack_end(self.add_item_btn)
+        # build the form as popover
+        
+        # inputs
+        #self.input_name = Gtk.Entry(placeholder_text=self.i18n._("input_name_ph"))
+        #form_box.append(self.input_name)
+
+        #self.input_desc = Gtk.Entry(placeholder_text=self.i18n._("input_desc_ph"))
+        #form_box.append(self.input_desc)
+
+       
+
+        
+        
+        
+       
+        local_wrapper.add_top_bar(local_action_bar)
+
+        #
+        scroll_win = Gtk.ScrolledWindow()
+        scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        content_box.set_margin_top(24)
+        content_box.set_margin_bottom(24)
+        content_box.set_margin_start(24)
+        content_box.set_margin_end(24)
+
+        #
+        local_items_group = Adw.PreferencesGroup()
+        local_items_group.set_title("Company title")
+
+        #
+         #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="test...")
+        box.append(lbl)
+        #
+        lbl2 = Gtk.Label(label=self.active_user.get("email"))
+        box.append(lbl2)
+
+        company = self.active_user.get("company")
+
+        while child := self.right_sidebar.get_first_child():
+                   self.right_sidebar.remove(child)
+
+        if not company:
+             lbl3 = Gtk.Label(label="No Company")
+             box.append(lbl3)
+             btn1 = Gtk.Button(label="add")
+             
+             # add lbl in right_sidebar
+             lbl4 = Gtk.Label(label="Add Company")
+             lbl4.set_visible(False)
+             #box.append(lbl3)
+             #self.right_sidebar.append(lbl4)
+             btn1.connect("clicked", lambda x:  lbl4.set_visible(True))
+             box.append(btn1)
+             self.right_sidebar.append(lbl4)
+        
+
+        #
+        #self.empty_list_lbl = Gtk.Label(label=self.i18n._("empty_list_text"))
+        #self.empty_list_lbl.add_css_class("dim-label")
+        #self.local_items_group.add(self.empty_list_lbl)
+        # attach list data in ui
+        content_box.append(box)
+        content_box.append(local_items_group)
+        scroll_win.set_child(content_box)
+        local_wrapper.set_content(scroll_win)
+
+
+        #
+        self.center_stack.add_named(local_wrapper, "profile_company_view")
+        #
+        return False
+
+    
+    def on_btn_add_company(self, button):
+        print("on_btn_add_company")
+
+
     
     def on_home_item_clicked(self, row):
         clicked_title = row.get_title()
@@ -4301,7 +4634,23 @@ class MyApp(Adw.Application):
             #self.info_label.set_text(f"Selected Section: {clicked_title} #")
             self.center_stack.set_visible_child_name("shell_console_view")
             
+        # profile tabs
+        elif clicked_title == "Info":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
+            #self.build_profile_info_view()
+            self.center_stack.set_visible_child_name("profile_info_view")
+
         
+        elif clicked_title == "Address":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ####?")
+            self.center_stack.set_visible_child_name("profile_address_view")
+            
+        
+        
+        elif clicked_title == "Company":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ####!")
+            self.center_stack.set_visible_child_name("profile_company_view")
+
 
 
         else:
