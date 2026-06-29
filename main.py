@@ -5378,6 +5378,7 @@ class MyApp(Adw.Application):
         self.register_widget(group, "title", "setting_display_item")
         #
         dark_mode_row = Adw.SwitchRow()
+        dark_mode_row.connect("notify::active", self.on_dark_mode_toggle_changed)
         self.register_widget(dark_mode_row, "title", "dark_mode")
         group.add(dark_mode_row)
         #
@@ -5389,6 +5390,24 @@ class MyApp(Adw.Application):
         #
         self.build_settings_template_view(action_bar_title="General",layout_name="settings_display_view", box=box)
         
+    
+    def on_dark_mode_toggle_changed(self, switch_row, gparam_spec):
+        print(f"on_dark_mode_toggle_changed")
+
+        is_dark_mode_enabled = switch_row.get_active()
+
+        current_scheme = self.style_manager.get_color_scheme()
+
+        if is_dark_mode_enabled:
+        #if current_scheme == Adw.ColorScheme.PREFER_LIGHT or current_scheme == Adw.ColorScheme.DEFAULT:
+           self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+           
+           self.theme_btn.set_icon_name("display-brightness-symbolic")
+           print("Theme scheme updated to : FORCE DARK")    
+        else:
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+            self.theme_btn.set_icon_name("weather-clear-symbolic")
+            print("Theme scheme updated to: FORCE LIGHT")
        
 
     def build_settings_colors_view(self):
