@@ -2360,9 +2360,32 @@ class MyApp(Adw.Application):
         self.active_user = {}
         #
         self.color_options = ["clear", "Blue", "Teal", "Green", "Orange", "Red"]
+        #
+        self.background_media_stream = Gtk.MediaFile.new()
+        #
+        self.music_items = [
+                ("ein.mp3"),
+                ("zwei.mp3"),
+                ("drei.mp3")
+               ]
+        #
 
 
         #
+    
+    def load_track_into_background(self, file_path_string):
+        if not os.path.exists(file_path_string):
+            print(f"File missing: {file_path_string}")
+            return
+        #
+        file_obj = Gio.File.new_for_path(file_path_string)
+        #
+        self.background_media_stream.set_file(file_obj)
+        #
+        self.background_media_stream.set_playing(True)
+        #
+
+        
     
 
     def check_auto_login_status(self):
@@ -2570,6 +2593,105 @@ class MyApp(Adw.Application):
         while child := self.center_stack.get_first_child():
                        self.center_stack.remove(child)
 
+    
+    def render_music_player_popover(self, header_bar):
+        print("render_music_player_popover")
+        #
+        self.music_media_controls = Gtk.MediaControls.new(self.background_media_stream)
+        #music_media_controls.set_media_stream(self.background_media_stream)
+        self.music_media_controls.add_css_class("custom-media-bar")
+        #header_bar.pack_end(self.music_media_controls)
+
+        # music_player_btn in header_bar
+        music_player_btn = Gtk.Button(label="play")
+        header_bar.pack_end(music_player_btn)
+
+        # music_player_popover
+        self.music_player_popover = Gtk.Popover()
+        self.music_player_popover.set_parent(music_player_btn)
+        self.music_player_popover.set_has_arrow(True)
+        # layout inside form popover box
+        music_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        music_box.set_margin_top(12)
+        music_box.set_margin_bottom(12)
+        music_box.set_margin_start(12)
+        music_box.set_margin_end(12)
+        music_box.set_size_request(240, -1)
+        # music_popover_title
+        music_popover_title = Gtk.Label(label="Music Player")
+        music_popover_title.add_css_class("title-3")
+        music_popover_title.set_halign(Gtk.Align.START)
+        music_box.append(music_popover_title)
+        # add music_media_controls in music_box
+        music_box.append(self.music_media_controls)
+        #
+        group = Adw.PreferencesGroup()
+        music_box.append(group)
+        #
+        def on_play_icon_clicked(button):
+            print("on_play_icon_clicked")
+            #
+            item = getattr(button, "item_data", "Unknown")
+            print(f"clicked play_icon item: {item}")
+            #
+            #file = Gio.File.new_for_path(f"assets/musics/{item}")
+            #
+            self.load_track_into_background(f"assets/musics/{item}")
+            #self.music_media_controls.set_media_stream(self.background_media_stream)
+            #
+            #media_stream = Gtk.MediaFile.new_for_file(file)
+            #media_stream.set_playing(True)
+            #media3_controls.set_media_stream(media_stream)
+            #media3_controls.set_media_stream(self.background_media_stream)
+            #media3_controls.set_visible(True)
+            #self.music_media_controls.set_media_stream(self.background_media_stream)
+            #self.right_sidebar.append(self.music_media_controls)
+            #
+            #lbl.set_text(item)
+            #lbl.set_visible(True)
+        #
+        for item in self.music_items:
+            print(f"item: {item} ")
+            row = Adw.ActionRow()
+            row.set_title(item)
+            #row.set_subtitle(code)
+            #
+            play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            play_icon.set_pixel_size(25)
+            #
+            play_btn = Gtk.Button()
+            play_btn.set_child(play_icon)
+            play_btn.add_css_class("flat")
+            play_btn.add_css_class("circular")
+            #
+            play_btn.item_data = item
+            play_btn.connect("clicked", on_play_icon_clicked)
+
+            #
+            row.add_suffix(play_btn)
+            #
+            row.payload = {"item": item}
+            #
+            row.set_activatable(True)
+            #row.connect("activated", card_clicked)
+            #
+            group.add(row)
+            #
+            
+
+        
+
+        
+
+        # 
+        self.music_player_popover.set_child(music_box)
+        music_player_btn.connect("clicked", lambda btn: self.music_player_popover.popup())
+
+
+
+
+
+
     def do_activate(self):
         # this is called g_application_activate() -> app.run()
 
@@ -2662,6 +2784,13 @@ class MyApp(Adw.Application):
         #self.main_menu_component.rebuild_menu()
         main_menu_button = self.main_menu_component.get_menu_button()
         header_bar.pack_end(main_menu_button)
+
+      
+        # render music_player as popover in header_bar
+        self.render_music_player_popover(header_bar)
+        
+        #
+       
 
 
 
@@ -5752,34 +5881,139 @@ class MyApp(Adw.Application):
         box.set_size_request(240, -1)
         #
         lbl = Gtk.Label(label="musics test...")
-        box.append(lbl)
+        lbl.set_margin_top(20)
+        lbl.set_visible(False)
+        self.right_sidebar.append(lbl)
+        #box.append(lbl)
         #
-        file = Gio.File.new_for_path("assets/musics/one.mp3")
+        temp_file = Gio.File.new_for_path("assets/musics/one.mp3")
         # easy_way
         music_player = Gtk.Video.new()
-        music_player.set_autoplay(True)
-        music_player.set_file(file)
+        #music_player.set_autoplay(True)
+        music_player.set_visible(False)
+        music_player.set_margin_top(50)
+        music_player.set_margin_start(10)
+        music_player.set_margin_end(10)
+        self.right_sidebar.append(music_player)
+        #music_player.set_file(file)
         #box.append(music_player)
 
         # custom_way
-        media_stream = Gtk.MediaFile.new_for_file(file)
+        #media_stream = Gtk.MediaFile.new_for_file(file)
         #media_stream.set_autoplay(True)
-        media_controls = Gtk.MediaControls.new(media_stream)
+        #media_controls = Gtk.MediaControls.new(media_stream)
         #box.append(media_controls)  
         #
-        lbl = Gtk.Label(label="music...")
-        lbl.set_margin_top(20)
-        self.right_sidebar.append(lbl)
+        #lbl = Gtk.Label(label="music...")
+        #lbl.set_margin_top(20)
+        #self.right_sidebar.append(lbl)
 
-        # music player for right_sidebar
-        media2_stream = Gtk.MediaFile.new_for_file(file)
-        media2_controls = Gtk.MediaControls.new(media2_stream)
+        # usic player for right_sidebar
+        #media2_stream = Gtk.MediaFile.new_for_file(file)
+        #media2_controls = Gtk.MediaControls.new(media2_stream)
         #media2_controls.set_hexpand(True)
         #media2_controls.set_vexpand(True)
-        media2_controls.set_margin_start(20)
-        media2_controls.set_margin_end(20)
-        self.right_sidebar.append(media2_controls)
+        #media2_controls.set_margin_start(20)
+        #media2_controls.set_margin_end(20)
+        #self.right_sidebar.append(media2_controls)
         #
+        #media3_stream = Gtk.MediaFile.new_for_file(temp_file)
+        #media3_controls = Gtk.MediaControls.new(media3_stream)
+        media3_controls = Gtk.MediaControls.new(None)
+        media3_controls.add_css_class("custom-media-bar")
+        media3_controls.set_visible(False)
+        self.right_sidebar.append(media3_controls)
+
+        #
+        # lists
+        
+        
+        group = Adw.PreferencesGroup()
+        #
+
+        def card_clicked(row):
+            payload = row.payload
+            file_name = payload.get("item")
+            print(f"video clicked {payload}, {payload.get("item")}")
+            #
+            file = Gio.File.new_for_path(f"assets/musics/{file_name}")
+            #
+            #music_player.set_file(file)
+            #music_player.set_visible(True)
+            #
+            media_stream = Gtk.MediaFile.new_for_file(file)
+            media_stream.set_playing(True)
+            media3_controls.set_media_stream(media_stream)
+            
+            media3_controls.set_visible(True)
+            #
+            lbl.set_text(file_name)
+            lbl.set_visible(True)
+
+
+        #
+        def on_play_icon_clicked(button):
+            print("on_play_icon_clicked")
+            #
+            item = getattr(button, "item_data", "Unknown")
+            print(f"clicked play_icon item: {item}")
+            #
+            file = Gio.File.new_for_path(f"assets/musics/{item}")
+            #
+            self.load_track_into_background(f"assets/musics/{item}")
+            #
+            media_stream = Gtk.MediaFile.new_for_file(file)
+            media_stream.set_playing(True)
+            #media3_controls.set_media_stream(media_stream)
+            media3_controls.set_media_stream(self.background_media_stream)
+            media3_controls.set_visible(True)
+            #self.music_media_controls.set_media_stream(self.background_media_stream)
+            #self.right_sidebar.append(self.music_media_controls)
+            #
+            lbl.set_text(item)
+            lbl.set_visible(True)
+            #
+            
+            #
+
+
+
+        for item in self.music_items:
+            print(f"item: {item} ")
+            row = Adw.ActionRow()
+            row.set_title(item)
+            #row.set_subtitle(code)
+            #
+            play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            play_icon.set_pixel_size(25)
+            #
+            play_btn = Gtk.Button()
+            play_btn.set_child(play_icon)
+            play_btn.add_css_class("flat")
+            play_btn.add_css_class("circular")
+            #
+            play_btn.item_data = item
+            play_btn.connect("clicked", on_play_icon_clicked)
+
+
+
+            #
+            row.add_suffix(play_btn)
+            #row.add_suffix(play_icon) # to make icon in right-side
+            #row.add_prefix(play_icon) # to make icon in left-side
+            #
+            row.payload = {"item": item}
+            #
+            row.set_activatable(True)
+            #row.connect("activated", card_clicked)
+            #
+            group.add(row)
+            #
+            
+
+        
+
+        box.append(group)
 
         #
         self.build_template_view(action_bar_title="Musics",layout_name="musics_view", box=box)

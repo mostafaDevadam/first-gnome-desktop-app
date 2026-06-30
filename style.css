@@ -365,3 +365,32 @@
             .bg-orange entry text {
                 color: #fff ;
             }
+
+            /* style of media-controls for music */
+
+            .custom-media-bar {
+                background-color: #2e3440 ;
+                border-radius: 8px;
+                padding: 6px 12px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                margin-left: 20px;
+                margin-right: 20px;
+            }
+
+            .custom-media-bar label {
+                color: #ffffff ;
+                text-shadow: none ;
+            }
+
+            .custom-media-bar button,
+            .custom-media-bar image,
+            .custom-media-bar button image {
+                color: #ffffff ;
+                -gtk-icon-palette: error #ffffff, success #ffffff, warning #ffffff;
+
+            }
+
+            .custom-media-bar scale ::highlight {
+                background-color: #da4747 ;
+            }
+
