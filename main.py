@@ -5663,8 +5663,11 @@ class MyApp(Adw.Application):
         box.set_margin_end(12)
         box.set_size_request(240, -1)
         #
-        #lbl = Gtk.Label(label="videos test...")
+        lbl = Gtk.Label(label="videos test...")
         #box.append(lbl)
+        lbl.set_visible(False)
+        lbl.set_margin_top(20)
+        self.right_sidebar.append(lbl)
         # lists
         items = [
                 ("Ein", "EN" ),
@@ -5673,6 +5676,17 @@ class MyApp(Adw.Application):
                ]
         
         group = Adw.PreferencesGroup()
+        #
+
+        def card_clicked(row):
+            playload = row.playload
+            print(f"video clicked {playload}, {playload.get("item")}")
+            #
+            lbl.set_text(playload.get("item"))
+            lbl.set_visible(True)
+
+
+        #
 
         for item, code in items:
             print(f"item: {item} , code: {code}")
@@ -5683,7 +5697,12 @@ class MyApp(Adw.Application):
             #avatar.set_
             avatar.set_halign(Gtk.Align.END)
             row.add_prefix(avatar)
+            row.playload = {"item": item, "code": code}
+            row.set_activatable(True)
+            row.connect("activated", card_clicked)
             group.add(row)
+            #
+            
 
         
 
