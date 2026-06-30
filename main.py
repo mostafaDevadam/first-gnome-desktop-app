@@ -6161,15 +6161,33 @@ class MyApp(Adw.Application):
 
 
 
-        for item in self.music_items:
-            music_items.append({"is_play": False, "name": item})
+        #for item in self.music_items:
+            #music_items.append({"is_play": False, "name": item})
             #
+        #
+        json_file = HandleJsonFile()
+        db = json_file.load_data_from_json_file("storage", "musics")
 
-        
-        print(f"music_items: {music_items}")
-
+        print(f"musics db: {db}")
+        #
+        if isinstance(db, list):
+            active_viewer_email = self.active_user.get("email", "")
+            #
+            for record in db:
+                if isinstance(record, dict):
+                    if record.get("user_email") == active_viewer_email:
+                        song_filename = record.get("filename", "Unknown.mp3")
+                        #
+                        track_obj = {
+                            "is_play": False,
+                            "name": song_filename
+                        }
+                        #
+                        music_items.append(track_obj)
+        #
         for item in music_items:
             populate_ui(item)
+
 
 
         #for item in self.music_items:
