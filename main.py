@@ -5276,7 +5276,7 @@ class MyApp(Adw.Application):
         
         action_bar = Gtk.HeaderBar()
         action_bar.set_show_title_buttons(False)
-        actionBar_title = Gtk.Label(label= "Settings") #action_bar_title)
+        actionBar_title = Gtk.Label(label= action_bar_title)
         actionBar_title.add_css_class("heading")
         # add actionBar_title in action_bar
         action_bar.set_title_widget(actionBar_title)
@@ -5654,6 +5654,8 @@ class MyApp(Adw.Application):
     def build_videos_view(self):
         print("build_videos_view")
         #
+        self.clear_right_sidebar()
+        #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         #box.set_margin_top(12)
         box.set_margin_bottom(12)
@@ -5663,25 +5665,58 @@ class MyApp(Adw.Application):
         #
         #lbl = Gtk.Label(label="videos test...")
         #box.append(lbl)
+        # lists
+        items = [
+                ("Ein", "EN" ),
+                ("Zwei" , "ZW"),
+                ("Drei" , "DR")
+               ]
+        
+        group = Adw.PreferencesGroup()
+
+        for item, code in items:
+            print(f"item: {item} , code: {code}")
+            row = Adw.ActionRow()
+            row.set_title(item)
+            row.set_subtitle(code)
+            avatar = Gtk.Image.new_from_icon_name("avatar-default-symbolic")
+            #avatar.set_
+            avatar.set_halign(Gtk.Align.END)
+            row.add_prefix(avatar)
+            group.add(row)
+
+        
+
+        box.append(group)
+
+
+
+
         #
         video_player = Gtk.Video.new()
         file_path = os.path.join(GLib.get_current_dir(), "assets/videos", "one.mp4")
         file = Gio.File.new_for_path("assets/videos/one.mp4")
         video_player.set_file(file)
         video_player.set_autoplay(True)
+        video_player.set_margin_top(50)
+        video_player.set_margin_start(10)
+        video_player.set_margin_end(10)
 
-        box.append(video_player)
+        #box.append(video_player)
+        self.right_sidebar.append(video_player)
         #
          
 
 
 
         #
-        self.build_template_view(action_bar_title="General",layout_name="videos_view", box=box)
+        self.build_template_view(action_bar_title="Videos",layout_name="videos_view", box=box)
 
     
     def build_musics_view(self):
         print("build_musics_view")
+        #
+        self.clear_right_sidebar()
         #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         #box.set_margin_top(12)
@@ -5704,11 +5739,24 @@ class MyApp(Adw.Application):
         media_stream = Gtk.MediaFile.new_for_file(file)
         #media_stream.set_autoplay(True)
         media_controls = Gtk.MediaControls.new(media_stream)
-        box.append(media_controls)  
+        #box.append(media_controls)  
+        #
+        lbl = Gtk.Label(label="music...")
+        lbl.set_margin_top(20)
+        self.right_sidebar.append(lbl)
+
+        # music player for right_sidebar
+        media2_stream = Gtk.MediaFile.new_for_file(file)
+        media2_controls = Gtk.MediaControls.new(media2_stream)
+        #media2_controls.set_hexpand(True)
+        #media2_controls.set_vexpand(True)
+        media2_controls.set_margin_start(20)
+        media2_controls.set_margin_end(20)
+        self.right_sidebar.append(media2_controls)
         #
 
         #
-        self.build_template_view(action_bar_title="General",layout_name="musics_view", box=box)
+        self.build_template_view(action_bar_title="Musics",layout_name="musics_view", box=box)
 
 
     
