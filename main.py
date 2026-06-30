@@ -2369,9 +2369,44 @@ class MyApp(Adw.Application):
                 ("drei.mp3")
                ]
         #
+        self.playlist_buttons = {}
+        self.current_playing_item = None
+        #
+        self.background_media_stream.connect("notify::playing", self.on_media_stream_state_changed)
 
 
         #
+
+    
+    def on_media_stream_state_changed(self, media_stream, gparam_spec):
+        print("on_media_stream_state_changed")
+        #
+        is_playing = media_stream.get_playing()
+        active_track_name = getattr(self, "current_playing_item", None)
+        #
+        if not hasattr(self, "playlist_buttons") or not self.playlist_buttons:
+            return 
+        #
+
+        #
+        for name_key, buttons_list in self.playlist_buttons.items():
+            is_active_song = (name_key == active_track_name)
+            
+            target_icon = "media-playback-pause-symbolic" if (is_active_song and is_playing) else "media-playback-start-symbolic"
+
+
+            if isinstance(buttons_list, list):
+                for button_widget in buttons_list:
+                    image_child = button_widget.get_child()
+                    if image_child and isinstance(image_child, Gtk.Image):
+                        image_child.set_from_icon_name(target_icon)
+                    #
+                #
+            #
+        #
+        self.right_sidebar.queue_allocate()
+        #
+
     
     def load_track_into_background(self, file_path_string):
         if not os.path.exists(file_path_string):
@@ -5877,6 +5912,10 @@ class MyApp(Adw.Application):
         #
         self.clear_right_sidebar()
         #
+        self.playlist_buttons.clear()
+        #
+        self.playlist_buttons = {}
+        #
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         #box.set_margin_top(12)
         box.set_margin_bottom(12)
@@ -5889,6 +5928,9 @@ class MyApp(Adw.Application):
         lbl.set_visible(False)
         self.right_sidebar.append(lbl)
         #box.append(lbl)
+        # upload_btn
+        upload_btn = Gtk.Button("Upload")
+        box.append(upload_btn)
         #
         temp_file = Gio.File.new_for_path("assets/musics/one.mp3")
         # easy_way
@@ -5936,14 +5978,14 @@ class MyApp(Adw.Application):
         # play icon: media-playback-start-symbolic
         # stop icon: media-playback-stop-symbolic
         # pause icon: media-playback-pause-symbolic
-        self.play_icon_name = "media-playback-start-symbolic"
+        """self.play_icon_name = "media-playback-start-symbolic"
         self.play_icon = Gtk.Image.new_from_icon_name(self.play_icon_name)
         self.play_icon.set_pixel_size(25)
         #
         self.play_btn = Gtk.Button()
         self.play_btn.set_child(self.play_icon)
         self.play_btn.add_css_class("flat")
-        self.play_btn.add_css_class("circular")
+        self.play_btn.add_css_class("circular")"""
 
         #
 
@@ -5966,6 +6008,12 @@ class MyApp(Adw.Application):
             lbl.set_text(file_name)
             lbl.set_visible(True)
 
+        #
+        
+        
+        
+
+
 
         #
         def on_play_icon_clicked(button):
@@ -5983,18 +6031,32 @@ class MyApp(Adw.Application):
             #
             file = Gio.File.new_for_path(f"assets/musics/{name}")
             #
-            self.load_track_into_background(f"assets/musics/{name}")
+            #self.load_track_into_background(f"assets/musics/{name}")
             #
-            media_stream = Gtk.MediaFile.new_for_file(file)
-            media_stream.set_playing(True)
+            #media_stream = Gtk.MediaFile.new_for_file(file)
+            #media_stream.set_playing(True)
             #media3_controls.set_media_stream(media_stream)
-            media3_controls.set_media_stream(self.background_media_stream)
-            media3_controls.set_visible(True)
+           
             #
-            lbl.set_text(name)
-            lbl.set_visible(True)
+           
             #
-            
+            if self.current_playing_item == name:
+                is_playing = self.background_media_stream.get_playing()
+                self.background_media_stream.set_playing(not is_playing)
+            else:
+                self.current_playing_item = name
+
+                self.load_track_into_background(f"assets/musics/{name}") 
+                
+                media3_controls.set_media_stream(self.background_media_stream)
+                media3_controls.set_visible(True)
+                #
+                lbl.set_text(name)
+                lbl.set_visible(True)
+                #
+                self.background_media_stream.set_playing(True)
+                #
+
             #
         music_items = []   
 
@@ -6008,26 +6070,25 @@ class MyApp(Adw.Application):
             #row.set_subtitle(code)
             #
             #play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
-            self.play_icon_name = "media-playback-start-symbolic"
-            self.play_icon = Gtk.Image.new_from_icon_name(self.play_icon_name)
-            self.play_icon.set_pixel_size(25)
+            play_icon_name = "media-playback-start-symbolic"
+            play_icon = Gtk.Image.new_from_icon_name(play_icon_name)
+            play_icon.set_pixel_size(25)
             #
-            self.play_btn = Gtk.Button()
-            self.play_btn.add_css_class("flat")
-            self.play_btn.add_css_class("circular")
-            self.play_btn.set_child(self.play_icon)
+            play_btn = Gtk.Button()
+            play_btn.add_css_class("flat")
+            play_btn.add_css_class("circular")
+            play_btn.set_child(play_icon)
             #self.play_btn.add_css_class("flat")
             #self.play_btn.add_css_class("circular")
             #
-            self.play_btn.item_data = item
-            self.play_btn.connect("clicked", on_play_icon_clicked)
+           
+            play_btn.item_data = item
+            play_btn.connect("clicked", on_play_icon_clicked)
             #
+           
             print(f"After play_icon is played: {item}")
-
-
-
             #
-            row.add_suffix(self.play_btn)
+            row.add_suffix(play_btn)
             #row.add_suffix(play_icon) # to make icon in right-side
             #row.add_prefix(play_icon) # to make icon in left-side
             #
@@ -6035,20 +6096,22 @@ class MyApp(Adw.Application):
             #
             row.set_activatable(True)
             #row.connect("activated", card_clicked)
+           
+            #
+            if name not in self.playlist_buttons:
+                self.playlist_buttons[name] = []
+            #
+            self.playlist_buttons[name].append(play_btn)
+
             #
             group.add(row)
 
 
 
+
         for item in self.music_items:
-            obj = {
-                "is_play": False,
-                "name": item,
-            }
-            print(f"obj: {obj}")
-            music_items.append(obj)
+            music_items.append({"is_play": False, "name": item})
             #
-            print(f"item obj: {obj.get("name")}")
 
         
         print(f"music_items: {music_items}")
