@@ -499,6 +499,12 @@ class I18n():
                                     "toolbar_color": "Toolbar Color",
                                     "header_bar_color": "Headerbar Color",
                                     "layout_title": "Keyboard Layout",
+                                    #
+                                    "btn_upload": "Upload",
+                                    "upload_title": "Upload Audio Track",
+                                    "upload_desc": "Select a local MP3 or WAV audio track file from your device directory storage.",
+                                    "uploaded_history_title": "Recently Uploaded Tracks",
+                                    #
 
 
 
@@ -597,6 +603,12 @@ class I18n():
                                     "toolbar_color": " اللون",
                                     "header_bar_color": "اللون",
                                     "layout_title": "تخطيط لوحة المفاتيح",
+                                    #
+                                    "btn_upload": "رفع ملف",
+                                    "upload_title": "رفع ملف صوتي",
+                                    "upload_desc": "اختر ملف صوّتي بصيغة MP3 أو WAV من مساحة تخزين جهازك المحليّة.",
+                                    "uploaded_history_title": "الملفات المرفوعة مؤخراً",
+                                    #
 
 
                                
@@ -688,6 +700,11 @@ class I18n():
                                     "toolbar_color": "Farbe",
                                     "header_bar_color": "Farbe",
                                     "layout_title": "Tastaturlayout",
+                                    #
+                                    "btn_upload": "Hochladen",
+                                    "upload_title": "Audiodatei hochladen",
+                                    "upload_desc": "Wählen Sie eine lokale MP3- oder WAV-Audiodatei aus Ihrem Gerätespeicher aus.",
+                                    "uploaded_history_title": "Kürzlich hochgeladene Titel",
 
                                 }
 
@@ -5929,8 +5946,11 @@ class MyApp(Adw.Application):
         self.right_sidebar.append(lbl)
         #box.append(lbl)
         # upload_btn
-        upload_btn = Gtk.Button("Upload")
+        upload_btn = Gtk.Button(label="Upload")
+        upload_btn.add_css_class("pill")
+        upload_btn.set_halign(Gtk.Align.END)
         box.append(upload_btn)
+        upload_btn.connect("clicked", self.build_music_upload_sidebar_view)
         #
         temp_file = Gio.File.new_for_path("assets/musics/one.mp3")
         # easy_way
@@ -6132,6 +6152,23 @@ class MyApp(Adw.Application):
         #
         self.build_template_view(action_bar_title="Musics",layout_name="musics_view", box=box)
 
+   
+    def build_music_upload_sidebar_view(self):
+       print("build_music_upload_sidebar_view")
+       #
+    
+    def on_native_file_choose_triggered(self, button):
+        print("on_native_file_choose_triggered")
+        #
+    
+        def on_chooser_response(dialog_obj, response_id):
+            print("on_chooser_response")
+            #
+
+
+    def execute_media_file_upload_stream(self, source_file_path):
+        print("execute_media_file_upload_stream")
+        #
 
     
     def on_home_item_clicked(self, row):
