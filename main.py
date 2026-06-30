@@ -5668,11 +5668,25 @@ class MyApp(Adw.Application):
         lbl.set_visible(False)
         lbl.set_margin_top(20)
         self.right_sidebar.append(lbl)
+        #
+        video_player = Gtk.Video.new()
+        video_player.set_visible(False)
+        #file_path = os.path.join(GLib.get_current_dir(), "assets/videos", "one.mp4")
+        #file = Gio.File.new_for_path("assets/videos/one.mp4")
+        #video_player.set_file(file)
+        video_player.set_autoplay(True)
+        video_player.set_margin_top(50)
+        video_player.set_margin_start(10)
+        video_player.set_margin_end(10)
+
+        #box.append(video_player)
+        self.right_sidebar.append(video_player)
+        #
         # lists
         items = [
-                ("Ein", "EN" ),
-                ("Zwei" , "ZW"),
-                ("Drei" , "DR")
+                ("ein.mp4"),
+                ("zwei.mp4"),
+                ("drei.mp4")
                ]
         
         group = Adw.PreferencesGroup()
@@ -5680,24 +5694,29 @@ class MyApp(Adw.Application):
 
         def card_clicked(row):
             playload = row.playload
+            file_name = playload.get("item")
             print(f"video clicked {playload}, {playload.get("item")}")
             #
-            lbl.set_text(playload.get("item"))
+            file = Gio.File.new_for_path(f"assets/videos/{file_name}")
+            video_player.set_file(file)
+            video_player.set_visible(True)
+            #
+            lbl.set_text(file_name)
             lbl.set_visible(True)
 
 
         #
 
-        for item, code in items:
-            print(f"item: {item} , code: {code}")
+        for item in items:
+            print(f"item: {item} ")
             row = Adw.ActionRow()
             row.set_title(item)
-            row.set_subtitle(code)
+            #row.set_subtitle(code)
             avatar = Gtk.Image.new_from_icon_name("avatar-default-symbolic")
             #avatar.set_
             avatar.set_halign(Gtk.Align.END)
             row.add_prefix(avatar)
-            row.playload = {"item": item, "code": code}
+            row.playload = {"item": item}
             row.set_activatable(True)
             row.connect("activated", card_clicked)
             group.add(row)
@@ -5711,19 +5730,7 @@ class MyApp(Adw.Application):
 
 
 
-        #
-        video_player = Gtk.Video.new()
-        file_path = os.path.join(GLib.get_current_dir(), "assets/videos", "one.mp4")
-        file = Gio.File.new_for_path("assets/videos/one.mp4")
-        video_player.set_file(file)
-        video_player.set_autoplay(True)
-        video_player.set_margin_top(50)
-        video_player.set_margin_start(10)
-        video_player.set_margin_end(10)
-
-        #box.append(video_player)
-        self.right_sidebar.append(video_player)
-        #
+       
          
 
 
