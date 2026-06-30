@@ -2628,6 +2628,8 @@ class MyApp(Adw.Application):
         group = Adw.PreferencesGroup()
         music_box.append(group)
         #
+
+        #
         def on_play_icon_clicked(button):
             print("on_play_icon_clicked")
             #
@@ -2657,6 +2659,8 @@ class MyApp(Adw.Application):
             #row.set_subtitle(code)
             #
             play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            # play-icon: media-playback-start-symbolic
+            # stop-icon:
             play_icon.set_pixel_size(25)
             #
             play_btn = Gtk.Button()
@@ -5929,6 +5933,18 @@ class MyApp(Adw.Application):
         
         
         group = Adw.PreferencesGroup()
+        # play icon: media-playback-start-symbolic
+        # stop icon: media-playback-stop-symbolic
+        # pause icon: media-playback-pause-symbolic
+        self.play_icon_name = "media-playback-start-symbolic"
+        self.play_icon = Gtk.Image.new_from_icon_name(self.play_icon_name)
+        self.play_icon.set_pixel_size(25)
+        #
+        self.play_btn = Gtk.Button()
+        self.play_btn.set_child(self.play_icon)
+        self.play_btn.add_css_class("flat")
+        self.play_btn.add_css_class("circular")
+
         #
 
         def card_clicked(row):
@@ -5958,47 +5974,60 @@ class MyApp(Adw.Application):
             item = getattr(button, "item_data", "Unknown")
             print(f"clicked play_icon item: {item}")
             #
-            file = Gio.File.new_for_path(f"assets/musics/{item}")
+            item["is_play"] = True
             #
-            self.load_track_into_background(f"assets/musics/{item}")
+            print(f"clicked play_icon item is_play: {item}")
+            ##
+            name = item.get("name")
+            is_play = item.get("is_play")
+            #
+            file = Gio.File.new_for_path(f"assets/musics/{name}")
+            #
+            self.load_track_into_background(f"assets/musics/{name}")
             #
             media_stream = Gtk.MediaFile.new_for_file(file)
             media_stream.set_playing(True)
             #media3_controls.set_media_stream(media_stream)
             media3_controls.set_media_stream(self.background_media_stream)
             media3_controls.set_visible(True)
-            #self.music_media_controls.set_media_stream(self.background_media_stream)
-            #self.right_sidebar.append(self.music_media_controls)
             #
-            lbl.set_text(item)
+            lbl.set_text(name)
             lbl.set_visible(True)
             #
             
             #
+        music_items = []   
+
+        
 
 
-
-        for item in self.music_items:
-            print(f"item: {item} ")
+        def populate_ui(item):
             row = Adw.ActionRow()
-            row.set_title(item)
+            name = item.get("name")
+            row.set_title(name)
             #row.set_subtitle(code)
             #
-            play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
-            play_icon.set_pixel_size(25)
+            #play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            self.play_icon_name = "media-playback-start-symbolic"
+            self.play_icon = Gtk.Image.new_from_icon_name(self.play_icon_name)
+            self.play_icon.set_pixel_size(25)
             #
-            play_btn = Gtk.Button()
-            play_btn.set_child(play_icon)
-            play_btn.add_css_class("flat")
-            play_btn.add_css_class("circular")
+            self.play_btn = Gtk.Button()
+            self.play_btn.add_css_class("flat")
+            self.play_btn.add_css_class("circular")
+            self.play_btn.set_child(self.play_icon)
+            #self.play_btn.add_css_class("flat")
+            #self.play_btn.add_css_class("circular")
             #
-            play_btn.item_data = item
-            play_btn.connect("clicked", on_play_icon_clicked)
+            self.play_btn.item_data = item
+            self.play_btn.connect("clicked", on_play_icon_clicked)
+            #
+            print(f"After play_icon is played: {item}")
 
 
 
             #
-            row.add_suffix(play_btn)
+            row.add_suffix(self.play_btn)
             #row.add_suffix(play_icon) # to make icon in right-side
             #row.add_prefix(play_icon) # to make icon in left-side
             #
@@ -6008,6 +6037,28 @@ class MyApp(Adw.Application):
             #row.connect("activated", card_clicked)
             #
             group.add(row)
+
+
+
+        for item in self.music_items:
+            obj = {
+                "is_play": False,
+                "name": item,
+            }
+            print(f"obj: {obj}")
+            music_items.append(obj)
+            #
+            print(f"item obj: {obj.get("name")}")
+
+        
+        print(f"music_items: {music_items}")
+
+        for item in music_items:
+            populate_ui(item)
+
+
+        #for item in self.music_items:
+            #populate_ui(item)
             #
             
 
