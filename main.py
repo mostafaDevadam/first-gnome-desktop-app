@@ -6318,12 +6318,48 @@ class MyApp(Adw.Application):
         try:
             shutil.copy2(source_file_path, dest_path)
             print(f"File Successfully uploaded into project")
+            # save in json file
+            user_email = self.active_user.get("email", "user@gmail.com")
+            #
+            music_log_entry = {
+                "filename": unique_filename,
+                "path": dest_path,
+                "user_email": user_email,
+                "uploaded_at": timestamp_id
+            }
+            #
+            log_dir = os.path.join(os.getcwd(), "storage")
+            os.makedirs(log_dir, exist_ok=True)
+            log_file_path = os.path.join(log_dir, "musics.json")
+            #
+            music_db = []
+            if os.path.exists(log_file_path):
+                try:
+                    with open(log_file_path, "r", encoding="utf-8") as f:
+                         music_db = json.load(f)
+                         if not isinstance(music_db, list):
+                            music_db = []
+                except json.JSONDecoder:
+                    music_db = []
+                except Exception as e:
+                    print(f"Error reading historical musics log file: {e}")
+            #
+            music_db.append(music_log_entry)
+            #
+            with open(log_file_path, "w", encoding="utf-8") as f:
+                json.dump(music_db, f, indent=4, ensure_ascii=False)
+            #
+            print(f"Metadata securely logged for '{unique_filename}' under {log_file_path}")
+
+
+            
+            
+            
             #
             if hasattr(self, 'uploaded_history_list_box') and self.uploaded_history_list_box:
                 history_row = Adw.ActionRow()
                 history_row.set_title(unique_filename)
-                #
-                history_row.set_subtitle(f"Original: {raw_basename}")
+                history_row.set_subtitle(f"By: {user_email}")
                 #
                 audio_doc_icon = Gtk.Image.new_from_icon_name("multimedia-player-symbolic")
                 history_row.add_prefix(audio_doc_icon)
