@@ -5661,9 +5661,18 @@ class MyApp(Adw.Application):
         box.set_margin_end(12)
         box.set_size_request(240, -1)
         #
-        lbl = Gtk.Label(label="videos test...")
-        box.append(lbl)
+        #lbl = Gtk.Label(label="videos test...")
+        #box.append(lbl)
         #
+        video_player = Gtk.Video.new()
+        file_path = os.path.join(GLib.get_current_dir(), "assets/videos", "one.mp4")
+        file = Gio.File.new_for_path("assets/videos/one.mp4")
+        video_player.set_file(file)
+        video_player.set_autoplay(True)
+
+        box.append(video_player)
+        #
+         
 
 
 
@@ -5684,7 +5693,18 @@ class MyApp(Adw.Application):
         lbl = Gtk.Label(label="musics test...")
         box.append(lbl)
         #
+        file = Gio.File.new_for_path("assets/musics/one.mp3")
+        # easy_way
+        music_player = Gtk.Video.new()
+        music_player.set_autoplay(True)
+        music_player.set_file(file)
+        #box.append(music_player)
 
+        # custom_way
+        media_stream = Gtk.MediaFile.new_for_file(file)
+        #media_stream.set_autoplay(True)
+        media_controls = Gtk.MediaControls.new(media_stream)
+        box.append(media_controls)  
         #
 
         #
@@ -6565,4 +6585,5 @@ class MyApp(Adw.Application):
 if __name__ == "__main__":
     print("main...")
     app = MyApp()
-    app.run()
+    #app.run()
+    sys.exit(app.run(sys.argv))
