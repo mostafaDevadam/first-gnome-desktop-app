@@ -430,6 +430,8 @@ class I18n():
                                     "item_posts": "Posts",   # Pure English value mapping
                                     "item_todos": "Todos",
                                     "item_shell": "Shell Terminal",
+                                    "item_videos": "Videos",
+                                    "item_musics": "Musics",
                                     #
                                     "shell_manager": "System Shell Workspace",
                                     "shell_run_btn": "Execute",
@@ -525,6 +527,8 @@ class I18n():
                                     "item_todos": "المهام",
                                     "item_shell": "الشل",
                                     "item_text" : "محطة الشل",
+                                    "item_videos": "الفيديوهات",
+                                    "item_musics": "موسيقى",
                                     #
                                     "shell_manager": "مساحة عمل الشل نظام",
                                     "shell_run_btn": "تنفيذ",
@@ -615,6 +619,8 @@ class I18n():
                                     "item_posts": "Beiträge",
                                     "item_todos": "Aufgaben",
                                     "item_shell": "Shell-Terminal",
+                                    "item_videos": "Videos",
+                                    "item_musics": "Musik",
                                     #
                                     "shell_manager": "System-Shell-Arbeitsbereich",
                                     "shell_run_btn": "Ausführen",
@@ -2530,7 +2536,8 @@ class MyApp(Adw.Application):
             ("Storage", "drive-harddisk-symbolic"),
             ("Users", "avatar-default-symbolic"),
             (self.i18n._('posts'), "mail-send-receive-symbolic"),
-            ("Todos", "checkbox-checked-symbolic")
+            ("Todos", "checkbox-checked-symbolic"),
+            
         ]
         list_box = Gtk.ListBox()
 
@@ -2714,7 +2721,6 @@ class MyApp(Adw.Application):
         self.list_box.add_css_class("boxed-list")
 
         home_items = [
-            
             ("item_test", "folder-download-symbolic"),
             ("item_local", "folder-download-symbolic"),
             ("item_storage", "drive-harddisk-symbolic"),
@@ -2722,6 +2728,8 @@ class MyApp(Adw.Application):
             ("item_posts", "mail-send-receive-symbolic"), # FIX: Changed from function call to abstract key string
             ("item_todos", "checkbox-checked-symbolic"),
             ("item_shell", "utilities-terminal-symbolic"),
+            ("item_videos", "video-x-generic-symbolic"), # camera-video-symbolic ,    video-x-generic-symbolic
+            ("item_musics", "audio-x-generic-symbolic"), # multimedia-player-symbolic, audio-x-generic-symbolic
         ]
 
         # Tracking dictionary to easily find rows during translation refresh cycles
@@ -5254,7 +5262,7 @@ class MyApp(Adw.Application):
        
 
     # build settings view
-    def build_settings_template_view(self, action_bar_title, layout_name, box: Gtk.Box):
+    def build_template_view(self, action_bar_title, layout_name, box: Gtk.Box):
         print("build_settings_template_view")
         
         #action-bar-title
@@ -5325,7 +5333,7 @@ class MyApp(Adw.Application):
 
 
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_general_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_general_view", box=box)
         
        
 
@@ -5364,7 +5372,7 @@ class MyApp(Adw.Application):
 
 
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_account_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_account_view", box=box)
         
        
 
@@ -5394,7 +5402,7 @@ class MyApp(Adw.Application):
 
 
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_notifications_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_notifications_view", box=box)
 
        
 
@@ -5425,7 +5433,7 @@ class MyApp(Adw.Application):
 
 
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_display_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_display_view", box=box)
         
     
     def on_dark_mode_toggle_changed(self, switch_row, gparam_spec):
@@ -5495,7 +5503,7 @@ class MyApp(Adw.Application):
 
 
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_colors_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_colors_view", box=box)
 
     
     def on_color_selection_changed(self, combo_row, gparam_spec):
@@ -5576,12 +5584,8 @@ class MyApp(Adw.Application):
         group.add(k_layout_row)
         #
         box.append(group)
-
-
-
-
         #
-        self.build_settings_template_view(action_bar_title="General",layout_name="settings_keyboard_view", box=box)
+        self.build_template_view(action_bar_title="General",layout_name="settings_keyboard_view", box=box)
         
     
     def on_keyboard_selection_changed(self, combo_row, gparam_spec):
@@ -5645,6 +5649,46 @@ class MyApp(Adw.Application):
         #
 
 
+    # media
+
+    def build_videos_view(self):
+        print("build_videos_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="videos test...")
+        box.append(lbl)
+        #
+
+
+
+        #
+        self.build_template_view(action_bar_title="General",layout_name="videos_view", box=box)
+
+    
+    def build_musics_view(self):
+        print("build_musics_view")
+        #
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        #box.set_margin_top(12)
+        box.set_margin_bottom(12)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_size_request(240, -1)
+        #
+        lbl = Gtk.Label(label="musics test...")
+        box.append(lbl)
+        #
+
+        #
+
+        #
+        self.build_template_view(action_bar_title="General",layout_name="musics_view", box=box)
 
 
     
@@ -5719,35 +5763,20 @@ class MyApp(Adw.Application):
             #self.info_label.set_text(f"Selected Section: {clicked_title} #")
             self.center_stack.set_visible_child_name("shell_console_view")
             
-        # profile tabs
-        """elif clicked_title == "Info":
-            #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
-            #self.build_profile_info_view()
-            self.center_stack.set_visible_child_name("profile_info_view")
-
         
-        elif clicked_title == "Address":
-            #self.info_label.set_text(f"Selected Section: {clicked_title} ####?")
-            self.build_profile_address_view()
-            self.center_stack.set_visible_child_name("profile_address_view")
-            
-        
-        
-        elif clicked_title == "Company":
-            #self.info_label.set_text(f"Selected Section: {clicked_title} ####!")
-            self.build_profile_company_view()
-            self.center_stack.set_visible_child_name("profile_company_view")
-        """
-
-
-        """else:
-            #self.center_stack.set_visible_child_name("welcome_view")
-            self.info_label.set_text(f"Selected Section: {clicked_title}")
-            self.state = ""
-        # call fetching"""
 
         #
-        if key == "profile_info":
+        if key == "item_videos":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ")
+            self.build_videos_view()
+            self.center_stack.set_visible_child_name("videos_view")
+
+        elif key == "item_musics":
+            #self.info_label.set_text(f"Selected Section: {clicked_title} ")
+            self.build_musics_view()
+            self.center_stack.set_visible_child_name("musics_view")
+        
+        elif key == "profile_info":
             #self.info_label.set_text(f"Selected Section: {clicked_title} ###")
             self.build_profile_info_view()
             self.center_stack.set_visible_child_name("profile_info_view")
