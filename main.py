@@ -2,8 +2,9 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 gi.require_version('Notify', '0.7')
+gi.require_version('Shumate', '1.0')
 
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk, Notify
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk, Notify, Shumate
 
 Notify.init('com.example.myapp')
 
@@ -13,6 +14,7 @@ import urllib.request
 import threading
 import json
 import os
+import uuid
 
 print("start py")
 
@@ -500,7 +502,7 @@ class I18n():
                                     "header_bar_color": "Headerbar Color",
                                     "layout_title": "Keyboard Layout",
                                     #
-                                    "btn_upload": "Upload",
+                                    "btn_upload": "Upload File",
                                     "upload_title": "Upload Audio Track",
                                     "upload_desc": "Select a local MP3 or WAV audio track file from your device directory storage.",
                                     "uploaded_history_title": "Recently Uploaded Tracks",
@@ -701,7 +703,7 @@ class I18n():
                                     "header_bar_color": "Farbe",
                                     "layout_title": "Tastaturlayout",
                                     #
-                                    "btn_upload": "Hochladen",
+                                    "btn_upload": "Hochladen File",
                                     "upload_title": "Audiodatei hochladen",
                                     "upload_desc": "Wählen Sie eine lokale MP3- oder WAV-Audiodatei aus Ihrem Gerätespeicher aus.",
                                     "uploaded_history_title": "Kürzlich hochgeladene Titel",
@@ -5186,6 +5188,34 @@ class MyApp(Adw.Application):
         city_row = Adw.ActionRow(title="City", subtitle=address.get("city", "N/A"))
         sidebar_group2.add(city_row)
         box.append(sidebar_group2)
+
+        # map
+        registry = Shumate.MapSourceRegistry.new_with_defaults()
+        
+
+        source = registry.get_by_id("osm-mapnik")
+        #viewport = Shumate.Viewport.new()
+        map_widget = Shumate.SimpleMap()
+        #map_view = Shumate.SimpleMap()
+        map_widget.set_map_source(source)
+        viewport = map_widget.get_viewport()
+        # cairo: 30.0444, 31.2357
+        # paris: 48.8566, 2.3522
+        # koblenz: 50.3595, 7.5899
+        viewport.set_location(50.3595, 7.5899)
+        #viewport.set_latitude(48.8566)
+        #viewport.set_longitude(2.3522)
+        viewport.set_zoom_level(12)
+        #
+        #map_widget.set_hexpand(True)
+        #map_widget.set_vexpand(True)
+        map_widget.set_size_request(-1, 300)
+        map_widget.set_margin_bottom(20)
+
+        box.append(map_widget)
+        #
+
+
         
         local_wrapper.add_top_bar(local_action_bar)
 
@@ -5949,8 +5979,10 @@ class MyApp(Adw.Application):
         upload_btn = Gtk.Button(label="Upload")
         upload_btn.add_css_class("pill")
         upload_btn.set_halign(Gtk.Align.END)
-        box.append(upload_btn)
+       
         upload_btn.connect("clicked", self.build_music_upload_sidebar_view)
+        
+        box.append(upload_btn)
         #
         temp_file = Gio.File.new_for_path("assets/musics/one.mp3")
         # easy_way
@@ -6153,22 +6185,167 @@ class MyApp(Adw.Application):
         self.build_template_view(action_bar_title="Musics",layout_name="musics_view", box=box)
 
    
-    def build_music_upload_sidebar_view(self):
+    def build_music_upload_sidebar_view(self, button):
        print("build_music_upload_sidebar_view")
        #
+       self.clear_right_sidebar()
+       lbl = Gtk.Label(label="test..")
+       #self.right_sidebar.append(lbl)
+       #
+       sidebar_main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+       sidebar_main_box.set_margin_top(24)
+       sidebar_main_box.set_margin_bottom(24)
+       sidebar_main_box.set_margin_start(24)
+       sidebar_main_box.set_margin_end(24)
+       #
+       #sidebar_main_box.append(Gtk.Label(label="box.."))
+
+       #
+       upload_status_page = Adw.StatusPage()
+       upload_status_page.set_icon_name("document-send-symbolic")
+       #
+       self.register_widget(upload_status_page, "title", "upload_title")
+       self.register_widget(upload_status_page, "description", "upload_desc")
+       #
+       select_file_btn = Gtk.Button(label="Upload File")
+       select_file_btn.add_css_class("suggested-action")
+       select_file_btn.add_css_class("pill")
+       self.register_widget(select_file_btn, "label", "btn_upload")
+       select_file_btn.connect("clicked", self.on_native_file_choose_triggered)
+       #
+       upload_status_page.set_child(select_file_btn)
+       sidebar_main_box.append(upload_status_page)
+       #
+       history_group = Adw.PreferencesGroup()
+       self.register_widget(history_group, "title", "uploaded_history_title")
+       history_group.set_margin_top(24)
+       #
+       self.uploaded_history_list_box = Gtk.ListBox()
+       self.uploaded_history_list_box.add_css_class("boxed-list")
+       history_group.add(self.uploaded_history_list_box)
+       #
+       sidebar_main_box.append(history_group)
+       #
+
+       #------------------------------------------
+       scroll_win = Gtk.ScrolledWindow()
+       scroll_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+       scroll_win.set_margin_top(24) 
+       scroll_win.set_min_content_height(200)  # Give it a minimum height
+       scroll_win.set_vexpand(True)  # Allow it to expand
+
+       # add content-box in scroll
+       scroll_win.set_child(sidebar_main_box)
+       # add scroll in wrapper
+       #wrapper.set_content(scroll_win)
+       #
+       self.right_sidebar.append(scroll_win)
+       #self.right_sidebar.append(scroll_win)
+       #self.right_sidebar.append(wrapper)
+       self.right_sidebar.queue_allocate()
+       #
+
+
+
+
     
     def on_native_file_choose_triggered(self, button):
         print("on_native_file_choose_triggered")
         #
+        dialog = Gtk.FileChooserNative.new(
+              title="Select Audio Track File",
+              parent=self.win,
+              action=Gtk.FileChooserAction.OPEN,
+              accept_label="Select",
+              cancel_label="Cancel"
+        )
+        #
+        audio_filter = Gtk.FileFilter.new()
+        audio_filter.set_name("Audio Tracks (*.mp3, *.wav)")
+        audio_filter.add_mime_type("audio/mpeg")
+        audio_filter.add_mime_type("audio/wav")
+        audio_filter.add_mime_type("audio/x-wav")
+        dialog.add_filter(audio_filter)
+        #
+
+
     
         def on_chooser_response(dialog_obj, response_id):
             print("on_chooser_response")
             #
+            if response_id == Gtk.ResponseType.ACCEPT:
+                gio_file = dialog_obj.get_file()
+                if gio_file:
+                    raw_absolute_source_path = gio_file.get_path()
+                    print(f"File selected from disk: {raw_absolute_source_path}")
+                    #
+                    if hasattr(self, "execute_media_file_upload_stream"):
+                         self.execute_media_file_upload_stream(raw_absolute_source_path)
+            #
+            dialog_obj.destroy()
+
+        #
+        dialog.connect("response", on_chooser_response)
+        dialog.show()
 
 
     def execute_media_file_upload_stream(self, source_file_path):
         print("execute_media_file_upload_stream")
         #
+        import shutil
+        import time
+        #
+
+        #
+        file_name = os.path.basename(source_file_path)
+        #
+        raw_basename = os.path.basename(source_file_path)
+        name_part, extension_part = os.path.splitext(raw_basename)
+        #
+        sanitized_name = "".join(c for c in name_part if c.isalnum() or c in ('-', '_')).strip()
+        if not sanitized_name:
+            sanitized_name = "uploaded_track"
+        #
+        timestamp_id = int(time.time())
+        random_token = uuid.uuid4().hex[:8]
+        unique_filename = f"{random_token}{timestamp_id}{extension_part}"
+
+        #
+        dest_dir = os.path.join(os.getcwd(), "assets", "musics")
+        os.makedirs(dest_dir, exist_ok=True)
+        dest_path = os.path.join(dest_dir, unique_filename)
+        #
+        try:
+            shutil.copy2(source_file_path, dest_path)
+            print(f"File Successfully uploaded into project")
+            #
+            if hasattr(self, 'uploaded_history_list_box') and self.uploaded_history_list_box:
+                history_row = Adw.ActionRow()
+                history_row.set_title(unique_filename)
+                #
+                history_row.set_subtitle(f"Original: {raw_basename}")
+                #
+                audio_doc_icon = Gtk.Image.new_from_icon_name("multimedia-player-symbolic")
+                history_row.add_prefix(audio_doc_icon)
+                #
+                check_symbol = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
+                history_row.add_suffix(check_symbol)
+                #
+                self.uploaded_history_list_box.append(history_row)
+                self.right_sidebar.queue_allocate()
+                #
+            #
+            if hasattr(self, "toast_overlay"):
+                success_msg = self.i18n._("success_update_msg")
+                self.toast_overlay.add_toast(Adw.Toast.new(success_msg))
+
+
+
+
+        except Exception as e:
+            print(f"error: {e}")
+            if hasattr(self, 'toast_overlay'):
+                self.toast_overlay.add_toast(Adw.Toast.new("Upload Failed!"))
 
     
     def on_home_item_clicked(self, row):
